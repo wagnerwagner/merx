@@ -1,0 +1,32 @@
+type: fields
+fields:
+  headlineOrder:
+    label: Order
+    type: headline
+    numbered: false
+  items:
+    label: Items
+    type: structure
+    width: 2/3
+    fields:
+      id:
+        label: ID
+        type: text
+      quantity:
+        label: Quantity
+        type: text
+      price:
+        label: Price
+        type: text
+      tax:
+        label: Tax
+        type: text
+  infoOrder:
+    label: Info
+    type: info
+    width: 1/3
+    text: >
+      Invoice Number: {{ page.invoiceNumber }}<br>
+      Sum: {{ page.formattedSum }}<br>
+      Invoice Date: {{ page.invoiceDate }}<br>
+      Payed Date: {{ page.payedDate }}<br>

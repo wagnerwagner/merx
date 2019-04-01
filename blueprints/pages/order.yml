@@ -1,0 +1,20 @@
+title: Order
+
+status:
+  draft: Error
+  unlisted: Incomplete
+  listed: Complete
+
+options:
+  changeSlug: false
+  changeTemplate: false
+  changeTitle: false
+  delete: false
+
+tabs:
+  overview:
+    sections:
+      order: sections/order
+  payment:
+    sections:
+      payment-method: sections/payment-method

@@ -1,0 +1,6 @@
+type: pages
+parent: site.find("orders")
+template: order
+sortBy: num desc
+text: "#{{ page.invoiceNumber }}"
+info: "{{ page.formattedSum }}"

@@ -1,0 +1,14 @@
+type: fields
+fields:
+  paymentMethod:
+    label: Payment Method
+    type: text
+    required: true
+    width: 1/2
+  paymentComplete:
+    label: Payment Complete
+    type: toggle
+    width: 1/2
+    text:
+      - "No"
+      - "Yes"
