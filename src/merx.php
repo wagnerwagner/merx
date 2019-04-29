@@ -232,7 +232,7 @@ class Merx
             kirby()->trigger('ww.merx.completePayment:before', $virtualOrderPage, $gateway, $data);
 
             if (is_callable($gateway['completePayment'])) {
-                $redirect = $gateway['completePayment']($virtualOrderPage, $data);
+                $gateway['completePayment']($virtualOrderPage, $data);
             }
 
             $virtualOrderPage->content()->update([

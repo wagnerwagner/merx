@@ -97,7 +97,7 @@ class Payment
     {
         self::setStripeApiKey();
 
-        $source = \Stripe\Source::retrieve($_GET['source']);
+        $source = \Stripe\Source::retrieve($sourceString);
         return $source->status;
     }
 

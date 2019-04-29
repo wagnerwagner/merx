@@ -53,6 +53,9 @@ class Event extends ApiResource
     const COUPON_CREATED                           = 'coupon.created';
     const COUPON_DELETED                           = 'coupon.deleted';
     const COUPON_UPDATED                           = 'coupon.updated';
+    const CREDIT_NOTE_CREATED                      = 'credit_note.created';
+    const CREDIT_NOTE_UPDATED                      = 'credit_note.updated';
+    const CREDIT_NOTE_VOIDED                       = 'credit_note.voided';
     const CUSTOMER_CREATED                         = 'customer.created';
     const CUSTOMER_DELETED                         = 'customer.deleted';
     const CUSTOMER_UPDATED                         = 'customer.updated';
@@ -104,6 +107,9 @@ class Event extends ApiResource
     const PAYOUT_FAILED                            = 'payout.failed';
     const PAYOUT_PAID                              = 'payout.paid';
     const PAYOUT_UPDATED                           = 'payout.updated';
+    const PERSON_CREATED                           = 'person.created';
+    const PERSON_DELETED                           = 'person.deleted';
+    const PERSON_UPDATED                           = 'person.updated';
     const PING                                     = 'ping';
     const PLAN_CREATED                             = 'plan.created';
     const PLAN_DELETED                             = 'plan.deleted';
@@ -137,6 +143,8 @@ class Event extends ApiResource
     const SUBSCRIPTION_SCHEDULE_EXPIRING           = 'subscription_schedule.expiring';
     const SUBSCRIPTION_SCHEDULE_RELEASED           = 'subscription_schedule.released';
     const SUBSCRIPTION_SCHEDULE_UPDATED            = 'subscription_schedule.updated';
+    const TAX_RATE_CREATED                         = 'tax_rate.created';
+    const TAX_RATE_UPDATED                         = 'tax_rate.updated';
     const TOPUP_CANCELED                           = 'topup.canceled';
     const TOPUP_CREATED                            = 'topup.created';
     const TOPUP_FAILED                             = 'topup.failed';
