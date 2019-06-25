@@ -111,16 +111,15 @@ class ProductList extends Collection
         if ($value['quantity'] < 0) {
             throw new \Exception('Quantity cannot be negative.');
         }
-        if ($value['price'] < 0) {
-            throw new \Exception('Price cannot be negative.');
-        }
-        if ($value['tax'] < 0) {
-            throw new \Exception('Tax cannot be negative');
-        }
-        if ($value['sum'] < 0) {
-            throw new \Exception('Sum cannot be negative');
-        }
         $this->data[strtolower($key)] = $value;
+
+        if ($this->getTax() < 0) {
+            throw new \Exception('Tax of Cart must be positive');
+        }
+
+        if ($this->getSum() < 0) {
+            throw new \Exception('Sum of Cart must be positive');
+        }
 
         return $this;
     }
