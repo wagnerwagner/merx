@@ -14,10 +14,12 @@ class Cart extends ProductList
      */
     public function __construct(array $data = [])
     {
-        if (count($data) === 0 && is_array(kirby()->session()->get($this->sessionName))) {
-            $data = kirby()->session()->get($this->sessionName);
+        $kirby = kirby();
+        if (count($data) === 0 && is_array($kirby->session()->get($this->sessionName))) {
+            $data = $kirby->session()->get($this->sessionName);
         }
         parent::__construct($data);
+        $kirby->trigger('ww.merx.cart', $this);
     }
 
 
