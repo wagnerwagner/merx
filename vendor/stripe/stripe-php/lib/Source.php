@@ -18,6 +18,7 @@ namespace Stripe;
  * @property mixed $code_verification
  * @property int $created
  * @property string $currency
+ * @property string $customer
  * @property mixed $eps
  * @property string $flow
  * @property mixed $giropay
@@ -42,7 +43,6 @@ namespace Stripe;
  */
 class Source extends ApiResource
 {
-
     const OBJECT_NAME = "source";
 
     use ApiOperations\Create;
