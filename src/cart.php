@@ -114,7 +114,7 @@ class Cart extends ProductList
 
     public function getStripePaymentIntentClientSecret(): string
     {
-        return Payment::createStripePaymentIntent($this->getSum(), [])->client_secret;
+        return Payment::createStripePaymentIntent($this->getSum())->client_secret;
     }
 
 
