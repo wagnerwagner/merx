@@ -65,6 +65,20 @@ Gateways::$gateways['credit-card'] = [
     },
 ];
 
+Gateways::$gateways['credit-card-intent'] = [
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage
+    {
+        $stripePaymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
+        $paymentIntent = Payment::getStripePaymentIntent($stripePaymentIntentId);
+        $paymentIntent->capture();
+        $virtualOrderPage->content()->update([
+            'paymentComplete' => true,
+            'payedDate' => date('c'),
+        ]);
+        return $virtualOrderPage;
+    },
+];
+
 Gateways::$gateways['sepa-debit'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage
     {

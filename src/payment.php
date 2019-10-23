@@ -75,6 +75,30 @@ class Payment
     }
 
 
+    public static function createStripePaymentIntent(float $amount, array $params = [], $options = []): ApiResource
+    {
+        self::setStripeApiKey();
+
+        $intent = \Stripe\PaymentIntent::create(array_merge([
+            'amount' => $amount * 100,
+            'currency' => option('ww.merx.currency'),
+            'capture_method' => 'manual',
+            'payment_method_types' => ['card'],
+        ], $params), $options);
+
+        return $intent;
+    }
+
+
+    public static function getStripePaymentIntent(string $paymentIntentId): ApiResource
+    {
+        self::setStripeApiKey();
+
+        $intent = \Stripe\PaymentIntent::retrieve($paymentIntentId);
+        return $intent;
+    }
+
+
     public static function createStripeSource(float $amount, string $type = 'sofort', array $data = []): ApiResource
     {
         self::setStripeApiKey();
