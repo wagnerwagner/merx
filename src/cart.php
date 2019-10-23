@@ -109,7 +109,7 @@ class Cart extends ProductList
     }
 
     /**
-     * Get client secret of Stripe’s PaymentIntent.
+     * Get Stripe’s PaymentIntent.
      */
 
     public function getStripePaymentIntent(): object
