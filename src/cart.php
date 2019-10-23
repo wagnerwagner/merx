@@ -112,9 +112,9 @@ class Cart extends ProductList
      * Get client secret of Stripe’s PaymentIntent.
      */
 
-    public function getStripePaymentIntentClientSecret(): string
+    public function getStripePaymentIntent(): object
     {
-        return Payment::createStripePaymentIntent($this->getSum())->client_secret;
+        return Payment::createStripePaymentIntent($this->getSum());
     }
 
 
