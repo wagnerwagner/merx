@@ -65,7 +65,7 @@ Gateways::$gateways['credit-card'] = [
     },
 ];
 
-Gateways::$gateways['credit-card-intent'] = [
+Gateways::$gateways['credit-card-sca'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage
     {
         $stripePaymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
