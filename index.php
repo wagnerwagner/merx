@@ -40,6 +40,11 @@ function calculateTax(float $grossPrice, float $tax): float
     return Merx::calculateTax($grossPrice, $tax);
 }
 
+function calculateNet(float $grossPrice, float $tax): float
+{
+    return Merx::calculateNet($grossPrice, $tax);
+}
+
 function crossfoot(int $int){
     $r = 0;
     foreach(str_split($int) as $v) $r += $v;

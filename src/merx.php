@@ -24,6 +24,7 @@ class Merx
         $this->gateways = array_merge(Gateways::$gateways, option('ww.merx.gateways', []));
     }
 
+
     /**
      * Localizes the price. Currency symbol is shown before or after price based on the locale information.
      */
@@ -49,6 +50,13 @@ class Merx
     }
 
 
+    /**
+     * Helper method to format IBAN (DE00 0000 0000 0000 00)
+     *
+     * @param string $iban E.g. DE0000000000000000
+     *
+     * @return string
+     */
     public static function formatIBAN(string $iban): string
     {
         $ibanArray = str_split($iban, 4);
@@ -70,6 +78,25 @@ class Merx
     }
 
 
+    /**
+     * Helper method to calculate net price
+     *
+     * @param float $grossPrice Price excluding tax. E.g. 99.99
+     * @param float $tax In percent. E.g. 19
+     *
+     * @return float
+     */
+    public static function calculateNet(float $grossPrice, float $tax): float
+    {
+        return $grossPrice - self::calculateTax($grossPrice, $tax);
+    }
+
+
+    /**
+     * Returns visitors cart.
+     *
+     * @param array $data Optional data to create a new cart.
+     */
     public function cart(?array $data = null): Cart
     {
         if ($data) {
