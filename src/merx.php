@@ -67,7 +67,7 @@ class Merx
     /**
      * Helper method to calculate tax
      *
-     * @param float $grossPrice Price excluding tax. E.g. 99.99
+     * @param float $grossPrice Price including tax. E.g. 99.99
      * @param float $tax In percent. E.g. 19
      *
      * @return float
@@ -81,7 +81,7 @@ class Merx
     /**
      * Helper method to calculate net price
      *
-     * @param float $grossPrice Price excluding tax. E.g. 99.99
+     * @param float $grossPrice Price including tax. E.g. 99.99
      * @param float $tax In percent. E.g. 19
      *
      * @return float
