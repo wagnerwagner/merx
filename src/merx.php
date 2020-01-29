@@ -26,7 +26,7 @@ class Merx
 
 
     /**
-     * Localizes the price. Currency symbol is shown before or after price based on the locale information.
+     * Localizes the price. Currency symbol is shown before or after price based on arguments, options or `localeconv`.
      *
      * @param float $price
      * @param bool $currencyPositionPrecedes `true` if currency symbol precedes, `false` if it succeeds one
