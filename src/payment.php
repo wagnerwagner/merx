@@ -39,6 +39,7 @@ class Payment
     public static function createPayPalPayment(float $total): HttpResponse
     {
         $client = self::getPayPalClient();
+        $siteTitle = (string)site()->title();
 
         $request = new OrdersCreateRequest();
         $applicationContext = array_merge([
@@ -46,12 +47,13 @@ class Payment
             'return_url' => url(option('ww.merx.successPage')),
             'user_action' => 'PAY_NOW',
             'shipping_preference' => 'NO_SHIPPING',
-            'brand_name' => (string)site()->title(),
+            'brand_name' => $siteTitle,
         ], option('ww.merx.paypal.applicationContext', []));
         $request->body = [
             "intent" => "CAPTURE",
             "purchase_units" => [
                 [
+                    "description" => $siteTitle,
                     "amount" => [
                         "value" => (string)round($total, 2),
                         "currency_code" => option('ww.merx.currency'),
