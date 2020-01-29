@@ -15,6 +15,29 @@ final class MerxTest extends TestCase
             Merx::formatPrice(10.20)
         );
     }
+    public function testFormatPriceDE(): void
+    {
+        setlocale(LC_ALL, 'de_DE');
+        $this->assertEquals(
+            '10,20 €',
+            Merx::formatPrice(10.20, false, true)
+        );
+    }
+    public function testFormatPrice1(): void
+    {
+        setlocale(LC_ALL, 'C');
+        $this->assertEquals(
+            '€ 11.99',
+            Merx::formatPrice(11.99, true)
+        );
+    }
+    public function testFormatPrice2(): void
+    {
+        $this->assertEquals(
+            '1984.12 €',
+            Merx::formatPrice(1984.12, false)
+        );
+    }
 
     public function testFormatIBAN(): void
     {

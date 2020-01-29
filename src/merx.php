@@ -27,21 +27,33 @@ class Merx
 
     /**
      * Localizes the price. Currency symbol is shown before or after price based on the locale information.
+     *
+     * @param float $price
+     * @param bool $currencyPositionPrecedes `true` if currency symbol precedes, `false` if it succeeds one
+     * @param bool $currencySeperateBySpace `true` if a space separates currency_symbol, `false` otherwise
+     *
+     * @return string
      */
-    public static function formatPrice(float $price): string
+    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, $currencySeperateBySpace = null): string
     {
         $localeFormatting = localeconv();
+        if ($currencyPositionPrecedes === null) {
+            $currencyPositionPrecedes = option('ww.merx.currencyPositionPrecedes', $localeFormatting['p_cs_precedes']);
+        }
+        if ($currencySeperateBySpace === null) {
+            $currencySeperateBySpace = option('ww.merx.currencySeperateBySpace', $localeFormatting['p_sep_by_space']);
+        }
 
         $string = '';
-        if ($localeFormatting['p_cs_precedes']) {
+        if ($currencyPositionPrecedes) {
             $string .= option('ww.merx.currencySymbol', '€');
-            if ($localeFormatting['p_sep_by_space']) {
+            if ($currencySeperateBySpace) {
                 $string .= ' '; // non breaking space
             }
         }
         $string .= number_format($price, 2, $localeFormatting['decimal_point'] ?? '.', $localeFormatting['thousands_sep'] ?? ',');
-        if (!$localeFormatting['p_cs_precedes']) {
-            if ($localeFormatting['p_sep_by_space']) {
+        if (!$currencyPositionPrecedes) {
+            if ($currencySeperateBySpace) {
                 $string .= ' '; // non breaking space
             }
             $string .= option('ww.merx.currencySymbol', '€');
