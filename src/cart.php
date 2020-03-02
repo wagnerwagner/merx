@@ -124,6 +124,7 @@ class Cart extends ProductList
     public function delete(): void
     {
         kirby()->session()->remove($this->sessionName);
+        $this->data = [];
     }
 
 
