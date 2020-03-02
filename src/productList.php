@@ -105,8 +105,8 @@ class ProductList extends Collection
             $value['tax'] = 0;
         }
 
-        $value['sum'] = (string)($value['price'] * $value['quantity']);
-        $value['sumTax'] = (string)($value['tax'] * $value['quantity']);
+        $value['sum'] = (float)($value['price'] * $value['quantity']);
+        $value['sumTax'] = (float)($value['tax'] * $value['quantity']);
 
         if ($value['quantity'] < 0) {
             throw new \Exception('Quantity cannot be negative.');
@@ -160,6 +160,7 @@ class ProductList extends Collection
             $item['price'] = Merx::formatPrice((float)$item['price']);
             $item['tax'] = Merx::formatPrice((float)$item['tax']);
             $item['sum'] = Merx::formatPrice((float)($item['sum']));
+            $item['sumTax'] = Merx::formatPrice((float)($item['sumTax']));
             return $item;
         }, $this->values());
     }
