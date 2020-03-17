@@ -31,6 +31,16 @@ class Gateways {
 Gateways::$gateways['paypal'] = [
     'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage
     {
+        if (option('ww.merx.production') === true) {
+            if (option('ww.merx.paypal.live.clientID') === null && option('ww.merx.paypal.live.secret') === null) {
+                throw new Exception('Missing PayPal live keys');
+            }
+        } else {
+            if (option('ww.merx.paypal.sandbox.clientID') === null && option('ww.merx.paypal.sandbox.secret') === null) {
+                throw new Exception('Missing PayPal sandbox keys');
+            }
+        }
+
         $response = Payment::createPayPalPayment($virtualOrderPage->cart()->getSum());
         $virtualOrderPage->content()->update([
             'orderId' => $response->result->id,
