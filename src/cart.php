@@ -135,4 +135,36 @@ class Cart extends ProductList
         kirby()->session()->set($this->sessionName, $this->toArray());
         return $this;
     }
+
+
+    public function toPayPalPurchaseUnits(): array
+    {
+        $siteTitle = site()->title();
+        $total = $this->getSum();
+        return [
+            [
+                "description" => (string)$siteTitle,
+                "amount" => [
+                    "value" => (string)round($total, 2),
+                    "currency_code" => option('ww.merx.currency'),
+                    "breakdown" => [
+                        "item_total" => [
+                            "value" => (string)round($total, 2),
+                            "currency_code" => option('ww.merx.currency'),
+                        ],
+                    ],
+                ],
+                "items" => array_map(function ($cartItem) {
+                    return [
+                        'name' => $cartItem['title'],
+                        'unit_amount' => [
+                            "value" => (string)round($cartItem['price'], 2),
+                            "currency_code" => option('ww.merx.currency'),
+                        ],
+                        'quantity' => $cartItem['quantity'],
+                    ];
+                }, $this->values()),
+            ],
+        ];
+    }
 }
