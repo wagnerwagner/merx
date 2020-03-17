@@ -42,6 +42,7 @@ class Payment
         $siteTitle = (string)site()->title();
 
         $request = new OrdersCreateRequest();
+
         $applicationContext = array_merge([
             'cancel_url' => url(option('ww.merx.successPage')),
             'return_url' => url(option('ww.merx.successPage')),
@@ -49,9 +50,11 @@ class Payment
             'shipping_preference' => 'NO_SHIPPING',
             'brand_name' => $siteTitle,
         ], option('ww.merx.paypal.applicationContext', []));
-        $request->body = [
-            "intent" => "CAPTURE",
-            "purchase_units" => [
+
+        if (option('ww.merx.paypal.purchaseUnits')) {
+            $purchaseUnits = option('ww.merx.paypal.purchaseUnits')();
+        } else {
+            $purchaseUnits = [
                 [
                     "description" => $siteTitle,
                     "amount" => [
@@ -59,7 +62,11 @@ class Payment
                         "currency_code" => option('ww.merx.currency'),
                     ],
                 ],
-            ],
+            ];
+        }
+        $request->body = [
+            "intent" => "CAPTURE",
+            "purchase_units" => $purchaseUnits,
             "application_context" => $applicationContext,
         ];
 
