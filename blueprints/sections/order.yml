@@ -14,13 +14,16 @@ fields:
         type: text
       quantity:
         label: Quantity
-        type: text
+        type: number
+        required: true
       price:
         label: Price
-        type: text
+        type: number
+        required: true
       tax:
         label: Tax
-        type: text
+        type: number
+        required: true
   infoOrder:
     label: Info
     type: info
