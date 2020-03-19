@@ -116,6 +116,19 @@ class Cart extends ProductList
 
     public function getStripePaymentIntent(): object
     {
+        if ($this->getSum() === 0.0) {
+            // set language for single language installations
+            if (!option('languages', false) && option('locale', false)) {
+                $lang = substr(option('locale'), 0, 2);
+                kirby()->setCurrentTranslation($lang);
+                kirby()->setCurrentLanguage($lang);
+            }
+
+            throw new Exception([
+                'key' => 'merx.emptycart',
+                'httpCode' => 400,
+            ]);
+        }
         return Payment::createStripePaymentIntent($this->getSum());
     }
 
@@ -145,11 +158,11 @@ class Cart extends ProductList
             [
                 "description" => (string)$siteTitle,
                 "amount" => [
-                    "value" => (string)round($total, 2),
+                    "value" => number_format($total, 2, '.', ''),
                     "currency_code" => option('ww.merx.currency'),
                     "breakdown" => [
                         "item_total" => [
-                            "value" => (string)round($total, 2),
+                            "value" => number_format($total, 2, '.', ''),
                             "currency_code" => option('ww.merx.currency'),
                         ],
                     ],
@@ -158,7 +171,7 @@ class Cart extends ProductList
                     return [
                         'name' => $cartItem['title'],
                         'unit_amount' => [
-                            "value" => (string)round($cartItem['price'], 2),
+                            "value" => number_format($cartItem['price'], 2, '.', ''),
                             "currency_code" => option('ww.merx.currency'),
                         ],
                         'quantity' => $cartItem['quantity'],
