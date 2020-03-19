@@ -1,9 +1,9 @@
 <?php
 
-namespace BraintreeHttp\Serializer;
+namespace PayPalHttp\Serializer;
 
-use BraintreeHttp\HttpRequest;
-use BraintreeHttp\Serializer;
+use PayPalHttp\HttpRequest;
+use PayPalHttp\Serializer;
 
 class Form implements Serializer
 {

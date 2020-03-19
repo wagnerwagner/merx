@@ -1,10 +1,10 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
 /**
  * Class HttpRequest
- * @package BraintreeHttp
+ * @package PayPalHttp
  *
  * Request object that holds all the necessary information required by HTTPClient
  *

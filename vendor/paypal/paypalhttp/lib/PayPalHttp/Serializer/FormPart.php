@@ -1,6 +1,6 @@
 <?php
 
-namespace BraintreeHttp\Serializer;
+namespace PayPalHttp\Serializer;
 
 class FormPart
 {

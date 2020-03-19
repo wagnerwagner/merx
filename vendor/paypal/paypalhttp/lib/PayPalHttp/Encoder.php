@@ -1,15 +1,15 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
-use BraintreeHttp\Serializer\Form;
-use BraintreeHttp\Serializer\Json;
-use BraintreeHttp\Serializer\Multipart;
-use BraintreeHttp\Serializer\Text;
+use PayPalHttp\Serializer\Form;
+use PayPalHttp\Serializer\Json;
+use PayPalHttp\Serializer\Multipart;
+use PayPalHttp\Serializer\Text;
 
 /**
  * Class Encoder
- * @package BraintreeHttp
+ * @package PayPalHttp
  *
  * Encoding class for serializing and deserializing request/response.
  */
@@ -25,40 +25,51 @@ class Encoder
         $this->serializers[] = new Form();
     }
 
+
+
     public function serializeRequest(HttpRequest $request)
     {
-        if (!array_key_exists('Content-Type', $request->headers)) {
-            throw new \Exception("HttpRequest does not have Content-Type header set");
+        if (!array_key_exists('content-type', $request->headers)) {
+            $message = "HttpRequest does not have Content-Type header set";
+            echo $message;
+            throw new \Exception($message);
         }
 
-        $contentType = $request->headers['Content-Type'];
+        $contentType = $request->headers['content-type'];
         /** @var Serializer $serializer */
         $serializer = $this->serializer($contentType);
 
         if (is_null($serializer)) {
-            throw new \Exception(sprintf("Unable to serialize request with Content-Type: %s. Supported encodings are: %s", $contentType, implode(", ", $this->supportedEncodings())));
+            $message = sprintf("Unable to serialize request with Content-Type: %s. Supported encodings are: %s", $contentType, implode(", ", $this->supportedEncodings()));
+            echo $message;
+            throw new \Exception($message);
         }
 
         if (!(is_string($request->body) || is_array($request->body))) {
-            throw new \Exception(sprintf("Body must be either string or array"));
+            $message = "Body must be either string or array";
+            echo $message;
+            throw new \Exception($message);
         }
 
         $serialized = $serializer->encode($request);
 
-        if (array_key_exists("Content-Encoding", $request->headers) && $request->headers["Content-Encoding"] === "gzip") {
+        if (array_key_exists("content-encoding", $request->headers) && $request->headers["content-encoding"] === "gzip") {
             $serialized = gzencode($serialized);
         }
-
         return $serialized;
     }
 
+
     public function deserializeResponse($responseBody, $headers)
     {
-        if (!array_key_exists('Content-Type', $headers)) {
-            throw new \Exception("HTTP response does not have Content-Type header set");
+
+        if (!array_key_exists('content-type', $headers)) {
+            $message = "HTTP response does not have Content-Type header set";
+            echo $message;
+            throw new \Exception($message);
         }
 
-        $contentType = $headers['Content-Type'];
+        $contentType = $headers['content-type'];
         /** @var Serializer $serializer */
         $serializer = $this->serializer($contentType);
 
@@ -66,7 +77,7 @@ class Encoder
             throw new \Exception(sprintf("Unable to deserialize response with Content-Type: %s. Supported encodings are: %s", $contentType, implode(", ", $this->supportedEncodings())));
         }
 
-        if (array_key_exists("Content-Encoding", $headers) && $headers["Content-Encoding"] === "gzip") {
+        if (array_key_exists("content-encoding", $headers) && $headers["content-encoding"] === "gzip") {
             $responseBody = gzdecode($responseBody);
         }
 
@@ -82,7 +93,9 @@ class Encoder
                     return $serializer;
                 }
             } catch (\Exception $ex) {
-                throw new \Exception(sprintf("Error while checking content type of %s: %s", get_class($serializer), $ex->getMessage()), $ex->getCode(), $ex);
+                $message = sprintf("Error while checking content type of %s: %s", get_class($serializer), $ex->getMessage());
+                echo $message;
+                throw new \Exception($message, $ex->getCode(), $ex);
             }
         }
 

@@ -1,10 +1,10 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
 /**
  * Interface Serializer
- * @package BraintreeHttp
+ * @package PayPalHttp
  *
  * Used to implement different serializers for different content types
  */

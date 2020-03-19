@@ -1,16 +1,16 @@
 <?php
 
-namespace BraintreeHttp\Serializer;
+namespace PayPalHttp\Serializer;
 
 use finfo;
-use BraintreeHttp\HttpRequest;
-use BraintreeHttp\Serializer;
-use BraintreeHttp\Encoder;
-use BraintreeHttp\Serializer\FormPart;
+use PayPalHttp\HttpRequest;
+use PayPalHttp\Serializer;
+use PayPalHttp\Encoder;
+use PayPalHttp\Serializer\FormPart;
 
 /**
  * Class Multipart
- * @package BraintreeHttp\Serializer
+ * @package PayPalHttp\Serializer
  *
  * Serializer for multipart.
  */
@@ -27,12 +27,11 @@ class Multipart implements Serializer
     {
         if (!is_array($request->body) || !$this->isAssociative($request->body))
         {
-            throw new \Exception("HttpRequest body must be an associative array when Content-Type is: " . $request->headers["Content-Type"]);
+            throw new \Exception("HttpRequest body must be an associative array when Content-Type is: " . $request->headers["content-type"]);
         }
-
         $boundary = "---------------------" . md5(mt_rand() . microtime());
-        $contentTypeHeader = $request->headers["Content-Type"];
-        $request->headers["Content-Type"] = "{$contentTypeHeader}; boundary={$boundary}";
+        $contentTypeHeader = $request->headers["content-type"];
+        $request->headers["content-type"] = "{$contentTypeHeader}; boundary={$boundary}";
 
         $value_params = [];
         $file_params = [];
@@ -109,12 +108,13 @@ class Multipart implements Serializer
         $contentDisposition = "Content-Disposition: form-data; name=\"{$partName}\"";
 
         $partHeaders = $formPart->getHeaders();
-        if (array_key_exists("Content-Type", $partHeaders)) {
-            if ($partHeaders["Content-Type"] === "application/json") {
+        $formattedheaders = array_change_key_case($partHeaders);
+        if (array_key_exists("content-type", $formattedheaders)) {
+            if ($formattedheaders["content-type"] === "application/json") {
                 $contentDisposition .= "; filename=\"{$partName}.json\"";
             }
             $tempRequest = new HttpRequest('/', 'POST');
-            $tempRequest->headers = $partHeaders;
+            $tempRequest->headers = $formattedheaders;
             $tempRequest->body = $formPart->getValue();
             $encoder = new Encoder();
             $partValue = $encoder->serializeRequest($tempRequest);

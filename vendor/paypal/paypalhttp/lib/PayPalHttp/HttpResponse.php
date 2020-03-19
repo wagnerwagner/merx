@@ -1,10 +1,10 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
 /**
  * Class HttpResponse
- * @package BraintreeHttp
+ * @package PayPalHttp
  *
  * Object that holds your response details
  */

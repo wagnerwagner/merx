@@ -1,10 +1,10 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
 /**
  * Class HttpClient
- * @package BraintreeHttp
+ * @package PayPalHttp
  *
  * Client used to make HTTP requests.
  */
@@ -64,15 +64,18 @@ class HttpClient
             $inj->inject($requestCpy);
         }
 
-        if (!array_key_exists("User-Agent", $requestCpy->headers)) {
-            $requestCpy->headers["User-Agent"] = $this->userAgent();
-        }
-
         $url = $this->environment->baseUrl() . $requestCpy->path;
+        $formattedHeaders = $this->prepareHeaders($requestCpy->headers);
+        if (!array_key_exists("user-agent", $formattedHeaders)) {
+            $requestCpy->headers["user-agent"] = $this->userAgent();
+        }
 
         $body = "";
         if (!is_null($requestCpy->body)) {
+            $rawHeaders = $requestCpy->headers;
+            $requestCpy->headers = $formattedHeaders;
             $body = $this->encoder->serializeRequest($requestCpy);
+            $requestCpy->headers = $this->mapHeaders($rawHeaders,$requestCpy->headers);
         }
 
         $curl->setOpt(CURLOPT_URL, $url);
@@ -101,13 +104,40 @@ class HttpClient
     }
 
     /**
+     * Returns an array representing headers with their keys
+     * to be lower case
+     * @param $headers
+     * @return array
+     */
+    public function prepareHeaders($headers){
+        return array_change_key_case($headers);
+    }
+
+    /**
+     * Returns an array representing headers with their key in
+     * original cases and updated values
+     * @param $rawHeaders
+     * @param $formattedHeaders
+     * @return array
+     */
+    public function mapHeaders($rawHeaders, $formattedHeaders){
+        $rawHeadersKey = array_keys($rawHeaders);
+        foreach ($rawHeadersKey as $array_key) {
+            if(array_key_exists(strtolower($array_key), $formattedHeaders)){
+                $rawHeaders[$array_key] = $formattedHeaders[strtolower($array_key)];
+            }
+        }
+        return $rawHeaders;
+    }
+
+    /**
      * Returns default user-agent
      *
      * @return string
      */
     public function userAgent()
     {
-        return "BraintreeHttp-PHP HTTP/1.1";
+        return "PayPalHttp-PHP HTTP/1.1";
     }
 
     /**
@@ -173,7 +203,7 @@ class HttpClient
             $responseBody = NULL;
 
             if (!empty($body)) {
-                $responseBody = $this->encoder->deserializeResponse($body, $headers);
+                $responseBody = $this->encoder->deserializeResponse($body, $this->prepareHeaders($headers));
             }
 
             return new HttpResponse(

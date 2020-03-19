@@ -1,7 +1,7 @@
 <?php
 namespace Wagnerwagner\Merx;
 
-use BraintreeHttp\HttpResponse;
+use PayPalHttp\HttpResponse;
 use PayPalCheckoutSdk\Core\PayPalHttpClient;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
 use PayPalCheckoutSdk\Core\ProductionEnvironment;

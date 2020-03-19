@@ -1,10 +1,10 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
 /**
  * Interface Environment
- * @package BraintreeHttp
+ * @package PayPalHttp
  *
  * Describes a domain that hosts a REST API, against which an HttpClient will make requests.
  * @see HttpClient

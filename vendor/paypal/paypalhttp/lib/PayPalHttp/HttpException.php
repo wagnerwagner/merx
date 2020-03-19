@@ -1,6 +1,6 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
 class HttpException extends IOException
 {

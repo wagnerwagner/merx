@@ -1,10 +1,10 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
 /**
  * Class Curl
- * @package BraintreeHttp
+ * @package PayPalHttp
  *
  * Curl wrapper used by HttpClient to make curl requests.
  * @see HttpClient

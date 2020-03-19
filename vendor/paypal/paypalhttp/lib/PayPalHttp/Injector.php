@@ -1,10 +1,10 @@
 <?php
 
-namespace BraintreeHttp;
+namespace PayPalHttp;
 
 /**
  * Interface Injector
- * @package BraintreeHttp
+ * @package PayPalHttp
  *
  * Interface that can be implemented to apply injectors to Http client.
  *

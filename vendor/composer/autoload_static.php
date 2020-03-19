@@ -18,11 +18,8 @@ class ComposerStaticInit1a6b0deb482e2dc1bcccd797ab955784
         ),
         'P' => 
         array (
+            'PayPalHttp\\' => 11,
             'PayPalCheckoutSdk\\' => 18,
-        ),
-        'B' => 
-        array (
-            'BraintreeHttp\\' => 14,
         ),
     );
 
@@ -39,32 +36,17 @@ class ComposerStaticInit1a6b0deb482e2dc1bcccd797ab955784
         array (
             0 => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/samples',
         ),
+        'PayPalHttp\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp',
+        ),
         'PayPalCheckoutSdk\\' => 
         array (
             0 => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/lib/PayPalCheckoutSdk',
         ),
-        'BraintreeHttp\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp',
-        ),
     );
 
     public static $classMap = array (
-        'BraintreeHttp\\Curl' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Curl.php',
-        'BraintreeHttp\\Encoder' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Encoder.php',
-        'BraintreeHttp\\Environment' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Environment.php',
-        'BraintreeHttp\\HttpClient' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/HttpClient.php',
-        'BraintreeHttp\\HttpException' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/HttpException.php',
-        'BraintreeHttp\\HttpRequest' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/HttpRequest.php',
-        'BraintreeHttp\\HttpResponse' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/HttpResponse.php',
-        'BraintreeHttp\\IOException' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/IOException.php',
-        'BraintreeHttp\\Injector' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Injector.php',
-        'BraintreeHttp\\Serializer' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Serializer.php',
-        'BraintreeHttp\\Serializer\\Form' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Serializer/Form.php',
-        'BraintreeHttp\\Serializer\\FormPart' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Serializer/FormPart.php',
-        'BraintreeHttp\\Serializer\\Json' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Serializer/Json.php',
-        'BraintreeHttp\\Serializer\\Multipart' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Serializer/Multipart.php',
-        'BraintreeHttp\\Serializer\\Text' => __DIR__ . '/..' . '/braintree/braintreehttp/lib/BraintreeHttp/Serializer/Text.php',
         'PayPalCheckoutSdk\\Core\\AccessToken' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/lib/PayPalCheckoutSdk/Core/AccessToken.php',
         'PayPalCheckoutSdk\\Core\\AccessTokenRequest' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/lib/PayPalCheckoutSdk/Core/AccessTokenRequest.php',
         'PayPalCheckoutSdk\\Core\\AuthorizationInjector' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/lib/PayPalCheckoutSdk/Core/AuthorizationInjector.php',
@@ -90,6 +72,21 @@ class ComposerStaticInit1a6b0deb482e2dc1bcccd797ab955784
         'PayPalCheckoutSdk\\Payments\\CapturesGetRequest' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/lib/PayPalCheckoutSdk/Payments/CapturesGetRequest.php',
         'PayPalCheckoutSdk\\Payments\\CapturesRefundRequest' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/lib/PayPalCheckoutSdk/Payments/CapturesRefundRequest.php',
         'PayPalCheckoutSdk\\Payments\\RefundsGetRequest' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/lib/PayPalCheckoutSdk/Payments/RefundsGetRequest.php',
+        'PayPalHttp\\Curl' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Curl.php',
+        'PayPalHttp\\Encoder' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Encoder.php',
+        'PayPalHttp\\Environment' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Environment.php',
+        'PayPalHttp\\HttpClient' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/HttpClient.php',
+        'PayPalHttp\\HttpException' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/HttpException.php',
+        'PayPalHttp\\HttpRequest' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/HttpRequest.php',
+        'PayPalHttp\\HttpResponse' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/HttpResponse.php',
+        'PayPalHttp\\IOException' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/IOException.php',
+        'PayPalHttp\\Injector' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Injector.php',
+        'PayPalHttp\\Serializer' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Serializer.php',
+        'PayPalHttp\\Serializer\\Form' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Serializer/Form.php',
+        'PayPalHttp\\Serializer\\FormPart' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Serializer/FormPart.php',
+        'PayPalHttp\\Serializer\\Json' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Serializer/Json.php',
+        'PayPalHttp\\Serializer\\Multipart' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Serializer/Multipart.php',
+        'PayPalHttp\\Serializer\\Text' => __DIR__ . '/..' . '/paypal/paypalhttp/lib/PayPalHttp/Serializer/Text.php',
         'Sample\\AuthorizeIntentExamples\\AuthorizeOrder' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/samples/AuthorizeIntentExamples/AuthorizeOrder.php',
         'Sample\\AuthorizeIntentExamples\\CaptureOrder' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/samples/AuthorizeIntentExamples/CaptureOrder.php',
         'Sample\\AuthorizeIntentExamples\\CreateOrder' => __DIR__ . '/..' . '/paypal/paypal-checkout-sdk/samples/AuthorizeIntentExamples/CreateOrder.php',

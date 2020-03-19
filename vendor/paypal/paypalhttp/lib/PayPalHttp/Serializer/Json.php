@@ -1,13 +1,13 @@
 <?php
 
-namespace BraintreeHttp\Serializer;
+namespace PayPalHttp\Serializer;
 
-use BraintreeHttp\HttpRequest;
-use BraintreeHttp\Serializer;
+use PayPalHttp\HttpRequest;
+use PayPalHttp\Serializer;
 
 /**
  * Class Json
- * @package BraintreeHttp\Serializer
+ * @package PayPalHttp\Serializer
  *
  * Serializer for JSON content types.
  */
