@@ -196,7 +196,7 @@ class Merx
                 ]);
             }
 
-            // check if paymentMethod existst
+            // check if paymentMethod exists
             if (!array_key_exists('paymentMethod', $data) || Str::length($data['paymentMethod']) === 0) {
                 throw new Exception([
                     'key' => 'merx.noPaymentMethod',
