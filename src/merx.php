@@ -36,6 +36,12 @@ class Merx
      */
     public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, $currencySeperateBySpace = null): string
     {
+        // set locale for single language installations
+        if (!option('languages', false) && option('locale', false)) {
+            $locale = substr(option('locale'), 0, 5);
+            setlocale(LC_ALL, $locale);
+        }
+
         $localeFormatting = localeconv();
         if ($currencyPositionPrecedes === null) {
             $currencyPositionPrecedes = option('ww.merx.currencyPositionPrecedes', $localeFormatting['p_cs_precedes']);

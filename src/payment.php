@@ -58,7 +58,7 @@ class Payment
                 [
                     "description" => $siteTitle,
                     "amount" => [
-                        "value" => (string)round($total, 2),
+                        "value" => number_format($total, 2, '.', ''),
                         "currency_code" => option('ww.merx.currency'),
                     ],
                 ],
