@@ -92,7 +92,7 @@ Kirby::plugin('ww/merx', [
             'error.merx.fieldsvalidation' => 'Felder sind invalide.',
             'error.merx.emptycart' => 'Der Warenkorb ist leer.',
             'error.merx.completePayment' => 'Die Bezahlung konnte nicht abgeschlossen werden.',
-            'error.merx.paymentCanceled' => 'Du hast die Bezahlung abgebrochen.',
+            'error.merx.paymentCanceled' => 'Die Bezahlung wurde abgebrochen.',
             'error.merx.cart.add' => 'Produkt "{id}" konnte nicht zum Warenkorb hinzugefügt werden.',
             'error.merx.cart.update' => 'Produkte konnten nicht aktualisiert werden.',
             'error.merx.order.changeNum' => 'Die Position einer vollständigen Bestellung kann nicht geändert werden.',
