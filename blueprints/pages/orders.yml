@@ -11,6 +11,7 @@ options:
   delete: false
   preview: false
   update: false
+  duplicate: false
 
 sections:
   orders: sections/orders

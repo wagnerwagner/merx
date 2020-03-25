@@ -10,6 +10,7 @@ options:
   changeTemplate: false
   changeTitle: false
   delete: false
+  duplicate: false
 
 tabs:
   overview:
