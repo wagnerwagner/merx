@@ -60,9 +60,67 @@ final class ProductListTest extends TestCase
     }
 
 
+    public function testTax(): void
+    {
+        $productList = new ProductList([
+            'nice-shoes' => [
+                'price' => 99.99,
+                'taxRate' => 19,
+            ],
+            'nice-socks' => [
+                'price' => 14.99,
+                'quantity' => 2,
+                'taxRate' => 7,
+            ],
+            't-shirt' => [
+                'price' => 19.99,
+                'quantity' => 2,
+                'tax' => 5,
+            ],
+            'shipping' => [
+                'price' => 4.99,
+                'taxRate' => 0,
+            ],
+        ]);
+
+        $this->assertEquals(
+            99.99 / (19 + 100) * 19,
+            $productList->get('nice-shoes')['sumTax']
+        );
+
+        $this->assertEquals(
+            14.99 * 2 / (7 + 100) * 7,
+            $productList->get('nice-socks')['sumTax']
+        );
+
+        $this->assertEquals(
+            5 * 2,
+            $productList->get('t-shirt')['sumTax']
+        );
+        $this->assertEquals(
+            0.0,
+            $productList->get('t-shirt')['taxRate']
+        );
+
+        $this->assertEquals(
+            [
+                [
+                    'taxRate' => 7,
+                    'sum' => 14.99 * 2 / (7 + 100) * 7,
+                ],
+                [
+                    'taxRate' => 19,
+                    'sum' => 99.99 / (19 + 100) * 19,
+                ],
+            ],
+            $productList->getTaxRates()
+        );
+    }
+
+
     public function testGetFormattedItems(): void
     {
-        $productList = new ProductList(['nice-shoes' => ['price' => 99.99]]);
+        $productList = new ProductList(['nice-shoes' => ['price' => 99.99, 'quantity' => 2]]);
 
         $this->assertEquals(
             'nice-shoes',
@@ -73,6 +131,12 @@ final class ProductListTest extends TestCase
             '€ 99.99',
             $productList->getFormattedItems()[0]['price']
         );
+
+        $this->assertEquals(
+            '€ 199.98',
+            $productList->getFormattedItems()[0]['sum']
+        );
+
 
         $this->assertEquals(
             '€ 0.00',

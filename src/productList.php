@@ -94,31 +94,37 @@ class ProductList extends Collection
             if (!isset($value['price'])) {
                 $value['price'] = $page->price()->toFloat();
             }
+            if (!isset($value['taxRate'])) {
+                $value['taxRate'] = $page->tax()->toFloat();
+            }
             if (!isset($value['tax'])) {
-                $value['tax'] = Merx::calculateTax($value['price'], $page->tax()->toFloat());
+                $value['tax'] = Merx::calculateTax($value['price'], $value['taxRate']);
             }
         }
         if (!isset($value['price'])) {
             throw new \Exception('You have to provide a "price" or a valid "id".');
         }
+        if (!array_key_exists('taxRate', $value)) {
+            $value['taxRate'] = 0;
+        }
         if (!array_key_exists('tax', $value)) {
-            $value['tax'] = 0;
+            $value['tax'] = Merx::calculateTax($value['price'], $value['taxRate']);
         }
 
         $value['sum'] = (float)($value['price'] * $value['quantity']);
         $value['sumTax'] = (float)($value['tax'] * $value['quantity']);
 
         if ($value['quantity'] < 0) {
-            throw new \Exception('Quantity cannot be negative.');
+            throw new \Exception('The quantity of the cart must not be negative.');
         }
         $this->data[strtolower($key)] = $value;
 
         if ($this->getTax() < 0) {
-            throw new \Exception('Tax of Cart must be positive');
+            throw new \Exception('The tax of the cart must not be negative');
         }
 
         if ($this->getSum() < 0) {
-            throw new \Exception('Sum of Cart must be positive');
+            throw new \Exception('The sum of the cart must not be negative');
         }
 
         return $this;
@@ -135,6 +141,33 @@ class ProductList extends Collection
             $tax += (float)$item['quantity'] * ((float)$item['tax'] ?? 0);
         }
         return $tax;
+    }
+
+
+    /**
+     * Taxes grouped by tax rate
+     */
+    public function getTaxRates(): array
+    {
+        $taxRates = array_unique($this->pluck('taxRate'));
+        $taxRates = array_filter($taxRates, function ($taxRate) {
+            return (float)$taxRate !== (float)0;
+        });
+        sort($taxRates);
+        $taxRates = array_map(function($taxRate) {
+            $sum = 0;
+            foreach ($this->data() as $item) {
+                if ($item['taxRate'] === $taxRate) {
+                    $sum += (float)$item['sumTax'];
+                }
+            }
+            return [
+                'taxRate' => (float)$taxRate,
+                'sum' => (float)$sum,
+            ];
+        }, $taxRates);
+
+        return $taxRates;
     }
 
 
