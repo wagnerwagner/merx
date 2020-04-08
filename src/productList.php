@@ -98,7 +98,7 @@ class ProductList extends Collection
                 $value['price'] = $page->price()->toFloat();
             }
             if (!isset($value['taxRate'])) {
-                $value['taxRate'] = $page->tax()->toFloat();
+                $value['taxRate'] = $page->tax() ? $page->tax()->toFloat() : 0;
             }
             if (!isset($value['tax'])) {
                 $value['tax'] = Merx::calculateTax($value['price'], $value['taxRate']);
