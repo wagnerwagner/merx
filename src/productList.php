@@ -87,6 +87,9 @@ class ProductList extends Collection
         if (!isset($value['quantity'])) {
             $value['quantity'] = 1;
         }
+        if (isset($value['taxrate'])) {
+            $value['taxRate'] = $value['taxrate'];
+        }
         if ($page = page($value['id'])) {
             if (!isset($value['title'])) {
                 $value['title'] = $page->title()->toString();
