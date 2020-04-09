@@ -27,7 +27,7 @@ class Cart extends ProductList
     /**
      * Adds item to cart.
      *
-     * @param array $cartItem Must contain a valid product page slug as id.
+     * @param array $cartItem Must contain a valid page slug as id. The page must have a price field.
      * @throws Exception error.merx.cart.add
      */
     public function add(array $cartItem): self
