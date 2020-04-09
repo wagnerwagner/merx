@@ -113,7 +113,6 @@ class Cart extends ProductList
     /**
      * Get Stripe’s PaymentIntent.
      */
-
     public function getStripePaymentIntent(): object
     {
         if ($this->getSum() === 0.0) {
@@ -150,7 +149,12 @@ class Cart extends ProductList
     }
 
 
-    public function toPayPalPurchaseUnits(): array
+    /**
+     * Returns an array in the format of PayPal’s purchase_unit_request.
+     *
+     * @since 1.3.0
+     */
+    public function payPalPurchaseUnits(): array
     {
         $siteTitle = site()->title();
         $total = $this->getSum();
@@ -169,7 +173,7 @@ class Cart extends ProductList
                 ],
                 "items" => array_map(function ($cartItem) {
                     return [
-                        'name' => $cartItem['title'],
+                        'name' => $cartItem['title'] ?? $cartItem['id'],
                         'unit_amount' => [
                             "value" => number_format($cartItem['price'], 2, '.', ''),
                             "currency_code" => option('ww.merx.currency'),
