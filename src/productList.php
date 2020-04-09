@@ -91,23 +91,23 @@ class ProductList extends Collection
             $value['taxRate'] = $value['taxrate'];
         }
         if ($page = page($value['id'])) {
-            if (!array_key_exists('title', $value)) {
+            if (!isset($value['title'])) {
                 $value['title'] = $page->title()->toString();
             }
-            if (!array_key_exists('price', $value)) {
+            if (!isset($value['price'])) {
                 $value['price'] = $page->price()->toFloat();
             }
-            if (!array_key_exists('taxRate', $value)) {
-                $value['taxRate'] = $page->tax() ? $page->tax()->toFloat() : 0;
+            if (!isset($value['taxRate'])) {
+                $value['taxRate'] = $page->tax()->exists() ? $page->tax()->toFloat() : 0;
             }
         }
         if (!isset($value['price'])) {
             throw new \Exception('You have to provide a "price" or a valid "id".');
         }
-        if (!array_key_exists('taxRate', $value)) {
+        if (!isset($value['taxRate'])) {
             $value['taxRate'] = 0;
         }
-        if (!array_key_exists('tax', $value)) {
+        if (!isset($value['tax'])) {
             $value['tax'] = Merx::calculateTax($value['price'], $value['taxRate']);
         }
 
