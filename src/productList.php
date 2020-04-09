@@ -117,6 +117,11 @@ class ProductList extends Collection
         if ($value['quantity'] < 0) {
             throw new \Exception('The quantity of the cart must not be negative.');
         }
+
+        if ($key !== $value['id']) {
+            $key = $value['id'];
+        }
+
         $this->data[strtolower($key)] = $value;
 
         if ($this->getTax() < 0) {
