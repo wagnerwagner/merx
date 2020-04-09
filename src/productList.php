@@ -91,17 +91,14 @@ class ProductList extends Collection
             $value['taxRate'] = $value['taxrate'];
         }
         if ($page = page($value['id'])) {
-            if (!isset($value['title'])) {
+            if (!array_key_exists('title', $value)) {
                 $value['title'] = $page->title()->toString();
             }
-            if (!isset($value['price'])) {
+            if (!array_key_exists('price', $value)) {
                 $value['price'] = $page->price()->toFloat();
             }
-            if (!isset($value['taxRate'])) {
+            if (!array_key_exists('taxRate', $value)) {
                 $value['taxRate'] = $page->tax() ? $page->tax()->toFloat() : 0;
-            }
-            if (!isset($value['tax'])) {
-                $value['tax'] = Merx::calculateTax($value['price'], $value['taxRate']);
             }
         }
         if (!isset($value['price'])) {
