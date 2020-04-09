@@ -38,6 +38,19 @@ final class MerxTest extends TestCase
             Merx::formatPrice(1984.12, false)
         );
     }
+    public function testFormatPriceThousandsSep(): void
+    {
+        $this->app = new Kirby\Cms\App([
+            'options' => [
+                'ww.merx.currencyThousandsSeparator' => ','
+            ],
+        ]);
+
+        $this->assertEquals(
+            '1,984.12 €',
+            Merx::formatPrice(1984.12, false)
+        );
+    }
 
     public function testFormatIBAN(): void
     {

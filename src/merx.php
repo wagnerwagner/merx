@@ -57,6 +57,12 @@ class Merx
                 $string .= ' '; // non breaking space
             }
         }
+        if (option('ww.merx.currencyDecimalPoint', false)) {
+            $localeFormatting['decimal_point'] = option('ww.merx.currencyDecimalPoint');
+        }
+        if (option('ww.merx.currencyThousandsSeparator', false)) {
+            $localeFormatting['thousands_sep'] = option('ww.merx.currencyThousandsSeparator');
+        }
         $string .= number_format($price, 2, $localeFormatting['decimal_point'] ?? '.', $localeFormatting['thousands_sep'] ?? ',');
         if (!$currencyPositionPrecedes) {
             if ($currencySeperateBySpace) {
