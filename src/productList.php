@@ -149,6 +149,7 @@ class ProductList extends Collection
 
     /**
      * Taxes grouped by tax rate
+     * @since 1.3.0
      */
     public function getTaxRates(): array
     {
