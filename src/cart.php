@@ -39,8 +39,8 @@ class Cart extends ProductList
             $page = page($cartItem['id']);
             if (!$page) {
                 throw new \Exception('Page not found.');
-            } else if ((string)$page->intendedTemplate() !== 'product') {
-                throw new \Exception('Page is not a product page.');
+            } else if (!$page->price()->exists()) {
+                throw new \Exception('Page must have a price field.');
             }
 
             $this->append($cartItem);
