@@ -30,11 +30,11 @@ class Merx
      *
      * @param float $price
      * @param bool $currencyPositionPrecedes `true` if currency symbol precedes, `false` if it succeeds one
-     * @param bool $currencySeperateBySpace `true` if a space separates currency_symbol, `false` otherwise
+     * @param bool $currencySeparateBySpace `true` if a space separates currency_symbol, `false` otherwise
      *
      * @return string
      */
-    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, $currencySeperateBySpace = null): string
+    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, $currencySeparateBySpace = null): string
     {
         // set locale for single language installations
         if (!option('languages', false) && option('locale', false)) {
@@ -46,14 +46,14 @@ class Merx
         if ($currencyPositionPrecedes === null) {
             $currencyPositionPrecedes = option('ww.merx.currencyPositionPrecedes', $localeFormatting['p_cs_precedes']);
         }
-        if ($currencySeperateBySpace === null) {
-            $currencySeperateBySpace = option('ww.merx.currencySeperateBySpace', $localeFormatting['p_sep_by_space']);
+        if ($currencySeparateBySpace === null) {
+            $currencySeparateBySpace = option('ww.merx.currencySeparateBySpace', $localeFormatting['p_sep_by_space']);
         }
 
         $string = '';
         if ($currencyPositionPrecedes) {
             $string .= option('ww.merx.currencySymbol', '€');
-            if ($currencySeperateBySpace) {
+            if ($currencySeparateBySpace) {
                 $string .= ' '; // non breaking space
             }
         }
@@ -65,7 +65,7 @@ class Merx
         }
         $string .= number_format($price, 2, $localeFormatting['decimal_point'] ?? '.', $localeFormatting['thousands_sep'] ?? ',');
         if (!$currencyPositionPrecedes) {
-            if ($currencySeperateBySpace) {
+            if ($currencySeparateBySpace) {
                 $string .= ' '; // non breaking space
             }
             $string .= option('ww.merx.currencySymbol', '€');

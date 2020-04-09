@@ -25,9 +25,9 @@ function productList(array $data = []): ProductList
     return new ProductList($data);
 }
 
-function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeperateBySpace = null): string
+function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null): string
 {
-    return Merx::formatPrice($price, $currencyPositionPrecedes, $currencySeperateBySpace);
+    return Merx::formatPrice($price, $currencyPositionPrecedes, $currencySeparateBySpace);
 }
 
 function formatIBAN(string $iban): string
