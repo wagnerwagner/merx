@@ -159,6 +159,17 @@ class Cart extends ProductList
     {
         $siteTitle = site()->title();
         $total = $this->getSum();
+        $discount = 0;
+        foreach ($this->values() as $cartItem) {
+            if ($cartItem['price'] <= 0) {
+                $discount += $cartItem['sum'];
+            }
+        }
+        $discount = $discount * -1;
+        $itemTotal = $total + $discount;
+        $items = array_filter($this->values(), function ($cartItem) {
+            return $cartItem['price'] > 0;
+        });
         return [
             [
                 "description" => (string)$siteTitle,
@@ -167,9 +178,13 @@ class Cart extends ProductList
                     "currency_code" => option('ww.merx.currency'),
                     "breakdown" => [
                         "item_total" => [
-                            "value" => number_format($total, 2, '.', ''),
+                            "value" => number_format($itemTotal, 2, '.', ''),
                             "currency_code" => option('ww.merx.currency'),
                         ],
+                        "discount" => [
+                            "value" => number_format($discount, 2, '.', ''),
+                            "currency_code" => option('ww.merx.currency'),
+                       ],
                     ],
                 ],
                 "items" => array_map(function ($cartItem) {
@@ -181,7 +196,7 @@ class Cart extends ProductList
                         ],
                         'quantity' => $cartItem['quantity'],
                     ];
-                }, $this->values()),
+                }, $items),
             ],
         ];
     }
