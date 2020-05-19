@@ -101,7 +101,7 @@ class ProductList extends Collection
                 $value['taxRate'] = $page->tax()->exists() ? $page->tax()->toFloat() : 0;
             }
             foreach (option('ww.merx.cart.fields', []) as $fieldName) {
-                $fieldValue = $page->content()->get($fieldName);
+                $fieldValue = $page->{$fieldName}();
                 if ($fieldValue->isNotEmpty()) {
                     $value[$fieldName] = $fieldValue->toString();
                 }
