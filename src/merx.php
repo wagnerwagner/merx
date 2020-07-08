@@ -261,6 +261,7 @@ class Merx
                 'details' => [
                     'message' => $ex->getMessage(),
                 ],
+                'previous' => $ex,
                 'data' => [
                     'exception' => $ex,
                 ],
@@ -292,7 +293,9 @@ class Merx
 
             kirby()->impersonate('kirby');
             $ordersPage = page(option('ww.merx.ordersPage', 'orders'));
-            $orderPage = $ordersPage->createChild($virtualOrderPage->toArray())->publish()->changeStatus('listed');
+            $virtualOrderPageArray = $virtualOrderPage->toArray();
+            $virtualOrderPageArray['template'] = $virtualOrderPageArray['template']->name();
+            $orderPage = $ordersPage->createChild($virtualOrderPageArray)->publish()->changeStatus('listed');
 
             $this->cart->delete();
             kirby()->session()->remove('ww.merx.virtualOrderPage');
@@ -307,6 +310,7 @@ class Merx
             throw new Exception([
                 'key' => 'merx.completePayment',
                 'httpCode' => 500,
+                'previous' => $ex,
                 'details' => [
                     'message' => $ex->getMessage(),
                 ],
