@@ -186,7 +186,7 @@ class Merx
             $cart = $this->cart;
 
             // run hook
-            Merx::triggerHook('ww.merx.initializePayment:before', [$data, $cart]);
+            Merx::triggerHook('ww.merx.initializePayment:before', compact('data', 'cart'));
 
             // check cart
             if ($cart->count() <= 0) {
@@ -248,7 +248,7 @@ class Merx
             kirby()->session()->set('ww.merx.virtualOrderPage', $virtualOrderPage->toArray());
 
             // run hook
-            Merx::triggerHook('ww.merx.initializePayment:after', [$virtualOrderPage, $redirect]);
+            Merx::triggerHook('ww.merx.initializePayment:after', compact('virtualOrderPage', 'redirect'));
 
             return $redirect;
         } catch (\Exception $ex) {
@@ -280,7 +280,7 @@ class Merx
             $virtualOrderPage = $this->getVirtualOrderPageFromSession();
             $gateway = $this->getGateway($virtualOrderPage->paymentMethod()->toString());
 
-            Merx::triggerHook('ww.merx.completePayment:before', [$virtualOrderPage, $gateway, $data]);
+            Merx::triggerHook('ww.merx.completePayment:before', compact('virtualOrderPage', 'gateway', 'data'));
 
             if (is_callable($gateway['completePayment'])) {
                 $gateway['completePayment']($virtualOrderPage, $data);
@@ -297,7 +297,7 @@ class Merx
             $this->cart->delete();
             kirby()->session()->remove('ww.merx.virtualOrderPage');
 
-            Merx::triggerHook('ww.merx.completePayment:after', [$orderPage]);
+            Merx::triggerHook('ww.merx.completePayment:after', compact('orderPage'));
 
             return $orderPage;
         } catch (\Exception $ex) {
