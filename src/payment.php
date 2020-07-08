@@ -89,7 +89,7 @@ class Payment
         self::setStripeApiKey();
 
         $intent = \Stripe\PaymentIntent::create(array_merge([
-            'amount' => $amount * 100,
+            'amount' => round($amount * 100),
             'currency' => option('ww.merx.currency'),
             'capture_method' => 'manual',
             'payment_method_types' => ['card'],
@@ -114,7 +114,7 @@ class Payment
 
         $params = array_merge([
             "type" => $type,
-            "amount" => $amount * 100,
+            "amount" => round($amount * 100),
             "currency" => option('ww.merx.currency'),
             "redirect" => [
                 "return_url" => url(option('ww.merx.successPage')),
@@ -139,7 +139,7 @@ class Payment
     {
         self::setStripeApiKey();
         $charge = Charge::create(array(
-            'amount'   => $amount * 100,
+            'amount'   => round($amount * 100),
             'currency' => option('ww.merx.currency'),
             'source' => $source,
         ));

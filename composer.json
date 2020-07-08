@@ -20,7 +20,7 @@
         "paypal/paypal-checkout-sdk": "^1.0.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^7",
+        "phpunit/phpunit": "^9",
         "getkirby/cms": "^3.1"
     },
     "autoload": {

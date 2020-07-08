@@ -100,6 +100,12 @@ class ProductList extends Collection
             if (!isset($value['taxRate'])) {
                 $value['taxRate'] = $page->tax()->exists() ? $page->tax()->toFloat() : 0;
             }
+            foreach (option('ww.merx.cart.fields', []) as $fieldName) {
+                $fieldValue = $page->{$fieldName}();
+                if ($fieldValue->isNotEmpty()) {
+                    $value[$fieldName] = $fieldValue->toString();
+                }
+            }
         }
         if (!isset($value['price'])) {
             throw new \Exception('You have to provide a "price" or a valid "id".');
