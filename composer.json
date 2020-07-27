@@ -16,7 +16,7 @@
     },
     "require": {
         "getkirby/composer-installer": "^1.1",
-        "stripe/stripe-php": "^6.28",
+        "stripe/stripe-php": "^7.44",
         "paypal/paypal-checkout-sdk": "^1.0.0"
     },
     "require-dev": {
