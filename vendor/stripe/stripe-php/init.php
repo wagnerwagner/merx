@@ -1,5 +1,7 @@
 <?php
 
+// File generated from our OpenAPI spec
+
 // Stripe singleton
 require __DIR__ . '/lib/Stripe.php';
 
@@ -122,6 +124,7 @@ require __DIR__ . '/lib/Person.php';
 require __DIR__ . '/lib/Plan.php';
 require __DIR__ . '/lib/Price.php';
 require __DIR__ . '/lib/Product.php';
+require __DIR__ . '/lib/PromotionCode.php';
 require __DIR__ . '/lib/Radar/EarlyFraudWarning.php';
 require __DIR__ . '/lib/Radar/ValueList.php';
 require __DIR__ . '/lib/Radar/ValueListItem.php';
@@ -131,6 +134,7 @@ require __DIR__ . '/lib/Refund.php';
 require __DIR__ . '/lib/Reporting/ReportRun.php';
 require __DIR__ . '/lib/Reporting/ReportType.php';
 require __DIR__ . '/lib/Review.php';
+require __DIR__ . '/lib/SetupAttempt.php';
 require __DIR__ . '/lib/SetupIntent.php';
 require __DIR__ . '/lib/Sigma/ScheduledQueryRun.php';
 require __DIR__ . '/lib/SKU.php';
@@ -189,6 +193,7 @@ require __DIR__ . '/lib/Service/PayoutService.php';
 require __DIR__ . '/lib/Service/PlanService.php';
 require __DIR__ . '/lib/Service/PriceService.php';
 require __DIR__ . '/lib/Service/ProductService.php';
+require __DIR__ . '/lib/Service/PromotionCodeService.php';
 require __DIR__ . '/lib/Service/Radar/EarlyFraudWarningService.php';
 require __DIR__ . '/lib/Service/Radar/ValueListService.php';
 require __DIR__ . '/lib/Service/Radar/ValueListItemService.php';
@@ -196,6 +201,7 @@ require __DIR__ . '/lib/Service/RefundService.php';
 require __DIR__ . '/lib/Service/Reporting/ReportRunService.php';
 require __DIR__ . '/lib/Service/Reporting/ReportTypeService.php';
 require __DIR__ . '/lib/Service/ReviewService.php';
+require __DIR__ . '/lib/Service/SetupAttemptService.php';
 require __DIR__ . '/lib/Service/SetupIntentService.php';
 require __DIR__ . '/lib/Service/Sigma/ScheduledQueryRunService.php';
 require __DIR__ . '/lib/Service/SkuService.php';

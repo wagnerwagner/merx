@@ -1,5 +1,7 @@
 <?php
 
+// File generated from our OpenAPI spec
+
 namespace Stripe;
 
 /**
@@ -18,7 +20,7 @@ namespace Stripe;
  * @property int $balance Current balance, if any, being stored on the customer. If negative, the customer has credit to apply to their next invoice. If positive, the customer has an amount owed that will be added to their next invoice. The balance does not refer to any unpaid invoices; it solely takes into account amounts that have yet to be successfully applied to any invoice. This balance is only taken into account as invoices are finalized.
  * @property int $created Time at which the object was created. Measured in seconds since the Unix epoch.
  * @property null|string $currency Three-letter <a href="https://stripe.com/docs/currencies">ISO code for the currency</a> the customer can be charged in for recurring billing purposes.
- * @property null|string|\Stripe\StripeObject $default_source <p>ID of the default payment source for the customer.</p><p>If you are using payment methods created via the PaymentMethods API, see the <a href="https://stripe.com/docs/api/customers/object#customer_object-invoice_settings-default_payment_method">invoice_settings.default_payment_method</a> field instead.</p>
+ * @property null|string|\Stripe\Account|\Stripe\AlipayAccount|\Stripe\BankAccount|\Stripe\BitcoinReceiver|\Stripe\Card|\Stripe\Source $default_source <p>ID of the default payment source for the customer.</p><p>If you are using payment methods created via the PaymentMethods API, see the <a href="https://stripe.com/docs/api/customers/object#customer_object-invoice_settings-default_payment_method">invoice_settings.default_payment_method</a> field instead.</p>
  * @property null|bool $delinquent When the customer's latest invoice is billed by charging automatically, delinquent is true if the invoice's latest charge is failed. When the customer's latest invoice is billed by sending an invoice, delinquent is true if the invoice is not paid by its due date.
  * @property null|string $description An arbitrary string attached to the object. Often useful for displaying to users.
  * @property null|\Stripe\Discount $discount Describes the current discount active on the customer, if there is one.
@@ -33,7 +35,7 @@ namespace Stripe;
  * @property null|string[] $preferred_locales The customer's preferred locales (languages), ordered by preference.
  * @property null|\Stripe\StripeObject $shipping Mailing and shipping address for the customer. Appears on invoices emailed to this customer.
  * @property \Stripe\Collection $sources The customer's payment sources, if any.
- * @property null|\Stripe\Collection $subscriptions The customer's current subscriptions, if any.
+ * @property \Stripe\Collection $subscriptions The customer's current subscriptions, if any.
  * @property null|string $tax_exempt Describes the customer's tax exemption status. One of <code>none</code>, <code>exempt</code>, or <code>reverse</code>. When set to <code>reverse</code>, invoice and receipt PDFs include the text <strong>&quot;Reverse charge&quot;</strong>.
  * @property \Stripe\Collection $tax_ids The customer's tax IDs.
  */
