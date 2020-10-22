@@ -37,9 +37,7 @@ class ProductList extends Collection
             $item = $args[0];
             $this->set($item['id'], $item);
         } else if (count($args) === 2) {
-            $item = $args[1];
-            $item['id'] = $args[0];
-            $this->set($args[0], $item);
+            $this->set($args[0], $args[1]);
         }
 
         return $this;
@@ -123,6 +121,9 @@ class ProductList extends Collection
         if ($value['quantity'] < 0) {
             throw new \Exception('The quantity of the cart must not be negative.');
         }
+
+        $value['key'] = $key;
+
         $this->data[strtolower($key)] = $value;
 
         if ($this->getTax() < 0) {
