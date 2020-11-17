@@ -9,6 +9,7 @@ use Kirby\Toolkit\A;
  * [
  *   [
  *     'id' => string 'nice-shoes'
+ *     'key' => string 'nice-shoes'
  *     'title' => string 'Nice Shoes',
  *     'quantity' => float 2.0,
  *     'price' => float 45.0,
@@ -23,7 +24,7 @@ class ProductList extends Collection
     /**
      * Appends item to ProductList
      *
-     * @param mixed $args `($data)` or `($id, $data)`. $data must contain a valid product page id.
+     * @param mixed $args `($data)` or `($id, $data)`.
      */
     public function append(...$args): self
     {
@@ -31,11 +32,12 @@ class ProductList extends Collection
             if (!is_array($args[0])) {
                 throw new \Exception('First argument has to be an array');
             }
-            if (!array_key_exists('id', $args[0])) {
-                throw new \Exception('Array must have an id');
-            }
             $item = $args[0];
-            $this->set($item['id'], $item);
+            $item['key'] = $item['key'] ?? $item['id'];
+            if (!array_key_exists('key', $item)) {
+                throw new \Exception('Array must have a ‘key’ or ‘id’');
+            }
+            $this->set($item['key'], $item);
         } else if (count($args) === 2) {
             $this->set($args[0], $args[1]);
         }
@@ -51,21 +53,22 @@ class ProductList extends Collection
      */
     public function updateItem(array $item): self
     {
-        if (!array_key_exists('id', $item)) {
-            throw new \Exception('Array must have an id');
+        $item['key'] = $item['key'] ?? $item['id'];
+        if (!array_key_exists('key', $item)) {
+            throw new \Exception('Array must have a ‘key’ or ‘id’');
         }
-        $id = $item['id'];
-        $existingItem = $this->get($id);
+        $key = $item['key'];
+        $existingItem = $this->get($key);
         $quantity = $item['quantity'] ?? $existingItem['quantity'];
         if ($existingItem) {
             if ($quantity <= 0) {
-                $this->remove($id);
+                $this->remove($key);
             } else {
                 $existingItem = A::merge($existingItem, $item, A::MERGE_OVERWRITE);
-                $this->set($id, $existingItem);
+                $this->set($key, $existingItem);
             }
         } else if ($quantity > 0) {
-            $this->set($id, $item);
+            $this->set($key, $item);
         }
         return $this;
     }
