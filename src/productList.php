@@ -101,6 +101,9 @@ class ProductList extends Collection
             if (!isset($value['template'])) {
                 $value['template'] = $page->intendedTemplate()->name();
             }
+            if (!isset($value['uid'])) {
+                $value['uid'] = $page->uid();
+            }
             foreach (option('ww.merx.cart.fields', []) as $fieldName) {
                 $fieldValue = $page->{$fieldName}();
                 if ($fieldValue->isNotEmpty()) {
