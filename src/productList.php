@@ -98,6 +98,9 @@ class ProductList extends Collection
             if (!isset($value['taxRate'])) {
                 $value['taxRate'] = $page->tax()->exists() ? $page->tax()->toFloat() : 0;
             }
+            if (!isset($value['template'])) {
+                $value['template'] = $page->intendedTemplate()->name();
+            }
             foreach (option('ww.merx.cart.fields', []) as $fieldName) {
                 $fieldValue = $page->{$fieldName}();
                 if ($fieldValue->isNotEmpty()) {
