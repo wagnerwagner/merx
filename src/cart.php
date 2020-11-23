@@ -121,8 +121,13 @@ class Cart extends ProductList
 
     /**
      * Get Stripe’s PaymentIntent.
+     *
+     * @param null|array $params Additional parameters used by \Stripe\PaymentIntent::create().
+     * @param null|array|\Stripe\Util\RequestOptions $options Additional options used by \Stripe\PaymentIntent::create().
+     *
+     * @return \Stripe\PaymentIntent
      */
-    public function getStripePaymentIntent(): object
+    public function getStripePaymentIntent(?array $params = [], $options = []): object
     {
         if ($this->getSum() === 0.0) {
             // set language for single language installations
@@ -137,7 +142,7 @@ class Cart extends ProductList
                 'httpCode' => 400,
             ]);
         }
-        return Payment::createStripePaymentIntent($this->getSum());
+        return Payment::createStripePaymentIntent($this->getSum(), $params, $options);
     }
 
 
