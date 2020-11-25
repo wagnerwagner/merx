@@ -162,8 +162,8 @@ class Merx
     /**
      * Creates virtual OrderPage and validates it. Runs payment gateway’s initializePayment function. Saves virtual OrderPage in user session.
      *
-     * @param array $data Content of `OrderPage`. Must contain `paymentMethod`.
-     * @return string `option('ww.merx.successPage')` or result of `initializePayment()` of `paymentMethod` gateway.
+     * @param array $data Content of `OrderPage`. Must contain `paymentMethod`.
+     * @return string `option('ww.merx.successPage')` or result of `initializePayment()` of `paymentMethod` gateway.
      */
     public function initializePayment(array $data): string
     {
@@ -329,7 +329,7 @@ class Merx
 
 
     /**
-     * Returns and removes message stored by `Merx::setMessage()`.
+     * Returns and removes message stored by `Merx::setMessage()`.
      *
      * @return null|mixed
      */
