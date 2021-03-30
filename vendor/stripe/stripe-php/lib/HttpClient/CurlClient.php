@@ -26,15 +26,15 @@ if (!\defined('CURL_HTTP_VERSION_2TLS')) {
 
 class CurlClient implements ClientInterface
 {
-    private static $instance;
+    protected static $instance;
 
     public static function instance()
     {
-        if (!self::$instance) {
-            self::$instance = new self();
+        if (!static::$instance) {
+            static::$instance = new static();
         }
 
-        return self::$instance;
+        return static::$instance;
     }
 
     protected $defaultOptions;
@@ -237,7 +237,7 @@ class CurlClient implements ClientInterface
         // add an Idempotency-Key header
         if (('post' === $method) && (Stripe::$maxNetworkRetries > 0)) {
             if (!$this->hasHeader($headers, 'Idempotency-Key')) {
-                \array_push($headers, 'Idempotency-Key: ' . $this->randomGenerator->uuid());
+                $headers[] = 'Idempotency-Key: ' . $this->randomGenerator->uuid();
             }
         }
 
@@ -253,7 +253,7 @@ class CurlClient implements ClientInterface
         // we'll error under that condition. To compensate for that problem
         // for the time being, override cURL's behavior by simply always
         // sending an empty `Expect:` header.
-        \array_push($headers, 'Expect: ');
+        $headers[] = 'Expect: ';
 
         $absUrl = Util\Util::utf8($absUrl);
         $opts[\CURLOPT_URL] = $absUrl;
@@ -271,6 +271,10 @@ class CurlClient implements ClientInterface
             $opts[\CURLOPT_HTTP_VERSION] = \CURL_HTTP_VERSION_2TLS;
         }
 
+        // Stripe's API servers are only accessible over IPv4. Force IPv4 resolving to avoid
+        // potential issues (cf. https://github.com/stripe/stripe-php/issues/1045).
+        $opts[\CURLOPT_IPRESOLVE] = \CURL_IPRESOLVE_V4;
+
         list($rbody, $rcode, $rheaders) = $this->executeRequestWithRetries($opts, $absUrl);
 
         return [$rbody, $rcode, $rheaders];
@@ -283,7 +287,6 @@ class CurlClient implements ClientInterface
     private function executeRequestWithRetries($opts, $absUrl)
     {
         $numRetries = 0;
-        $isPost = \array_key_exists(\CURLOPT_POST, $opts) && 1 === $opts[\CURLOPT_POST];
 
         while (true) {
             $rcode = 0;
@@ -363,6 +366,7 @@ class CurlClient implements ClientInterface
                  . 'https://twitter.com/stripestatus, or';
 
                 break;
+
             case \CURLE_SSL_CACERT:
             case \CURLE_SSL_PEER_CERTIFICATE:
                 $msg = "Could not verify Stripe's SSL certificate.  Please make sure "
@@ -371,6 +375,7 @@ class CurlClient implements ClientInterface
                  . 'If this problem persists,';
 
                 break;
+
             default:
                 $msg = 'Unexpected error communicating with Stripe.  '
                  . 'If this problem persists,';

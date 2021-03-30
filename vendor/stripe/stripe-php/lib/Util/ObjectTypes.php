@@ -1,5 +1,7 @@
 <?php
 
+// File generated from our OpenAPI spec
+
 namespace Stripe\Util;
 
 class ObjectTypes
@@ -17,6 +19,7 @@ class ObjectTypes
         \Stripe\Balance::OBJECT_NAME => \Stripe\Balance::class,
         \Stripe\BalanceTransaction::OBJECT_NAME => \Stripe\BalanceTransaction::class,
         \Stripe\BankAccount::OBJECT_NAME => \Stripe\BankAccount::class,
+        \Stripe\BillingPortal\Configuration::OBJECT_NAME => \Stripe\BillingPortal\Configuration::class,
         \Stripe\BillingPortal\Session::OBJECT_NAME => \Stripe\BillingPortal\Session::class,
         \Stripe\BitcoinReceiver::OBJECT_NAME => \Stripe\BitcoinReceiver::class,
         \Stripe\BitcoinTransaction::OBJECT_NAME => \Stripe\BitcoinTransaction::class,
@@ -61,6 +64,7 @@ class ObjectTypes
         \Stripe\Plan::OBJECT_NAME => \Stripe\Plan::class,
         \Stripe\Price::OBJECT_NAME => \Stripe\Price::class,
         \Stripe\Product::OBJECT_NAME => \Stripe\Product::class,
+        \Stripe\PromotionCode::OBJECT_NAME => \Stripe\PromotionCode::class,
         \Stripe\Radar\EarlyFraudWarning::OBJECT_NAME => \Stripe\Radar\EarlyFraudWarning::class,
         \Stripe\Radar\ValueList::OBJECT_NAME => \Stripe\Radar\ValueList::class,
         \Stripe\Radar\ValueListItem::OBJECT_NAME => \Stripe\Radar\ValueListItem::class,
@@ -70,6 +74,7 @@ class ObjectTypes
         \Stripe\Reporting\ReportRun::OBJECT_NAME => \Stripe\Reporting\ReportRun::class,
         \Stripe\Reporting\ReportType::OBJECT_NAME => \Stripe\Reporting\ReportType::class,
         \Stripe\Review::OBJECT_NAME => \Stripe\Review::class,
+        \Stripe\SetupAttempt::OBJECT_NAME => \Stripe\SetupAttempt::class,
         \Stripe\SetupIntent::OBJECT_NAME => \Stripe\SetupIntent::class,
         \Stripe\Sigma\ScheduledQueryRun::OBJECT_NAME => \Stripe\Sigma\ScheduledQueryRun::class,
         \Stripe\SKU::OBJECT_NAME => \Stripe\SKU::class,

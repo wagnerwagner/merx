@@ -27,6 +27,8 @@ class ApiRequestor
      */
     private static $requestTelemetry;
 
+    private static $OPTIONS_KEYS = ['api_key', 'idempotency_key', 'stripe_account', 'stripe_version', 'api_base'];
+
     /**
      * ApiRequestor constructor.
      *
@@ -185,14 +187,19 @@ class ApiRequestor
                 // no break
             case 404:
                 return Exception\InvalidRequestException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code, $param);
+
             case 401:
                 return Exception\AuthenticationException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code);
+
             case 402:
                 return Exception\CardException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code, $declineCode, $param);
+
             case 403:
                 return Exception\PermissionException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code);
+
             case 429:
                 return Exception\RateLimitException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code, $param);
+
             default:
                 return Exception\UnknownApiErrorException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code);
         }
@@ -216,16 +223,22 @@ class ApiRequestor
         switch ($errorCode) {
             case 'invalid_client':
                 return Exception\OAuth\InvalidClientException::factory($description, $rcode, $rbody, $resp, $rheaders, $errorCode);
+
             case 'invalid_grant':
                 return Exception\OAuth\InvalidGrantException::factory($description, $rcode, $rbody, $resp, $rheaders, $errorCode);
+
             case 'invalid_request':
                 return Exception\OAuth\InvalidRequestException::factory($description, $rcode, $rbody, $resp, $rheaders, $errorCode);
+
             case 'invalid_scope':
                 return Exception\OAuth\InvalidScopeException::factory($description, $rcode, $rbody, $resp, $rheaders, $errorCode);
+
             case 'unsupported_grant_type':
                 return Exception\OAuth\UnsupportedGrantTypeException::factory($description, $rcode, $rbody, $resp, $rheaders, $errorCode);
+
             case 'unsupported_response_type':
                 return Exception\OAuth\UnsupportedResponseTypeException::factory($description, $rcode, $rbody, $resp, $rheaders, $errorCode);
+
             default:
                 return Exception\OAuth\UnknownOAuthErrorException::factory($description, $rcode, $rbody, $resp, $rheaders, $errorCode);
         }
@@ -258,6 +271,27 @@ class ApiRequestor
     /**
      * @static
      *
+     * @param string $disabledFunctionsOutput - String value of the 'disable_function' setting, as output by \ini_get('disable_functions')
+     * @param string $functionName - Name of the function we are interesting in seeing whether or not it is disabled
+     * @param mixed $disableFunctionsOutput
+     *
+     * @return bool
+     */
+    private static function _isDisabled($disableFunctionsOutput, $functionName)
+    {
+        $disabledFunctions = \explode(',', $disableFunctionsOutput);
+        foreach ($disabledFunctions as $disabledFunction) {
+            if (\trim($disabledFunction) === $functionName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @static
+     *
      * @param string $apiKey
      * @param null   $clientInfo
      *
@@ -268,7 +302,7 @@ class ApiRequestor
         $uaString = 'Stripe/v1 PhpBindings/' . Stripe::VERSION;
 
         $langVersion = \PHP_VERSION;
-        $uname_disabled = \in_array('php_uname', \explode(',', \ini_get('disable_functions')), true);
+        $uname_disabled = static::_isDisabled(\ini_get('disable_functions'), 'php_uname');
         $uname = $uname_disabled ? '(disabled)' : \php_uname();
 
         $appInfo = Stripe::getAppInfo();
@@ -329,6 +363,21 @@ class ApiRequestor
             $clientUAInfo = $this->httpClient()->getUserAgentInfo();
         }
 
+        if ($params && \is_array($params)) {
+            $optionKeysInParams = \array_filter(
+                static::$OPTIONS_KEYS,
+                function ($key) use ($params) {
+                    return \array_key_exists($key, $params);
+                }
+            );
+            if (\count($optionKeysInParams) > 0) {
+                $message = \sprintf('Options found in $params: %s. Options should '
+                  . 'be passed in their own array after $params. (HINT: pass an '
+                  . 'empty array to $params if you do not have any.)', \implode(', ', $optionKeysInParams));
+                \trigger_error($message, \E_USER_WARNING);
+            }
+        }
+
         $absUrl = $this->_apiBase . $url;
         $params = self::_encodeObjects($params);
         $defaultHeaders = $this->_defaultHeaders($myApiKey, $clientUAInfo);
@@ -377,9 +426,11 @@ class ApiRequestor
             $hasFile
         );
 
-        if (isset($rheaders['request-id'], $rheaders['request-id'][0])) {
+        if (isset($rheaders['request-id'])
+        && \is_string($rheaders['request-id'])
+        && \strlen($rheaders['request-id']) > 0) {
             self::$requestTelemetry = new RequestTelemetry(
-                $rheaders['request-id'][0],
+                $rheaders['request-id'],
                 Util\Util::currentTimeMillis() - $requestStartMs
             );
         }

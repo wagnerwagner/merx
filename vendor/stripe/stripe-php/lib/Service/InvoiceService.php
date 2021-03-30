@@ -1,5 +1,7 @@
 <?php
 
+// File generated from our OpenAPI spec
+
 namespace Stripe\Service;
 
 class InvoiceService extends \Stripe\Service\AbstractService
@@ -43,7 +45,10 @@ class InvoiceService extends \Stripe\Service\AbstractService
     /**
      * This endpoint creates a draft invoice for a given customer. The draft invoice
      * created pulls in all pending invoice items on that customer, including
-     * prorations.
+     * prorations. The invoice remains a draft until you <a
+     * href="#finalize_invoice">finalize</a> the invoice, which allows you to <a
+     * href="#pay_invoice">pay</a> or <a href="#send_invoice">send</a> the invoice to
+     * your customers.
      *
      * @param null|array $params
      * @param null|array|\Stripe\Util\RequestOptions $opts
@@ -173,8 +178,8 @@ class InvoiceService extends \Stripe\Service\AbstractService
     /**
      * At any time, you can preview the upcoming invoice for a customer. This will show
      * you all the charges that are pending, including subscription renewal charges,
-     * invoice item charges, etc. It will also show you any discount that is applicable
-     * to the customer.
+     * invoice item charges, etc. It will also show you any discounts that are
+     * applicable to the invoice.
      *
      * Note that when you are viewing an upcoming invoice, you are simply viewing a
      * preview – the invoice has not yet been created. As such, the upcoming invoice
