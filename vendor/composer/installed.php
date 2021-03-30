@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '43e9b8ddf195b1a6f540319dd49cda1de074a1b7',
+    'reference' => '7dadf16e0150777a427f56397cbc66af12d0637b',
     'name' => 'wagnerwagner/merx',
   ),
   'versions' => 
@@ -54,7 +54,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '43e9b8ddf195b1a6f540319dd49cda1de074a1b7',
+      'reference' => '7dadf16e0150777a427f56397cbc66af12d0637b',
     ),
   ),
 );

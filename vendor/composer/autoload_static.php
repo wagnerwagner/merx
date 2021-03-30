@@ -320,6 +320,11 @@ class ComposerStaticInit1a6b0deb482e2dc1bcccd797ab955784
         'Stripe\\Webhook' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Webhook.php',
         'Stripe\\WebhookEndpoint' => __DIR__ . '/..' . '/stripe/stripe-php/lib/WebhookEndpoint.php',
         'Stripe\\WebhookSignature' => __DIR__ . '/..' . '/stripe/stripe-php/lib/WebhookSignature.php',
+        'Wagnerwagner\\Merx\\Cart' => __DIR__ . '/../..' . '/src/Cart.php',
+        'Wagnerwagner\\Merx\\Gateways' => __DIR__ . '/../..' . '/src/Gateways.php',
+        'Wagnerwagner\\Merx\\Merx' => __DIR__ . '/../..' . '/src/Merx.php',
+        'Wagnerwagner\\Merx\\Payment' => __DIR__ . '/../..' . '/src/Payment.php',
+        'Wagnerwagner\\Merx\\ProductList' => __DIR__ . '/../..' . '/src/ProductList.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
