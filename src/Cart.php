@@ -27,23 +27,31 @@ class Cart extends ProductList
     /**
      * Adds item to cart.
      *
-     * @param array $cartItem Must contain a valid page slug as id. The page must have a price field.
+     * @param mixed $args `($cartItem)` or `($key, $cartItem)`. $cartItem must contain a valid product page id.
      * @throws Exception error.merx.cart.add
      */
-    public function add(array $cartItem): self
+    public function add(...$args): self
     {
         try {
-            if (!isset($cartItem['id'])) {
-                throw new \Exception('No "id" is provided.');
-            }
-            $page = page($cartItem['id']);
-            if (!$page) {
-                throw new \Exception('Page not found.');
-            } else if (!$page->price()->exists()) {
-                throw new \Exception('Page must have a price field.');
+            if (count($args) === 1) {
+                $cartItem = $args[0];
+                if (!is_array($args[0])) {
+                    throw new \Exception('First argument has to be an array');
+                }
+                if (!isset($cartItem['id'])) {
+                    throw new \Exception('No "id" is provided.');
+                }
+                $page = page($cartItem['id']);
+                if (!$page) {
+                    throw new \Exception('Page not found.');
+                } else if (!$page->price()->exists()) {
+                    throw new \Exception('Page must have a price field.');
+                }
+                $this->append($cartItem);
+            } else if (count($args) === 2) {
+                $this->append($args[0], $args[1]);
             }
 
-            $this->append($cartItem);
             $this->save();
             return $this;
         } catch (\Exception $ex) {
@@ -113,8 +121,13 @@ class Cart extends ProductList
 
     /**
      * Get Stripe’s PaymentIntent.
+     *
+     * @param null|array $params Additional parameters used by \Stripe\PaymentIntent::create().
+     * @param null|array|\Stripe\Util\RequestOptions $options Additional options used by \Stripe\PaymentIntent::create().
+     *
+     * @return \Stripe\PaymentIntent
      */
-    public function getStripePaymentIntent(): object
+    public function getStripePaymentIntent(?array $params = [], $options = []): object
     {
         if ($this->getSum() === 0.0) {
             // set language for single language installations
@@ -130,7 +143,7 @@ class Cart extends ProductList
                 'httpCode' => 400,
             ]);
         }
-        return Payment::createStripePaymentIntent($this->getSum());
+        return Payment::createStripePaymentIntent($this->getSum(), $params, $options);
     }
 
 

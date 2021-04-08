@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "269316ceceb1389f4771138a3a8a511c",
+    "content-hash": "0e6844e48721e9961055fedf05c0b662",
     "packages": [
         {
             "name": "getkirby/composer-installer",
@@ -147,7 +147,6 @@
                 "issues": "https://github.com/paypal/paypalhttp_php/issues",
                 "source": "https://github.com/paypal/paypalhttp_php/tree/1.0.0"
             },
-            "abandoned": true,
             "time": "2019-11-06T21:27:12+00:00"
         },
         {

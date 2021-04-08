@@ -1,12 +1,12 @@
 <?php return array (
   'root' => 
   array (
-    'pretty_version' => 'dev-master',
-    'version' => 'dev-master',
+    'pretty_version' => '1.4.2',
+    'version' => '1.4.2.0',
     'aliases' => 
     array (
     ),
-    'reference' => '7dadf16e0150777a427f56397cbc66af12d0637b',
+    'reference' => NULL,
     'name' => 'wagnerwagner/merx',
   ),
   'versions' => 
@@ -49,12 +49,12 @@
     ),
     'wagnerwagner/merx' => 
     array (
-      'pretty_version' => 'dev-master',
-      'version' => 'dev-master',
+      'pretty_version' => '1.4.2',
+      'version' => '1.4.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => '7dadf16e0150777a427f56397cbc66af12d0637b',
+      'reference' => NULL,
     ),
   ),
 );
