@@ -38,8 +38,7 @@ class Merx
     {
         // set locale for single language installations
         if (!option('languages', false) && option('locale', false)) {
-            $locale = substr(option('locale'), 0, 5);
-            setlocale(LC_ALL, $locale);
+            \Kirby\Toolkit\Locale::set(option('locale'));
         }
 
         $localeFormatting = localeconv();
@@ -162,8 +161,8 @@ class Merx
     /**
      * Creates virtual OrderPage and validates it. Runs payment gateway’s initializePayment function. Saves virtual OrderPage in user session.
      *
-     * @param array $data Content of `OrderPage`. Must contain `paymentMethod`.
-     * @return string `option('ww.merx.successPage')` or result of `initializePayment()` of `paymentMethod` gateway.
+     * @param array $data Content of `OrderPage`. Must contain `paymentMethod`.
+     * @return string `option('ww.merx.successPage')` or result of `initializePayment()` of `paymentMethod` gateway.
      */
     public function initializePayment(array $data): string
     {
@@ -172,7 +171,8 @@ class Merx
 
             // set language for single language installations
             if (!option('languages', false) && option('locale', false)) {
-                $lang = substr(option('locale'), 0, 2);
+                $locale = \Kirby\Toolkit\Locale::normalize(option('locale'));
+                $lang = substr($locale[LC_ALL] ?? $locale[LC_MESSAGES], 0, 2);
                 kirby()->setCurrentTranslation($lang);
                 kirby()->setCurrentLanguage($lang);
             }
@@ -329,7 +329,7 @@ class Merx
 
 
     /**
-     * Returns and removes message stored by `Merx::setMessage()`.
+     * Returns and removes message stored by `Merx::setMessage()`.
      *
      * @return null|mixed
      */
