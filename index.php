@@ -62,6 +62,16 @@ function getShippingName($featureKey)
 }
 function getFeatureName($featureKey)
 {
+    $featureNames = site()->productFlags()->toStructure();
+    foreach ( $featureNames as $feature) {
+        if (strval($feature->productFlags_name()) == $featureKey) {
+            return $feature->productFlags_label();
+        }
+    }
+}
+
+function getBadgeName($featureKey)
+{
     $featureNames = site()->attributefields()->toStructure();
     foreach ( $featureNames as $feature) {
         if (strval($feature->attribute_name()) == $featureKey) {
@@ -69,8 +79,6 @@ function getFeatureName($featureKey)
         }
     }
 }
-
-
 
 
 Kirby::plugin('ww/merx', [
