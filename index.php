@@ -51,36 +51,6 @@ function crossfoot(int $int){
     return $r;
 }
 
-function getShippingName($featureKey)
-{
-    $featureNames = site()->shippingtimes()->toStructure();
-    foreach ( $featureNames as $feature) {
-        if (strval($feature->shippingtime_name()) == $featureKey) {
-            return strval($feature->shippingtime_label()->text());
-        }
-    }
-}
-function getFeatureName($featureKey)
-{
-    $featureNames = site()->productFlags()->toStructure();
-    foreach ( $featureNames as $feature) {
-        if (strval($feature->productFlags_name()) == $featureKey) {
-            return $feature->productFlags_label();
-        }
-    }
-}
-
-function getBadgeName($featureKey)
-{
-    $featureNames = site()->attributefields()->toStructure();
-    foreach ( $featureNames as $feature) {
-        if (strval($feature->attribute_name()) == $featureKey) {
-            return $feature->attribute_label();
-        }
-    }
-}
-
-
 Kirby::plugin('ww/merx', [
     'options' => [
         'successPage' => 'success',
