@@ -132,7 +132,8 @@ class Cart extends ProductList
         if ($this->getSum() === 0.0) {
             // set language for single language installations
             if (!option('languages', false) && option('locale', false)) {
-                $lang = substr(option('locale'), 0, 2);
+                $locale = \Kirby\Toolkit\Locale::normalize(option('locale'));
+                $lang = substr($locale[LC_ALL] ?? $locale[LC_MESSAGES], 0, 2);
                 kirby()->setCurrentTranslation($lang);
                 kirby()->setCurrentLanguage($lang);
             }

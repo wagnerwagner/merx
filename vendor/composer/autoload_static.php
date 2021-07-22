@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitfaee21536052409ad95bc50442763552
+class ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d
 {
     public static $prefixLengthsPsr4 = array (
         'W' => 
@@ -55,6 +55,7 @@ class ComposerStaticInitfaee21536052409ad95bc50442763552
     );
 
     public static $classMap = array (
+        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Kirby\\ComposerInstaller\\CmsInstaller' => __DIR__ . '/..' . '/getkirby/composer-installer/src/ComposerInstaller/CmsInstaller.php',
         'Kirby\\ComposerInstaller\\Installer' => __DIR__ . '/..' . '/getkirby/composer-installer/src/ComposerInstaller/Installer.php',
         'Kirby\\ComposerInstaller\\Plugin' => __DIR__ . '/..' . '/getkirby/composer-installer/src/ComposerInstaller/Plugin.php',
@@ -128,6 +129,7 @@ class ComposerStaticInitfaee21536052409ad95bc50442763552
         'Stripe\\BalanceTransaction' => __DIR__ . '/..' . '/stripe/stripe-php/lib/BalanceTransaction.php',
         'Stripe\\BankAccount' => __DIR__ . '/..' . '/stripe/stripe-php/lib/BankAccount.php',
         'Stripe\\BaseStripeClient' => __DIR__ . '/..' . '/stripe/stripe-php/lib/BaseStripeClient.php',
+        'Stripe\\BillingPortal\\Configuration' => __DIR__ . '/..' . '/stripe/stripe-php/lib/BillingPortal/Configuration.php',
         'Stripe\\BillingPortal\\Session' => __DIR__ . '/..' . '/stripe/stripe-php/lib/BillingPortal/Session.php',
         'Stripe\\BitcoinReceiver' => __DIR__ . '/..' . '/stripe/stripe-php/lib/BitcoinReceiver.php',
         'Stripe\\BitcoinTransaction' => __DIR__ . '/..' . '/stripe/stripe-php/lib/BitcoinTransaction.php',
@@ -220,6 +222,7 @@ class ComposerStaticInitfaee21536052409ad95bc50442763552
         'Stripe\\Service\\BalanceService' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Service/BalanceService.php',
         'Stripe\\Service\\BalanceTransactionService' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Service/BalanceTransactionService.php',
         'Stripe\\Service\\BillingPortal\\BillingPortalServiceFactory' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Service/BillingPortal/BillingPortalServiceFactory.php',
+        'Stripe\\Service\\BillingPortal\\ConfigurationService' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Service/BillingPortal/ConfigurationService.php',
         'Stripe\\Service\\BillingPortal\\SessionService' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Service/BillingPortal/SessionService.php',
         'Stripe\\Service\\ChargeService' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Service/ChargeService.php',
         'Stripe\\Service\\Checkout\\CheckoutServiceFactory' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Service/Checkout/CheckoutServiceFactory.php',
@@ -317,19 +320,19 @@ class ComposerStaticInitfaee21536052409ad95bc50442763552
         'Stripe\\Webhook' => __DIR__ . '/..' . '/stripe/stripe-php/lib/Webhook.php',
         'Stripe\\WebhookEndpoint' => __DIR__ . '/..' . '/stripe/stripe-php/lib/WebhookEndpoint.php',
         'Stripe\\WebhookSignature' => __DIR__ . '/..' . '/stripe/stripe-php/lib/WebhookSignature.php',
-        'Wagnerwagner\\Merx\\Cart' => __DIR__ . '/../..' . '/src/cart.php',
-        'Wagnerwagner\\Merx\\Gateways' => __DIR__ . '/../..' . '/src/gateways.php',
-        'Wagnerwagner\\Merx\\Merx' => __DIR__ . '/../..' . '/src/merx.php',
-        'Wagnerwagner\\Merx\\Payment' => __DIR__ . '/../..' . '/src/payment.php',
-        'Wagnerwagner\\Merx\\ProductList' => __DIR__ . '/../..' . '/src/productList.php',
+        'Wagnerwagner\\Merx\\Cart' => __DIR__ . '/../..' . '/src/Cart.php',
+        'Wagnerwagner\\Merx\\Gateways' => __DIR__ . '/../..' . '/src/Gateways.php',
+        'Wagnerwagner\\Merx\\Merx' => __DIR__ . '/../..' . '/src/Merx.php',
+        'Wagnerwagner\\Merx\\Payment' => __DIR__ . '/../..' . '/src/Payment.php',
+        'Wagnerwagner\\Merx\\ProductList' => __DIR__ . '/../..' . '/src/ProductList.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitfaee21536052409ad95bc50442763552::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitfaee21536052409ad95bc50442763552::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitfaee21536052409ad95bc50442763552::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d::$classMap;
 
         }, null, ClassLoader::class);
     }

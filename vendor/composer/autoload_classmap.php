@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'Kirby\\ComposerInstaller\\CmsInstaller' => $vendorDir . '/getkirby/composer-installer/src/ComposerInstaller/CmsInstaller.php',
     'Kirby\\ComposerInstaller\\Installer' => $vendorDir . '/getkirby/composer-installer/src/ComposerInstaller/Installer.php',
     'Kirby\\ComposerInstaller\\Plugin' => $vendorDir . '/getkirby/composer-installer/src/ComposerInstaller/Plugin.php',
@@ -79,6 +80,7 @@ return array(
     'Stripe\\BalanceTransaction' => $vendorDir . '/stripe/stripe-php/lib/BalanceTransaction.php',
     'Stripe\\BankAccount' => $vendorDir . '/stripe/stripe-php/lib/BankAccount.php',
     'Stripe\\BaseStripeClient' => $vendorDir . '/stripe/stripe-php/lib/BaseStripeClient.php',
+    'Stripe\\BillingPortal\\Configuration' => $vendorDir . '/stripe/stripe-php/lib/BillingPortal/Configuration.php',
     'Stripe\\BillingPortal\\Session' => $vendorDir . '/stripe/stripe-php/lib/BillingPortal/Session.php',
     'Stripe\\BitcoinReceiver' => $vendorDir . '/stripe/stripe-php/lib/BitcoinReceiver.php',
     'Stripe\\BitcoinTransaction' => $vendorDir . '/stripe/stripe-php/lib/BitcoinTransaction.php',
@@ -171,6 +173,7 @@ return array(
     'Stripe\\Service\\BalanceService' => $vendorDir . '/stripe/stripe-php/lib/Service/BalanceService.php',
     'Stripe\\Service\\BalanceTransactionService' => $vendorDir . '/stripe/stripe-php/lib/Service/BalanceTransactionService.php',
     'Stripe\\Service\\BillingPortal\\BillingPortalServiceFactory' => $vendorDir . '/stripe/stripe-php/lib/Service/BillingPortal/BillingPortalServiceFactory.php',
+    'Stripe\\Service\\BillingPortal\\ConfigurationService' => $vendorDir . '/stripe/stripe-php/lib/Service/BillingPortal/ConfigurationService.php',
     'Stripe\\Service\\BillingPortal\\SessionService' => $vendorDir . '/stripe/stripe-php/lib/Service/BillingPortal/SessionService.php',
     'Stripe\\Service\\ChargeService' => $vendorDir . '/stripe/stripe-php/lib/Service/ChargeService.php',
     'Stripe\\Service\\Checkout\\CheckoutServiceFactory' => $vendorDir . '/stripe/stripe-php/lib/Service/Checkout/CheckoutServiceFactory.php',
@@ -268,9 +271,9 @@ return array(
     'Stripe\\Webhook' => $vendorDir . '/stripe/stripe-php/lib/Webhook.php',
     'Stripe\\WebhookEndpoint' => $vendorDir . '/stripe/stripe-php/lib/WebhookEndpoint.php',
     'Stripe\\WebhookSignature' => $vendorDir . '/stripe/stripe-php/lib/WebhookSignature.php',
-    'Wagnerwagner\\Merx\\Cart' => $baseDir . '/src/cart.php',
-    'Wagnerwagner\\Merx\\Gateways' => $baseDir . '/src/gateways.php',
-    'Wagnerwagner\\Merx\\Merx' => $baseDir . '/src/merx.php',
-    'Wagnerwagner\\Merx\\Payment' => $baseDir . '/src/payment.php',
-    'Wagnerwagner\\Merx\\ProductList' => $baseDir . '/src/productList.php',
+    'Wagnerwagner\\Merx\\Cart' => $baseDir . '/src/Cart.php',
+    'Wagnerwagner\\Merx\\Gateways' => $baseDir . '/src/Gateways.php',
+    'Wagnerwagner\\Merx\\Merx' => $baseDir . '/src/Merx.php',
+    'Wagnerwagner\\Merx\\Payment' => $baseDir . '/src/Payment.php',
+    'Wagnerwagner\\Merx\\ProductList' => $baseDir . '/src/ProductList.php',
 );
