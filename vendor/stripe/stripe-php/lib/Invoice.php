@@ -23,7 +23,7 @@ namespace Stripe;
  * to finalize the invoice.
  *
  * If your invoice is configured to be billed by sending an email, then based on
- * your <a href="https://dashboard.stripe.com/account/billing/automatic'">email
+ * your <a href="https://dashboard.stripe.com/account/billing/automatic">email
  * settings</a>, Stripe will email the invoice to your customer and await payment.
  * These emails can contain a link to a hosted page to pay the invoice.
  *
@@ -35,13 +35,8 @@ namespace Stripe;
  * the amount due to the customer's credit balance which is applied to the next
  * invoice.
  *
-<<<<<<< HEAD
- * More details on the customer's account balance are <a
- * href="https://stripe.com/docs/api/customers/object#customer_object-account_balance">here</a>.
-=======
  * More details on the customer's credit balance are <a
  * href="https://stripe.com/docs/billing/customer/balance">here</a>.
->>>>>>> master
  *
  * Related guide: <a href="https://stripe.com/docs/billing/invoices/sending">Send
  * Invoices to Customers</a>.
@@ -58,9 +53,10 @@ namespace Stripe;
  * @property int $attempt_count Number of payment attempts made for this invoice, from the perspective of the payment retry schedule. Any payment attempt counts as the first attempt, and subsequently only automatic retries increment the attempt count. In other words, manual payment attempts after the first attempt do not affect the retry schedule.
  * @property bool $attempted Whether an attempt has been made to pay the invoice. An invoice is not attempted until 1 hour after the <code>invoice.created</code> webhook, for example, so you might not want to display that invoice as unpaid to your users.
  * @property bool $auto_advance Controls whether Stripe will perform <a href="https://stripe.com/docs/billing/invoices/workflow/#auto_advance">automatic collection</a> of the invoice. When <code>false</code>, the invoice's state will not automatically advance without an explicit action.
+ * @property \Stripe\StripeObject $automatic_tax
  * @property null|string $billing_reason Indicates the reason why the invoice was created. <code>subscription_cycle</code> indicates an invoice created by a subscription advancing into a new period. <code>subscription_create</code> indicates an invoice created due to creating a subscription. <code>subscription_update</code> indicates an invoice created due to updating a subscription. <code>subscription</code> is set for all old invoices to indicate either a change to a subscription or a period advancement. <code>manual</code> is set for all invoices unrelated to a subscription (for example: created via the invoice editor). The <code>upcoming</code> value is reserved for simulated invoices per the upcoming invoice endpoint. <code>subscription_threshold</code> indicates an invoice created due to a billing threshold being reached.
  * @property null|string|\Stripe\Charge $charge ID of the latest charge generated for this invoice, if any.
- * @property null|string $collection_method Either <code>charge_automatically</code>, or <code>send_invoice</code>. When charging automatically, Stripe will attempt to pay this invoice using the default source attached to the customer. When sending an invoice, Stripe will email this invoice to the customer with payment instructions.
+ * @property string $collection_method Either <code>charge_automatically</code>, or <code>send_invoice</code>. When charging automatically, Stripe will attempt to pay this invoice using the default source attached to the customer. When sending an invoice, Stripe will email this invoice to the customer with payment instructions.
  * @property int $created Time at which the object was created. Measured in seconds since the Unix epoch.
  * @property string $currency Three-letter <a href="https://www.iso.org/iso-4217-currency-codes.html">ISO currency code</a>, in lowercase. Must be a <a href="https://stripe.com/docs/currencies">supported currency</a>.
  * @property null|\Stripe\StripeObject[] $custom_fields Custom fields displayed on the invoice.
@@ -97,6 +93,7 @@ namespace Stripe;
  * @property int $period_start Start of the usage period during which invoice items were added to this invoice.
  * @property int $post_payment_credit_notes_amount Total amount of all post-payment credit notes issued for this invoice.
  * @property int $pre_payment_credit_notes_amount Total amount of all pre-payment credit notes issued for this invoice.
+ * @property null|string|\Stripe\Quote $quote The quote this invoice was generated from.
  * @property null|string $receipt_number This is the transaction number that appears on email receipts sent for this invoice.
  * @property int $starting_balance Starting customer balance before the invoice is finalized. If the invoice has not been finalized yet, this will be the current customer balance.
  * @property null|string $statement_descriptor Extra information about an invoice for the customer's credit card statement.
@@ -109,11 +106,7 @@ namespace Stripe;
  * @property \Stripe\StripeObject $threshold_reason
  * @property int $total Total after discounts and taxes.
  * @property null|\Stripe\StripeObject[] $total_discount_amounts The aggregate amounts calculated per discount across all line items.
-<<<<<<< HEAD
- * @property null|\Stripe\StripeObject[] $total_tax_amounts The aggregate amounts calculated per tax rate for all line items.
-=======
  * @property \Stripe\StripeObject[] $total_tax_amounts The aggregate amounts calculated per tax rate for all line items.
->>>>>>> master
  * @property null|int $webhooks_delivered_at Invoices are automatically paid or sent 1 hour after webhooks are delivered, or until all webhook delivery attempts have <a href="https://stripe.com/docs/billing/webhooks#understand">been exhausted</a>. This field tracks the time when webhooks for this invoice were successfully delivered. If the invoice had no webhooks to deliver, this will be set while the invoice is being created.
  */
 class Invoice extends ApiResource
@@ -130,6 +123,7 @@ class Invoice extends ApiResource
     const BILLING_SEND_INVOICE = 'send_invoice';
 
     const BILLING_REASON_MANUAL = 'manual';
+    const BILLING_REASON_QUOTE_ACCEPT = 'quote_accept';
     const BILLING_REASON_SUBSCRIPTION = 'subscription';
     const BILLING_REASON_SUBSCRIPTION_CREATE = 'subscription_create';
     const BILLING_REASON_SUBSCRIPTION_CYCLE = 'subscription_cycle';
@@ -152,24 +146,6 @@ class Invoice extends ApiResource
     const PATH_LINES = '/lines';
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
-     *
-     * @return \Stripe\Invoice the upcoming invoice
-     */
-    public static function upcoming($params = null, $opts = null)
-    {
-        $url = static::classUrl() . '/upcoming';
-        list($response, $opts) = static::_staticRequest('get', $url, $params, $opts);
-        $obj = Util\Util::convertToStripeObject($response->json, $opts);
-        $obj->setLastResponse($response);
-
-        return $obj;
-    }
-
-    /**
      * @param string $id the ID of the invoice on which to retrieve the lines
      * @param null|array $params
      * @param null|array|string $opts
@@ -189,7 +165,7 @@ class Invoice extends ApiResource
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return Invoice the finalized invoice
+     * @return \Stripe\Invoice the finalized invoice
      */
     public function finalizeInvoice($params = null, $opts = null)
     {
@@ -206,7 +182,7 @@ class Invoice extends ApiResource
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return Invoice the uncollectible invoice
+     * @return \Stripe\Invoice the uncollectible invoice
      */
     public function markUncollectible($params = null, $opts = null)
     {
@@ -223,7 +199,7 @@ class Invoice extends ApiResource
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return Invoice the paid invoice
+     * @return \Stripe\Invoice the paid invoice
      */
     public function pay($params = null, $opts = null)
     {
@@ -240,7 +216,7 @@ class Invoice extends ApiResource
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return Invoice the sent invoice
+     * @return \Stripe\Invoice the sent invoice
      */
     public function sendInvoice($params = null, $opts = null)
     {
@@ -257,7 +233,25 @@ class Invoice extends ApiResource
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return Invoice the voided invoice
+     * @return \Stripe\Invoice the upcoming invoice
+     */
+    public static function upcoming($params = null, $opts = null)
+    {
+        $url = static::classUrl() . '/upcoming';
+        list($response, $opts) = static::_staticRequest('get', $url, $params, $opts);
+        $obj = \Stripe\Util\Util::convertToStripeObject($response->json, $opts);
+        $obj->setLastResponse($response);
+
+        return $obj;
+    }
+
+    /**
+     * @param null|array $params
+     * @param null|array|string $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\Invoice the voided invoice
      */
     public function voidInvoice($params = null, $opts = null)
     {

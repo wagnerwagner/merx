@@ -146,11 +146,11 @@ class AccountService extends \Stripe\Service\AbstractService
     }
 
     /**
-     * With <a href="/docs/connect">Connect</a>, you can delete Custom or Express
-     * accounts you manage.
+     * With <a href="/docs/connect">Connect</a>, you can delete accounts you manage.
      *
-     * Accounts created using test-mode keys can be deleted at any time. Accounts
-     * created using live-mode keys can only be deleted once all balances are zero.
+     * Accounts created using test-mode keys can be deleted at any time. Custom or
+     * Express accounts created using live-mode keys can only be deleted once all
+     * balances are zero.
      *
      * If you want to delete your own account, use the <a
      * href="https://dashboard.stripe.com/account">account information tab in your
@@ -278,11 +278,11 @@ class AccountService extends \Stripe\Service\AbstractService
     }
 
     /**
-     * Updates a connected <a href="/docs/connect/accounts">Express or Custom
-     * account</a> by setting the values of the parameters passed. Any parameters not
-     * provided are left unchanged. Most parameters can be changed only for Custom
-     * accounts. (These are marked <strong>Custom Only</strong> below.) Parameters
-     * marked <strong>Custom and Express</strong> are supported by both account types.
+     * Updates a <a href="/docs/connect/accounts">connected account</a> by setting the
+     * values of the parameters passed. Any parameters not provided are left unchanged.
+     * Most parameters can be changed only for Custom accounts. (These are marked
+     * <strong>Custom Only</strong> below.) Parameters marked <strong>Custom and
+     * Express</strong> are not supported for Standard accounts.
      *
      * To update your own account, use the <a
      * href="https://dashboard.stripe.com/account">Dashboard</a>. Refer to our <a
@@ -320,10 +320,10 @@ class AccountService extends \Stripe\Service\AbstractService
     }
 
     /**
-     * Updates the metadata, account holder name, and account holder type of a bank
-     * account belonging to a <a href="/docs/connect/custom-accounts">Custom
-     * account</a>, and optionally sets it as the default for its currency. Other bank
-     * account details are not editable by design.
+     * Updates the metadata, account holder name, account holder type of a bank account
+     * belonging to a <a href="/docs/connect/custom-accounts">Custom account</a>, and
+     * optionally sets it as the default for its currency. Other bank account details
+     * are not editable by design.
      *
      * You can re-enable a disabled bank account by performing an update call without
      * providing any arguments or changes.

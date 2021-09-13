@@ -2,12 +2,12 @@
 
 // File generated from our OpenAPI spec
 
-namespace Stripe\Service\Reporting;
+namespace Stripe\Service\Identity;
 
-class ReportTypeService extends \Stripe\Service\AbstractService
+class VerificationReportService extends \Stripe\Service\AbstractService
 {
     /**
-     * Returns a full list of Report Types.
+     * List all verification reports.
      *
      * @param null|array $params
      * @param null|array|\Stripe\Util\RequestOptions $opts
@@ -18,12 +18,11 @@ class ReportTypeService extends \Stripe\Service\AbstractService
      */
     public function all($params = null, $opts = null)
     {
-        return $this->requestCollection('get', '/v1/reporting/report_types', $params, $opts);
+        return $this->requestCollection('get', '/v1/identity/verification_reports', $params, $opts);
     }
 
     /**
-     * Retrieves the details of a Report Type. (Certain report types require a <a
-     * href="https://stripe.com/docs/keys#test-live-modes">live-mode API key</a>.).
+     * Retrieves an existing VerificationReport.
      *
      * @param string $id
      * @param null|array $params
@@ -31,10 +30,10 @@ class ReportTypeService extends \Stripe\Service\AbstractService
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Reporting\ReportType
+     * @return \Stripe\Identity\VerificationReport
      */
     public function retrieve($id, $params = null, $opts = null)
     {
-        return $this->request('get', $this->buildPath('/v1/reporting/report_types/%s', $id), $params, $opts);
+        return $this->request('get', $this->buildPath('/v1/identity/verification_reports/%s', $id), $params, $opts);
     }
 }

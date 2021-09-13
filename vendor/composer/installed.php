@@ -40,12 +40,12 @@
     ),
     'stripe/stripe-php' => 
     array (
-      'pretty_version' => 'v7.76.0',
-      'version' => '7.76.0.0',
+      'pretty_version' => 'v7.95.0',
+      'version' => '7.95.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '47e66d4186712be33c593fe820dccf270a04d5d6',
+      'reference' => 'ed372a1f6430b06dda408bb33b27d2be35ceaf07',
     ),
     'wagnerwagner/merx' => 
     array (

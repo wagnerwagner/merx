@@ -2,12 +2,13 @@
 
 // File generated from our OpenAPI spec
 
-namespace Stripe\Service\Reporting;
+namespace Stripe\Service;
 
-class ReportTypeService extends \Stripe\Service\AbstractService
+class TaxCodeService extends \Stripe\Service\AbstractService
 {
     /**
-     * Returns a full list of Report Types.
+     * A list of <a href="https://stripe.com/docs/tax/tax-codes">all tax codes
+     * available</a> to add to Products in order to allow specific tax calculations.
      *
      * @param null|array $params
      * @param null|array|\Stripe\Util\RequestOptions $opts
@@ -18,12 +19,12 @@ class ReportTypeService extends \Stripe\Service\AbstractService
      */
     public function all($params = null, $opts = null)
     {
-        return $this->requestCollection('get', '/v1/reporting/report_types', $params, $opts);
+        return $this->requestCollection('get', '/v1/tax_codes', $params, $opts);
     }
 
     /**
-     * Retrieves the details of a Report Type. (Certain report types require a <a
-     * href="https://stripe.com/docs/keys#test-live-modes">live-mode API key</a>.).
+     * Retrieves the details of an existing tax code. Supply the unique tax code ID and
+     * Stripe will return the corresponding tax code information.
      *
      * @param string $id
      * @param null|array $params
@@ -31,10 +32,10 @@ class ReportTypeService extends \Stripe\Service\AbstractService
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Reporting\ReportType
+     * @return \Stripe\TaxCode
      */
     public function retrieve($id, $params = null, $opts = null)
     {
-        return $this->request('get', $this->buildPath('/v1/reporting/report_types/%s', $id), $params, $opts);
+        return $this->request('get', $this->buildPath('/v1/tax_codes/%s', $id), $params, $opts);
     }
 }
