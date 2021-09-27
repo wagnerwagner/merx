@@ -83,8 +83,12 @@ class ProductList extends Collection
      */
     public function __set(string $key, $value)
     {
+        $key = $value['key'] ?? $value['id'] ?? $key;
         if (!isset($value['id'])) {
             $value['id'] = $key;
+        }
+        if (!isset($value['key'])) {
+            $value['key'] = $key;
         }
         if (!isset($value['quantity'])) {
             $value['quantity'] = 1;
