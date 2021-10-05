@@ -1,24 +1,23 @@
 <?php
 
-declare(strict_types=1);
+namespace Wagnerwagner\Merx;
 
 use PHPUnit\Framework\TestCase;
-use Wagnerwagner\Merx\Cart;
 
 final class CartTest extends TestCase
 {
     public function testCartException1(): void
     {
-        $cart = new Cart();
         $this->expectExceptionCode('error.merx.cart.add');
+        $cart = new Cart();
         $cart->add([]);
     }
 
 
     public function testCartException2(): void
     {
-        $cart = new Cart();
         $this->expectExceptionCode('error.merx.cart.add');
+        $cart = new Cart();
         $cart->add(['id' => 'nice-shoes']);
     }
 }

@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types=1);
+namespace Wagnerwagner\Merx;
 
 use PHPUnit\Framework\TestCase;
-use Wagnerwagner\Merx\Merx;
-use Wagnerwagner\Merx\Cart;
 
 final class MerxTest extends TestCase
 {
@@ -35,19 +33,6 @@ final class MerxTest extends TestCase
     {
         $this->assertEquals(
             '1984.12 €',
-            Merx::formatPrice(1984.12, false)
-        );
-    }
-    public function testFormatPriceThousandsSep(): void
-    {
-        $this->app = new Kirby\Cms\App([
-            'options' => [
-                'ww.merx.currencyThousandsSeparator' => ','
-            ],
-        ]);
-
-        $this->assertEquals(
-            '1,984.12 €',
             Merx::formatPrice(1984.12, false)
         );
     }
@@ -91,13 +76,13 @@ final class MerxTest extends TestCase
         $merx->completePayment([]);
     }
 
-    // public function testMessages(): void
-    // {
-    //     $testMessage = 'Test Message';
-    //     Merx::setMessage($testMessage);
-    //     $this->assertEquals(
-    //         $testMessage,
-    //         Merx::getMessage()
-    //     );
-    // }
+    public function testMessages(): void
+    {
+        $testMessage = 'Test Message';
+        Merx::setMessage($testMessage);
+        $this->assertEquals(
+            $testMessage,
+            Merx::getMessage()
+        );
+    }
 }
