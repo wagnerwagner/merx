@@ -24,7 +24,7 @@ class InstalledVersions
 private static $installed = array (
   'root' => 
   array (
-    'pretty_version' => '1.5.0.beta-1',
+    'pretty_version' => '1.5.0-beta.1',
     'version' => '1.5.0.0-beta1',
     'aliases' => 
     array (
@@ -72,7 +72,7 @@ private static $installed = array (
     ),
     'wagnerwagner/merx' => 
     array (
-      'pretty_version' => '1.5.0.beta-1',
+      'pretty_version' => '1.5.0-beta.1',
       'version' => '1.5.0.0-beta1',
       'aliases' => 
       array (
