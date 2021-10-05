@@ -1,10 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\Cart;
-
 
 final class MerxTest extends TestCase
 {

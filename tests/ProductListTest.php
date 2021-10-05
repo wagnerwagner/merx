@@ -1,9 +1,9 @@
 <?php
+
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\ProductList;
-
 
 final class ProductListTest extends TestCase
 {
