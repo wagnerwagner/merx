@@ -1,4 +1,5 @@
 <?php
+
 namespace Wagnerwagner\Merx;
 
 use Wagnerwagner\Merx\ProductList;
@@ -44,11 +45,11 @@ class Cart extends ProductList
                 $page = page($cartItem['id']);
                 if (!$page) {
                     throw new \Exception('Page not found.');
-                } else if (!$page->price()->exists()) {
+                } elseif (!$page->price()->exists()) {
                     throw new \Exception('Page must have a price field.');
                 }
                 $this->append($cartItem);
-            } else if (count($args) === 2) {
+            } elseif (count($args) === 2) {
                 $this->append($args[0], $args[1]);
             }
 
@@ -198,7 +199,7 @@ class Cart extends ProductList
                         "discount" => [
                             "value" => number_format($discount, 2, '.', ''),
                             "currency_code" => option('ww.merx.currency'),
-                       ],
+                        ],
                     ],
                 ],
                 "items" => array_map(function ($cartItem) {
