@@ -1,4 +1,5 @@
 <?php
+
 namespace Wagnerwagner\Merx;
 
 use Wagnerwagner\Merx\Merx;
@@ -38,7 +39,7 @@ class ProductList extends Collection
                 throw new \Exception('Array must have a ‘key’ or ‘id’');
             }
             $this->set($item['key'], $item);
-        } else if (count($args) === 2) {
+        } elseif (count($args) === 2) {
             $this->set($args[0], $args[1]);
         }
 
@@ -67,7 +68,7 @@ class ProductList extends Collection
                 $existingItem = A::merge($existingItem, $item, A::MERGE_OVERWRITE);
                 $this->set($key, $existingItem);
             }
-        } else if ($quantity > 0) {
+        } elseif ($quantity > 0) {
             $this->set($key, $item);
         }
         return $this;
@@ -79,11 +80,16 @@ class ProductList extends Collection
      *
      * @param string $key
      * @param array $value
+     * @return $this
      */
-    public function __set(string $key, $value): self
+    public function __set(string $key, $value)
     {
+        $key = $value['key'] ?? $value['id'] ?? $key;
         if (!isset($value['id'])) {
             $value['id'] = $key;
+        }
+        if (!isset($value['key'])) {
+            $value['key'] = $key;
         }
         if (!isset($value['quantity'])) {
             $value['quantity'] = 1;
@@ -171,7 +177,7 @@ class ProductList extends Collection
             return (float)$taxRate !== (float)0;
         });
         sort($taxRates);
-        $taxRates = array_map(function($taxRate) {
+        $taxRates = array_map(function ($taxRate) {
             $sum = 0;
             foreach ($this->data() as $item) {
                 if ($item['taxRate'] === $taxRate) {
@@ -206,7 +212,7 @@ class ProductList extends Collection
      */
     public function getFormattedItems(): array
     {
-        return array_map(function($item) {
+        return array_map(function ($item) {
             $item['price'] = Merx::formatPrice((float)$item['price']);
             $item['tax'] = Merx::formatPrice((float)$item['tax']);
             $item['sum'] = Merx::formatPrice((float)($item['sum']));

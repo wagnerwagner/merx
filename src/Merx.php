@@ -1,4 +1,5 @@
 <?php
+
 namespace Wagnerwagner\Merx;
 
 use Wagnerwagner\Merx\Gateways;
@@ -10,8 +11,6 @@ use Kirby\Exception\Exception;
 use Kirby\Cms\Field;
 use Kirby\Data\Yaml;
 use OrderPage;
-
-
 
 class Merx
 {
@@ -34,7 +33,7 @@ class Merx
      *
      * @return string
      */
-    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, $currencySeparateBySpace = null): string
+    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null): string
     {
         // set locale for single language installations
         if (!option('languages', false) && option('locale', false)) {
@@ -178,7 +177,7 @@ class Merx
             }
 
             // cleaning up and secure post data
-            $data = array_map(function(string $item) {
+            $data = array_map(function (string $item) {
                 return Escape::html(Str::trim($item));
             }, $data);
 
@@ -231,7 +230,7 @@ class Merx
                 ]);
             }
             $licenseArr = Str::split(Str::after(option('ww.merx.license', ''), 'MERX-'), '-');
-            if  (option('ww.merx.production') && crossfoot(hexdec($licenseArr[0])) + crossfoot(hexdec($licenseArr[1])) !== 90) {
+            if (option('ww.merx.production') && crossfoot(hexdec($licenseArr[0])) + crossfoot(hexdec($licenseArr[1])) !== 90) {
                 throw new Exception('Invalid License');
             }
 

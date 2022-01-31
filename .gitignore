@@ -18,3 +18,4 @@
 /vendor/**/php4/*
 /vendor/getkirby/composer-installer
 .DS_Store
+/tests/kirby

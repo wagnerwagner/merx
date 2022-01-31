@@ -17,6 +17,7 @@ require __DIR__ . '/lib/Util/ObjectTypes.php';
 
 // HttpClient
 require __DIR__ . '/lib/HttpClient/ClientInterface.php';
+require __DIR__ . '/lib/HttpClient/StreamingClientInterface.php';
 require __DIR__ . '/lib/HttpClient/CurlClient.php';
 
 // Exceptions
@@ -66,7 +67,9 @@ require __DIR__ . '/lib/Service/AbstractService.php';
 require __DIR__ . '/lib/Service/AbstractServiceFactory.php';
 
 // StripeClient
+require __DIR__ . '/lib/BaseStripeClientInterface.php';
 require __DIR__ . '/lib/StripeClientInterface.php';
+require __DIR__ . '/lib/StripeStreamingClientInterface.php';
 require __DIR__ . '/lib/BaseStripeClient.php';
 require __DIR__ . '/lib/StripeClient.php';
 
@@ -103,6 +106,8 @@ require __DIR__ . '/lib/Event.php';
 require __DIR__ . '/lib/ExchangeRate.php';
 require __DIR__ . '/lib/File.php';
 require __DIR__ . '/lib/FileLink.php';
+require __DIR__ . '/lib/Identity/VerificationReport.php';
+require __DIR__ . '/lib/Identity/VerificationSession.php';
 require __DIR__ . '/lib/Invoice.php';
 require __DIR__ . '/lib/InvoiceItem.php';
 require __DIR__ . '/lib/InvoiceLineItem.php';
@@ -126,6 +131,7 @@ require __DIR__ . '/lib/Plan.php';
 require __DIR__ . '/lib/Price.php';
 require __DIR__ . '/lib/Product.php';
 require __DIR__ . '/lib/PromotionCode.php';
+require __DIR__ . '/lib/Quote.php';
 require __DIR__ . '/lib/Radar/EarlyFraudWarning.php';
 require __DIR__ . '/lib/Radar/ValueList.php';
 require __DIR__ . '/lib/Radar/ValueListItem.php';
@@ -144,6 +150,7 @@ require __DIR__ . '/lib/SourceTransaction.php';
 require __DIR__ . '/lib/Subscription.php';
 require __DIR__ . '/lib/SubscriptionItem.php';
 require __DIR__ . '/lib/SubscriptionSchedule.php';
+require __DIR__ . '/lib/TaxCode.php';
 require __DIR__ . '/lib/TaxId.php';
 require __DIR__ . '/lib/TaxRate.php';
 require __DIR__ . '/lib/Terminal/ConnectionToken.php';
@@ -179,6 +186,8 @@ require __DIR__ . '/lib/Service/EventService.php';
 require __DIR__ . '/lib/Service/ExchangeRateService.php';
 require __DIR__ . '/lib/Service/FileService.php';
 require __DIR__ . '/lib/Service/FileLinkService.php';
+require __DIR__ . '/lib/Service/Identity/VerificationReportService.php';
+require __DIR__ . '/lib/Service/Identity/VerificationSessionService.php';
 require __DIR__ . '/lib/Service/InvoiceService.php';
 require __DIR__ . '/lib/Service/InvoiceItemService.php';
 require __DIR__ . '/lib/Service/Issuing/AuthorizationService.php';
@@ -196,6 +205,7 @@ require __DIR__ . '/lib/Service/PlanService.php';
 require __DIR__ . '/lib/Service/PriceService.php';
 require __DIR__ . '/lib/Service/ProductService.php';
 require __DIR__ . '/lib/Service/PromotionCodeService.php';
+require __DIR__ . '/lib/Service/QuoteService.php';
 require __DIR__ . '/lib/Service/Radar/EarlyFraudWarningService.php';
 require __DIR__ . '/lib/Service/Radar/ValueListService.php';
 require __DIR__ . '/lib/Service/Radar/ValueListItemService.php';
@@ -211,6 +221,7 @@ require __DIR__ . '/lib/Service/SourceService.php';
 require __DIR__ . '/lib/Service/SubscriptionService.php';
 require __DIR__ . '/lib/Service/SubscriptionItemService.php';
 require __DIR__ . '/lib/Service/SubscriptionScheduleService.php';
+require __DIR__ . '/lib/Service/TaxCodeService.php';
 require __DIR__ . '/lib/Service/TaxRateService.php';
 require __DIR__ . '/lib/Service/Terminal/ConnectionTokenService.php';
 require __DIR__ . '/lib/Service/Terminal/LocationService.php';
@@ -224,6 +235,7 @@ require __DIR__ . '/lib/Service/WebhookEndpointService.php';
 require __DIR__ . '/lib/Service/CoreServiceFactory.php';
 require __DIR__ . '/lib/Service/BillingPortal/BillingPortalServiceFactory.php';
 require __DIR__ . '/lib/Service/Checkout/CheckoutServiceFactory.php';
+require __DIR__ . '/lib/Service/Identity/IdentityServiceFactory.php';
 require __DIR__ . '/lib/Service/Issuing/IssuingServiceFactory.php';
 require __DIR__ . '/lib/Service/Radar/RadarServiceFactory.php';
 require __DIR__ . '/lib/Service/Reporting/ReportingServiceFactory.php';

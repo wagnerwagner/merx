@@ -1,4 +1,5 @@
 <?php
+
 namespace Wagnerwagner\Merx;
 
 use PayPalHttp\HttpResponse;
@@ -135,7 +136,7 @@ class Payment
     }
 
 
-    public static function createStripeCharge(Float $amount, string $source): ApiResource
+    public static function createStripeCharge(float $amount, string $source): ApiResource
     {
         self::setStripeApiKey();
         $charge = Charge::create(array(

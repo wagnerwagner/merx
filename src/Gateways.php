@@ -1,4 +1,5 @@
 <?php
+
 namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
@@ -24,13 +25,13 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     return $virtualOrderPage;
 }
 
-class Gateways {
+class Gateways
+{
     public static $gateways = [];
 }
 
 Gateways::$gateways['paypal'] = [
-    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage
-    {
+    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
         if (option('ww.merx.production') === true) {
             if (option('ww.merx.paypal.live.clientID') === null && option('ww.merx.paypal.live.secret') === null) {
                 throw new Exception('Missing PayPal live keys');
@@ -48,8 +49,7 @@ Gateways::$gateways['paypal'] = [
         ]);
         return $virtualOrderPage;
     },
-    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage
-    {
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         // check if user canceled payment
         if (!isset($data['paymentId']) && !isset($data['PayerID'])) {
             throw new Exception([
@@ -69,15 +69,13 @@ Gateways::$gateways['paypal'] = [
 ];
 
 Gateways::$gateways['credit-card'] = [
-    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage
-    {
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         return completeStripePayment($virtualOrderPage, $data);
     },
 ];
 
 Gateways::$gateways['credit-card-sca'] = [
-    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage
-    {
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         $stripePaymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
         $paymentIntent = Payment::getStripePaymentIntent($stripePaymentIntentId);
         $paymentIntent->capture();
@@ -90,15 +88,13 @@ Gateways::$gateways['credit-card-sca'] = [
 ];
 
 Gateways::$gateways['sepa-debit'] = [
-    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage
-    {
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         return completeStripePayment($virtualOrderPage, $data);
     },
 ];
 
 Gateways::$gateways['sofort'] = [
-    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage
-    {
+    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
         $data = [
             "sofort" => [
                 "country" => "DE",
@@ -110,8 +106,7 @@ Gateways::$gateways['sofort'] = [
         ]);
         return $virtualOrderPage;
     },
-    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage
-    {
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         return completeStripePayment($virtualOrderPage, $data);
     },
 ];

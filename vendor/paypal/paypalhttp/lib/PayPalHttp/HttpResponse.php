@@ -11,12 +11,12 @@ namespace PayPalHttp;
 class HttpResponse
 {
     /**
-     * @var integer
+     * @var int
      */
     public $statusCode;
 
     /**
-     * @var array | string
+     * @var array | string | object
      */
     public $result;
 

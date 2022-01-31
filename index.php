@@ -1,4 +1,5 @@
 <?php
+
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\ProductList;
@@ -7,7 +8,6 @@ use Kirby\Exception\Exception;
 
 @include_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/models/orderPageAbstract.php';
-
 
 
 function merx(): Merx
@@ -45,9 +45,12 @@ function calculateNet(float $grossPrice, float $tax): float
     return Merx::calculateNet($grossPrice, $tax);
 }
 
-function crossfoot(int $int){
+function crossfoot(int $int): string
+{
     $r = 0;
-    foreach(str_split($int) as $v) $r += $v;
+    foreach (str_split($int) as $v) {
+        $r += $v;
+    }
     return $r;
 }
 
