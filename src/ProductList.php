@@ -26,8 +26,9 @@ class ProductList extends Collection
      * Appends item to ProductList
      *
      * @param mixed $args `($data)` or `($id, $data)`.
+     * @return $this
      */
-    public function append(...$args): self
+    public function append(...$args): static
     {
         if (count($args) === 1) {
             if (!is_array($args[0])) {

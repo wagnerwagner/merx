@@ -25,7 +25,7 @@ final class ProductListTest extends TestCase
             $productList->getSum()
         );
 
-        $productList->append(['id' => 'nice-socks', 'price' => 10]);
+        $productList = $productList->append(['id' => 'nice-socks', 'price' => 10]);
         $this->assertEquals(
             109.99,
             $productList->getSum()

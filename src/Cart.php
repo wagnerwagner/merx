@@ -73,6 +73,7 @@ class Cart extends ProductList
      * Removes item from Cart by key
      *
      * @param mixed $key the name of the key
+     * @return $this
      */
     public function remove($key)
     {
@@ -80,6 +81,7 @@ class Cart extends ProductList
             parent::remove($key);
             $this->save();
         }
+        return $this;
     }
 
 
