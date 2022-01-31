@@ -24,8 +24,8 @@ class InstalledVersions
 private static $installed = array (
   'root' => 
   array (
-    'pretty_version' => '1.5.0-beta.1',
-    'version' => '1.5.0.0-beta1',
+    'pretty_version' => '1.6.0-beta.1',
+    'version' => '1.6.0.0-beta1',
     'aliases' => 
     array (
     ),
@@ -63,17 +63,17 @@ private static $installed = array (
     ),
     'stripe/stripe-php' => 
     array (
-      'pretty_version' => 'v7.97.0',
-      'version' => '7.97.0.0',
+      'pretty_version' => 'v7.112.0',
+      'version' => '7.112.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'ae41c309ce113362706f8d5f19cf0cf2c730bc4a',
+      'reference' => 'f5213ccb88795663f73841bc65f467a0e1e61180',
     ),
     'wagnerwagner/merx' => 
     array (
-      'pretty_version' => '1.5.0-beta.1',
-      'version' => '1.5.0.0-beta1',
+      'pretty_version' => '1.6.0-beta.1',
+      'version' => '1.6.0.0-beta1',
       'aliases' => 
       array (
       ),
