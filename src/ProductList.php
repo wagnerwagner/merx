@@ -115,9 +115,16 @@ class ProductList extends Collection
                 $value['uid'] = $page->uid();
             }
             foreach (option('ww.merx.cart.fields', []) as $fieldName) {
-                $fieldValue = $page->{$fieldName}();
-                if ($fieldValue->isNotEmpty()) {
-                    $value[$fieldName] = $fieldValue->toString();
+                $field = $page->{$fieldName}();
+                if (is_a($field, '\Kirby\Cms\Field') && $field->isNotEmpty()) {
+                    $value[$fieldName] = $field->toString();
+                } elseif (
+                    $field === null ||
+                    is_scalar($field) ||
+                    is_string($field) ||
+                    (is_object($field) && method_exists($field, '__toString'))
+                ) {
+                    $value[$fieldName] = (string)$field;
                 }
             }
         }
