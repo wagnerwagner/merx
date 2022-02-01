@@ -122,7 +122,7 @@ class ProductList extends Collection
             }
         }
         if (!isset($value['price'])) {
-            throw new \Exception('You have to provide a "price" or a valid "id".');
+            throw new \Exception('You have to provide a "price" or a page with a price field.');
         }
         if (!isset($value['taxRate'])) {
             $value['taxRate'] = 0;
