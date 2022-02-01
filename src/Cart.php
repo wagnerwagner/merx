@@ -60,8 +60,12 @@ class Cart extends ProductList
                     'id' => $cartItem['id'] ?? '',
                 ],
                 'details' => [
-                    'exception' => $ex,
+                    'message' => $ex->getMessage(),
+                    'code' => $ex->getCode(),
+                    'file' => $ex->getFile(),
+                    'line' => $ex->getLine(),
                 ],
+                'previous' => $ex,
             ]);
         }
     }
@@ -101,8 +105,12 @@ class Cart extends ProductList
             throw new Exception([
                 'key' => 'merx.cart.update',
                 'details' => [
-                    'exception' => $ex,
+                    'message' => $ex->getMessage(),
+                    'code' => $ex->getCode(),
+                    'file' => $ex->getFile(),
+                    'line' => $ex->getLine(),
                 ],
+                'previous' => $ex,
             ]);
         }
     }
