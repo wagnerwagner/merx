@@ -12,4 +12,11 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+    <issueHandlers>
+      <UndefinedClass>
+        <errorLevel type="suppress">
+          <referencedClass name="OrderPage" />
+        </errorLevel>
+      </UndefinedClass>
+    </issueHandlers>
 </psalm>
