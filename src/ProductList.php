@@ -26,8 +26,9 @@ class ProductList extends Collection
      * Appends item to ProductList
      *
      * @param mixed $args `($data)` or `($id, $data)`.
+     * @return $this
      */
-    public function append(...$args): self
+    public function append(...$args)
     {
         if (count($args) === 1) {
             if (!is_array($args[0])) {
@@ -122,14 +123,21 @@ class ProductList extends Collection
                 $value['uid'] = $page->uid();
             }
             foreach (option('ww.merx.cart.fields', []) as $fieldName) {
-                $fieldValue = $page->{$fieldName}();
-                if ($fieldValue->isNotEmpty()) {
-                    $value[$fieldName] = $fieldValue->toString();
+                $field = $page->{$fieldName}();
+                if (is_a($field, '\Kirby\Cms\Field') && $field->isNotEmpty()) {
+                    $value[$fieldName] = $field->toString();
+                } elseif (
+                    $field === null ||
+                    is_scalar($field) ||
+                    is_string($field) ||
+                    (is_object($field) && method_exists($field, '__toString'))
+                ) {
+                    $value[$fieldName] = (string)$field;
                 }
             }
         }
         if (!isset($value['price'])) {
-            throw new \Exception('You have to provide a "price" or a valid "id".');
+            throw new \Exception('You have to provide a "price" or a page with a price field.');
         }
         if (!isset($value['taxRate'])) {
             $value['taxRate'] = 0;

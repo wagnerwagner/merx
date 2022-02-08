@@ -50,8 +50,6 @@ class Cart extends ProductList
                 $page = page($cartItem['id']);
                 if (!$page) {
                     throw new \Exception('Page not found.');
-                } elseif (!(is_numeric($page->price()) || $page->price()->exists())) {
-                    throw new \Exception('Page must have a price field.');
                 }
                 $this->append($cartItem);
             } elseif (count($args) === 2) {
@@ -67,7 +65,10 @@ class Cart extends ProductList
                     'id' => $cartItem['id'] ?? '',
                 ],
                 'details' => [
-                    'exception' => $ex->getMessage(),
+                    'message' => $ex->getMessage(),
+                    'code' => $ex->getCode(),
+                    'file' => $ex->getFile(),
+                    'line' => $ex->getLine(),
                 ],
                 'previous' => $ex,
             ]);
@@ -79,6 +80,7 @@ class Cart extends ProductList
      * Removes item from Cart by key
      *
      * @param mixed $key the name of the key
+     * @return $this
      */
     public function remove($key)
     {
@@ -86,6 +88,7 @@ class Cart extends ProductList
             parent::remove($key);
             $this->save();
         }
+        return $this;
     }
 
 
@@ -107,8 +110,12 @@ class Cart extends ProductList
             throw new Exception([
                 'key' => 'merx.cart.update',
                 'details' => [
-                    'exception' => $ex,
+                    'message' => $ex->getMessage(),
+                    'code' => $ex->getCode(),
+                    'file' => $ex->getFile(),
+                    'line' => $ex->getLine(),
                 ],
+                'previous' => $ex,
             ]);
         }
     }

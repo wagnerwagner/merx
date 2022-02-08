@@ -40,6 +40,22 @@ class CustomerService extends \Stripe\Service\AbstractService
     }
 
     /**
+     * Returns a list of PaymentMethods for a given Customer.
+     *
+     * @param string $id
+     * @param null|array $params
+     * @param null|array|\Stripe\Util\RequestOptions $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\Collection
+     */
+    public function allPaymentMethods($id, $params = null, $opts = null)
+    {
+        return $this->requestCollection('get', $this->buildPath('/v1/customers/%s/payment_methods', $id), $params, $opts);
+    }
+
+    /**
      * List sources for a specified customer.
      *
      * @param string $parentId
@@ -207,8 +223,7 @@ class CustomerService extends \Stripe\Service\AbstractService
     }
 
     /**
-     * Retrieves the details of an existing customer. You need only supply the unique
-     * customer identifier that was returned upon customer creation.
+     * Retrieves a Customer object.
      *
      * @param string $id
      * @param null|array $params

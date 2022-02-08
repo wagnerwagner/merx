@@ -1,60 +1,59 @@
-<?php return array (
-  'root' => 
-  array (
-    'pretty_version' => '1.5.0-beta.1',
-    'version' => '1.5.0.0-beta1',
-    'aliases' => 
-    array (
+<?php return array(
+    'root' => array(
+        'pretty_version' => '1.6.0-beta.1',
+        'version' => '1.6.0.0-beta1',
+        'type' => 'kirby-plugin',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'reference' => NULL,
+        'name' => 'wagnerwagner/merx',
+        'dev' => false,
     ),
-    'reference' => NULL,
-    'name' => 'wagnerwagner/merx',
-  ),
-  'versions' => 
-  array (
-    'getkirby/composer-installer' => 
-    array (
-      'pretty_version' => '1.2.1',
-      'version' => '1.2.1.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'c98ece30bfba45be7ce457e1102d1b169d922f3d',
+    'versions' => array(
+        'getkirby/composer-installer' => array(
+            'pretty_version' => '1.2.1',
+            'version' => '1.2.1.0',
+            'type' => 'composer-plugin',
+            'install_path' => __DIR__ . '/../getkirby/composer-installer',
+            'aliases' => array(),
+            'reference' => 'c98ece30bfba45be7ce457e1102d1b169d922f3d',
+            'dev_requirement' => false,
+        ),
+        'paypal/paypal-checkout-sdk' => array(
+            'pretty_version' => '1.0.2',
+            'version' => '1.0.2.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../paypal/paypal-checkout-sdk',
+            'aliases' => array(),
+            'reference' => '19992ce7051ff9e47e643f28abb8cc1b3e5f1812',
+            'dev_requirement' => false,
+        ),
+        'paypal/paypalhttp' => array(
+            'pretty_version' => '1.0.1',
+            'version' => '1.0.1.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../paypal/paypalhttp',
+            'aliases' => array(),
+            'reference' => '7b09c89c80828e842c79230e7f156b61fbb68d25',
+            'dev_requirement' => false,
+        ),
+        'stripe/stripe-php' => array(
+            'pretty_version' => 'v7.112.0',
+            'version' => '7.112.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../stripe/stripe-php',
+            'aliases' => array(),
+            'reference' => 'f5213ccb88795663f73841bc65f467a0e1e61180',
+            'dev_requirement' => false,
+        ),
+        'wagnerwagner/merx' => array(
+            'pretty_version' => '1.6.0-beta.1',
+            'version' => '1.6.0.0-beta1',
+            'type' => 'kirby-plugin',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'reference' => NULL,
+            'dev_requirement' => false,
+        ),
     ),
-    'paypal/paypal-checkout-sdk' => 
-    array (
-      'pretty_version' => '1.0.2',
-      'version' => '1.0.2.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '19992ce7051ff9e47e643f28abb8cc1b3e5f1812',
-    ),
-    'paypal/paypalhttp' => 
-    array (
-      'pretty_version' => '1.0.1',
-      'version' => '1.0.1.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '7b09c89c80828e842c79230e7f156b61fbb68d25',
-    ),
-    'stripe/stripe-php' => 
-    array (
-      'pretty_version' => 'v7.97.0',
-      'version' => '7.97.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'ae41c309ce113362706f8d5f19cf0cf2c730bc4a',
-    ),
-    'wagnerwagner/merx' => 
-    array (
-      'pretty_version' => '1.5.0-beta.1',
-      'version' => '1.5.0.0-beta1',
-      'aliases' => 
-      array (
-      ),
-      'reference' => NULL,
-    ),
-  ),
 );

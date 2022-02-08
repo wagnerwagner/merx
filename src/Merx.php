@@ -259,11 +259,11 @@ class Merx
                 'httpCode' => 500,
                 'details' => [
                     'message' => $ex->getMessage(),
+                    'code' => $ex->getCode(),
+                    'file' => $ex->getFile(),
+                    'line' => $ex->getLine(),
                 ],
                 'previous' => $ex,
-                'data' => [
-                    'exception' => $ex,
-                ],
             ]);
         }
     }
@@ -309,13 +309,13 @@ class Merx
             throw new Exception([
                 'key' => 'merx.completePayment',
                 'httpCode' => 500,
-                'previous' => $ex,
                 'details' => [
                     'message' => $ex->getMessage(),
+                    'code' => $ex->getCode(),
+                    'file' => $ex->getFile(),
+                    'line' => $ex->getLine(),
                 ],
-                'data' => [
-                    'exception' => $ex,
-                ],
+                'previous' => $ex,
             ]);
         }
     }
