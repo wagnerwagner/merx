@@ -121,4 +121,9 @@ Kirby::plugin('ww/merx', [
             site()->children()->add($successPage);
         },
     ],
+    'fieldMethods' => [
+        'toFormattedPrice' => function ($field, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null) {
+            return Merx::formatPrice($field->toFloat(), $currencyPositionPrecedes, $currencySeparateBySpace);
+        },
+    ],
 ]);
