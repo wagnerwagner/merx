@@ -2,11 +2,13 @@
 
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\ProductList;
-use Kirby\Toolkit\V;
-use Kirby\Cms\Page;
 
 abstract class OrderPageAbstract extends Page
 {
+    public function title(): \Kirby\Cms\Field
+    {
+        return new Field($this, 'title', $this->invoiceNumber());
+    }
 
     /**
      * Cart of this Order.
