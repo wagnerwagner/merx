@@ -12,10 +12,4 @@ options:
   delete: false
   duplicate: false
 
-tabs:
-  overview:
-    sections:
-      order: sections/order
-  payment:
-    sections:
-      payment-method: sections/payment-method
+extends: layouts/order

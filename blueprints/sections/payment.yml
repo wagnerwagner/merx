@@ -1,0 +1,24 @@
+type: fields
+fields:
+  paymentMethod:
+    label:
+      en: Payment Method
+      de: Bezahlmethode
+    type: text
+    required: true
+    width: 1/2
+    translate: false
+  paymentComplete:
+    label:
+      en: Payment Complete
+      de: Bezahlung vollständig
+    type: toggle
+    width: 1/2
+    text:
+      -
+        en: "No"
+        de: Nein
+      -
+        en: "Yes"
+        de: Ja
+    translate: false

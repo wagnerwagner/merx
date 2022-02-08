@@ -1,0 +1,9 @@
+label:
+  en: Price
+  de: Preis
+type: number
+step: .01
+min: 0
+before: "{{ kirby.option('ww.merx.currencySymbol') }}"
+required: true
+translate: false

@@ -1,0 +1,15 @@
+tabs:
+  overview:
+    label:
+      en: Overview
+      de: Übersicht
+    icon: draft
+    sections:
+      order: sections/order
+  payment:
+    label:
+      en: Payment
+      de: Bezahlung
+    icon: credit-card
+    sections:
+      payment: sections/payment
