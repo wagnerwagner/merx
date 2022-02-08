@@ -28,16 +28,21 @@ class Cart extends ProductList
     /**
      * Adds item to cart.
      *
-     * @param mixed $args `($cartItem)` or `($key, $cartItem)`. $cartItem must contain a valid product page id.
+     * @param mixed $args `($id)`, `($cartItem)` or `($key, $cartItem)`. $id must be a valid product page, $cartItem must contain a valid product page id.
      * @throws Exception error.merx.cart.add
      */
     public function add(...$args): self
     {
         try {
             if (count($args) === 1) {
-                $cartItem = $args[0];
-                if (!is_array($args[0])) {
-                    throw new \Exception('First argument has to be an array');
+                if (is_string($args[0])) {
+                    $cartItem = [
+                        'id' => $args[0],
+                    ];
+                } elseif (is_array($args[0])) {
+                    $cartItem = $args[0];
+                } else {
+                    throw new \Exception('First argument has to be string or array');
                 }
                 if (!isset($cartItem['id'])) {
                     throw new \Exception('No "id" is provided.');
@@ -45,7 +50,7 @@ class Cart extends ProductList
                 $page = page($cartItem['id']);
                 if (!$page) {
                     throw new \Exception('Page not found.');
-                } elseif (!$page->price()->exists()) {
+                } elseif (!(is_numeric($page->price()) || $page->price()->exists())) {
                     throw new \Exception('Page must have a price field.');
                 }
                 $this->append($cartItem);
@@ -62,8 +67,9 @@ class Cart extends ProductList
                     'id' => $cartItem['id'] ?? '',
                 ],
                 'details' => [
-                    'exception' => $ex,
+                    'exception' => $ex->getMessage(),
                 ],
+                'previous' => $ex,
             ]);
         }
     }
