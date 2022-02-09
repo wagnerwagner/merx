@@ -20,7 +20,7 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     $virtualOrderPage->content()->update([
         'paymentDetails' => (array)$stripeCharge,
         'paymentComplete' => true,
-        'payedDate' => date('c'),
+        'paidDate' => date('c'),
     ]);
     return $virtualOrderPage;
 }
@@ -62,7 +62,7 @@ Gateways::$gateways['paypal'] = [
         $virtualOrderPage->content()->update([
             'paymentDetails' => (array)$paypalResponse->result,
             'paymentComplete' => true,
-            'payedDate' => date('c'),
+            'paidDate' => date('c'),
         ]);
         return $virtualOrderPage;
     }
@@ -81,7 +81,7 @@ Gateways::$gateways['credit-card-sca'] = [
         $paymentIntent->capture();
         $virtualOrderPage->content()->update([
             'paymentComplete' => true,
-            'payedDate' => date('c'),
+            'paidDate' => date('c'),
         ]);
         return $virtualOrderPage;
     },
