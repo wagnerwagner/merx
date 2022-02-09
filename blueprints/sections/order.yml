@@ -1,27 +1,23 @@
 type: fields
 fields:
   items:
-    label:
-      en: Items
-      de: Warenkorb
+    label: field.items
     type: structure
     width: 2/3
     fields:
       key:
-        label: Key
+        label: field.key
         type: text
         required: true
         width: 1/2
       id:
-        label: ID
+        label: field.id
         type: pages
         multiple: false
         required: true
         width: 1/2
       quantity:
-        label:
-          en: Quantity
-          de: Menge
+        label: field.quantity
         type: number
         required: true
         width: 1/3
@@ -30,15 +26,13 @@ fields:
         required: true
         width: 1/3
       tax:
-        label:
-          en: Tax
-          en: Steuer
+        label: field.tax
         type: number
         required: true
         width: 1/3
     translate: false
   infoOrder:
-    label: Info
+    label: field.info
     type: info
     width: 1/3
     text:

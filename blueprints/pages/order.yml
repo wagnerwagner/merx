@@ -1,9 +1,9 @@
-title: Order
+title: field.order
 
 status:
-  draft: Error
-  unlisted: Incomplete
-  listed: Complete
+  draft: page.status.error
+  unlisted: page.status.incomplete
+  listed: page.status.complete
 
 options:
   changeSlug: false

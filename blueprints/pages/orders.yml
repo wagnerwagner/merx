@@ -1,8 +1,8 @@
 title: Orders
 
 status:
-  draft: Draft
-  unlisted: Invisible
+  draft: true
+  unlisted: true
 
 options:
   changeSlug: false

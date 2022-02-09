@@ -1,17 +1,13 @@
 type: fields
 fields:
   paymentMethod:
-    label:
-      en: Payment Method
-      de: Bezahlmethode
+    label: field.paymentMethod
     type: text
     required: true
     width: 1/2
     translate: false
   paymentComplete:
-    label:
-      en: Payment Complete
-      de: Bezahlung vollständig
+    label: field.paymentComplete
     type: toggle
     width: 1/2
     text:

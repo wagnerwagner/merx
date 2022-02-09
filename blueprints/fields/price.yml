@@ -1,6 +1,4 @@
-label:
-  en: Price
-  de: Preis
+label: field.price
 type: number
 step: .01
 min: 0

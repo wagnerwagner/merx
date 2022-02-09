@@ -1,6 +1,4 @@
-headline:
-  en: Orders
-  de: Bestellungen
+headline: section.headline.orders
 type: pages
 parent: site.find(kirby.option('ww.merx.ordersPage'))
 template: order
