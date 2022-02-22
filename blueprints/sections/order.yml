@@ -12,7 +12,7 @@ fields:
         width: 1/2
       id:
         label: field.id
-        type: pages
+        type: text
         multiple: false
         required: true
         width: 1/2
