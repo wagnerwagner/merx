@@ -290,11 +290,23 @@ class Merx
                 'invoiceDate' => date('c'),
             ]);
 
-            kirby()->impersonate('kirby');
+            $kirby = kirby();
+
+            // Set to default language to make sure content is saved in default language
+            $currentLanguageCode = null;
+            if ($kirby->multilang()) {
+                $currentLanguageCode = $kirby->languageCode();
+                $kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
+            }
+
+            $kirby->impersonate('kirby');
             $ordersPage = page(option('ww.merx.ordersPage', 'orders'));
             $virtualOrderPageArray = $virtualOrderPage->toArray();
             $virtualOrderPageArray['template'] = $virtualOrderPageArray['template']->name();
             $orderPage = $ordersPage->createChild($virtualOrderPageArray)->publish()->changeStatus('listed');
+
+            // Reset language
+            $kirby->setCurrentLanguage($currentLanguageCode);
 
             $this->cart->delete();
             kirby()->session()->remove('ww.merx.virtualOrderPage');
