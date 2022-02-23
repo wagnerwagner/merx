@@ -38,12 +38,12 @@
             'dev_requirement' => false,
         ),
         'stripe/stripe-php' => array(
-            'pretty_version' => 'v7.113.0',
-            'version' => '7.113.0.0',
+            'pretty_version' => 'v7.114.0',
+            'version' => '7.114.0.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../stripe/stripe-php',
             'aliases' => array(),
-            'reference' => '1aef1ccffad48f39952073e0ed53cb8f3f1b1d8c',
+            'reference' => '63be231686c6874befb5b3a47fb8effb4c30b78b',
             'dev_requirement' => false,
         ),
         'wagnerwagner/merx' => array(
