@@ -26,6 +26,7 @@ namespace Stripe;
  * @property \Stripe\Service\ExchangeRateService $exchangeRates
  * @property \Stripe\Service\FileLinkService $fileLinks
  * @property \Stripe\Service\FileService $files
+ * @property \Stripe\Service\FinancialConnections\FinancialConnectionsServiceFactory $financialConnections
  * @property \Stripe\Service\Identity\IdentityServiceFactory $identity
  * @property \Stripe\Service\InvoiceItemService $invoiceItems
  * @property \Stripe\Service\InvoiceService $invoices
@@ -59,6 +60,7 @@ namespace Stripe;
  * @property \Stripe\Service\TaxCodeService $taxCodes
  * @property \Stripe\Service\TaxRateService $taxRates
  * @property \Stripe\Service\Terminal\TerminalServiceFactory $terminal
+ * @property \Stripe\Service\TestHelpers\TestHelpersServiceFactory $testHelpers
  * @property \Stripe\Service\TokenService $tokens
  * @property \Stripe\Service\TopupService $topups
  * @property \Stripe\Service\TransferService $transfers
