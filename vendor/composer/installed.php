@@ -1,7 +1,7 @@
 <?php return array(
     'root' => array(
-        'pretty_version' => '1.7.0-beta.1',
-        'version' => '1.7.0.0-beta1',
+        'pretty_version' => '1.6.1',
+        'version' => '1.6.1.0',
         'type' => 'kirby-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -38,17 +38,17 @@
             'dev_requirement' => false,
         ),
         'stripe/stripe-php' => array(
-            'pretty_version' => 'v7.114.0',
-            'version' => '7.114.0.0',
+            'pretty_version' => 'v7.128.0',
+            'version' => '7.128.0.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../stripe/stripe-php',
             'aliases' => array(),
-            'reference' => '63be231686c6874befb5b3a47fb8effb4c30b78b',
+            'reference' => 'c704949c49b72985c76cc61063aa26fefbd2724e',
             'dev_requirement' => false,
         ),
         'wagnerwagner/merx' => array(
-            'pretty_version' => '1.7.0-beta.1',
-            'version' => '1.7.0.0-beta1',
+            'pretty_version' => '1.6.1',
+            'version' => '1.6.1.0',
             'type' => 'kirby-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

@@ -81,9 +81,9 @@ class ProductList extends Collection
      *
      * @param string $key
      * @param array $value
-     * @return $this
+     * @return void
      */
-    public function __set(string $key, $value)
+    public function __set(string $key, $value): void
     {
         $key = $value['key'] ?? $value['id'] ?? $key;
         if (!isset($value['id'])) {
@@ -165,8 +165,6 @@ class ProductList extends Collection
         if ($this->getSum() < 0) {
             throw new \Exception('The sum of the cart must not be negative');
         }
-
-        return $this;
     }
 
 
