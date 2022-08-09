@@ -36,4 +36,20 @@ abstract class OrderPageAbstract extends Page
             return '';
         }
     }
+
+
+    /**
+    * Helper method that returns paidDate or payedDate field of the OrderPage.
+    * Before Merx 1.7 a “payedDate” field was stored in the OrderPage for complete payments.
+    * Since Merx 1.7 a “paidDate” field is stored instead.
+    *
+    * @deprecated Rename “Payeddate” fields to “Paiddate” in every order page and use $orderPage->paidDate()
+    */
+    public function payedDate(): \Kirby\Cms\Field
+    {
+        if ($this->content()->payedDate()->isNotEmpty()) {
+            return $this->content()->payedDate();
+        }
+        return $this->content()->paidDate();
+    }
 }
