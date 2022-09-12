@@ -1,6 +1,7 @@
 <?php
 
 use Kirby\Form\Form;
+use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\ProductList;
 
@@ -14,12 +15,18 @@ abstract class OrderPageAbstract extends Page
      */
     public function errors(): array
     {
+        $kirby = $this->kirby();
+        if ($kirby->multilang() === true) {
+            Kirby\Toolkit\I18n::$locale = $kirby->language()->code();
+        }
+
         $fields = array_change_key_case($this->blueprint()->fields());
         // add model to each field
         $fields = array_map(function ($field) {
             $field['model'] = $this;
             return $field;
         }, $fields);
+
         $form = new Form([
             'fields' => $fields,
             'values' => $this->content()->toArray(),
