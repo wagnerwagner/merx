@@ -1,10 +1,32 @@
 <?php
 
+use Kirby\Form\Form;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\ProductList;
 
 abstract class OrderPageAbstract extends Page
 {
+    /**
+     * Returns all content validation errors
+     * This is required since otherwise errors won’t show for virtual pages.
+     *
+     * @return array
+     */
+    public function errors(): array
+    {
+        $fields = array_change_key_case($this->blueprint()->fields());
+        // add model to each field
+        $fields = array_map(function ($field) {
+            $field['model'] = $this;
+            return $field;
+        }, $fields);
+        $form = new Form([
+            'fields' => $fields,
+            'values' => $this->content()->toArray(),
+        ]);
+        return $form->errors();
+    }
+
     public function title(): \Kirby\Cms\Field
     {
         return new Field($this, 'title', $this->invoiceNumber());
