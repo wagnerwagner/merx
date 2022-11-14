@@ -61,7 +61,7 @@ class ProductList extends Collection
         }
         $key = $item['key'];
         $existingItem = $this->get($key);
-        $quantity = $item['quantity'] ?? $existingItem['quantity'];
+        $quantity = (float)($item['quantity'] ?? $existingItem['quantity']);
         if ($existingItem) {
             if ($quantity <= 0) {
                 $this->remove($key);
@@ -80,7 +80,7 @@ class ProductList extends Collection
      * Sets title, price and tax automagically if $key is a valid page slug.
      *
      * @param string $key
-     * @param array $value
+     * @param mixed $value
      * @return void
      */
     public function __set(string $key, $value): void
@@ -103,10 +103,18 @@ class ProductList extends Collection
                 $value['title'] = $page->title()->toString();
             }
             if (!isset($value['price'])) {
-                $value['price'] = $page->price()->toFloat();
+                if (is_numeric($page->price())) {
+                    $value['price'] = (float)$page->price();
+                } else {
+                    $value['price'] = $page->price()->toFloat();
+                }
             }
             if (!isset($value['taxRate'])) {
-                $value['taxRate'] = $page->tax()->exists() ? $page->tax()->toFloat() : 0;
+                if (is_numeric($page->tax())) {
+                    $value['taxRate'] = (float)$page->tax();
+                } else {
+                    $value['taxRate'] = $page->tax()->exists() ? $page->tax()->toFloat() : 0;
+                }
             }
             if (!isset($value['template'])) {
                 $value['template'] = $page->intendedTemplate()->name();
@@ -140,6 +148,7 @@ class ProductList extends Collection
 
         $value['sum'] = (float)($value['price'] * $value['quantity']);
         $value['sumTax'] = (float)($value['tax'] * $value['quantity']);
+        $value['quantity'] = (float)$value['quantity'];
 
         if ($value['quantity'] < 0) {
             throw new \Exception('The quantity of the cart must not be negative.');

@@ -1,0 +1,11 @@
+tabs:
+  overview:
+    label: field.overview
+    icon: draft
+    sections:
+      order: sections/order
+  payment:
+    label: field.payment
+    icon: credit-card
+    sections:
+      payment: sections/payment

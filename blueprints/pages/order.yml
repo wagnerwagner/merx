@@ -1,9 +1,9 @@
-title: Order
+title: field.order
 
 status:
-  draft: Error
-  unlisted: Incomplete
-  listed: Complete
+  draft: page.status.error
+  unlisted: page.status.incomplete
+  listed: page.status.complete
 
 options:
   changeSlug: false
@@ -12,10 +12,4 @@ options:
   delete: false
   duplicate: false
 
-tabs:
-  overview:
-    sections:
-      order: sections/order
-  payment:
-    sections:
-      payment-method: sections/payment-method
+extends: layouts/order

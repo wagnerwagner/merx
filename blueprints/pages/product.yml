@@ -1,4 +1,4 @@
-title: Product
+title: page.title.product
 
 options:
   changeSlug: false
@@ -7,12 +7,9 @@ options:
 
 fields:
   price:
-    label: Price
-    type: number
-    required: true
-    step: .01
+    extends: fields/price
   tax:
-    label: Tax
+    label: field.tax
     type: number
     required: true
     step: 1

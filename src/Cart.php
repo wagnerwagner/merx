@@ -11,6 +11,8 @@ class Cart extends ProductList
 
 
     /**
+     * Constructor
+     *
      * @param array $data List of product items. Product items must contain `id`. `quantity`, `title`, `price`, `tax` are optional.
      */
     public function __construct(array $data = [])
@@ -20,7 +22,7 @@ class Cart extends ProductList
             $data = $kirby->session()->get($this->sessionName);
         }
         parent::__construct($data);
-        Merx::triggerHook('ww.merx.cart', ['cart' => $this]);
+        kirby()->trigger('ww.merx.cart', ['cart' => $this]);
         $this->save();
     }
 
@@ -28,16 +30,21 @@ class Cart extends ProductList
     /**
      * Adds item to cart.
      *
-     * @param mixed $args `($cartItem)` or `($key, $cartItem)`. $cartItem must contain a valid product page id.
+     * @param mixed $args `($id)`, `($cartItem)` or `($key, $cartItem)`. $id must be a valid product page, $cartItem must contain a valid product page id.
      * @throws Exception error.merx.cart.add
      */
     public function add(...$args): self
     {
         try {
             if (count($args) === 1) {
-                $cartItem = $args[0];
-                if (!is_array($args[0])) {
-                    throw new \Exception('First argument has to be an array');
+                if (is_string($args[0])) {
+                    $cartItem = [
+                        'id' => $args[0],
+                    ];
+                } elseif (is_array($args[0])) {
+                    $cartItem = $args[0];
+                } else {
+                    throw new \Exception('First argument has to be string or array');
                 }
                 if (!isset($cartItem['id'])) {
                     throw new \Exception('No "id" is provided.');
@@ -119,7 +126,7 @@ class Cart extends ProductList
     /**
      * Updates existing item.
      *
-     * @param array $updatedItem Must contain a valid product page id.
+     * @param array $item Must contain a valid product page id.
      */
     public function updateItem(array $item): parent
     {
