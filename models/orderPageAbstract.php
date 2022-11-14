@@ -1,7 +1,8 @@
 <?php
 
+use Kirby\Cms\Field;
+use Kirby\Cms\Page;
 use Kirby\Form\Form;
-use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\ProductList;
 
@@ -74,7 +75,7 @@ abstract class OrderPageAbstract extends Page
     *
     * @deprecated Rename “Payeddate” fields to “Paiddate” in every order page and use $orderPage->paidDate()
     */
-    public function payedDate(): \Kirby\Cms\Field
+    public function payedDate(): Field
     {
         if ($this->content()->payedDate()->isNotEmpty()) {
             return $this->content()->payedDate();

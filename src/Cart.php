@@ -11,6 +11,8 @@ class Cart extends ProductList
 
 
     /**
+     * Constructor
+     *
      * @param array $data List of product items. Product items must contain `id`. `quantity`, `title`, `price`, `tax` are optional.
      */
     public function __construct(array $data = [])

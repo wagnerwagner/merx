@@ -80,7 +80,7 @@ class ProductList extends Collection
      * Sets title, price and tax automagically if $key is a valid page slug.
      *
      * @param string $key
-     * @param array $value
+     * @param mixed $value
      * @return void
      */
     public function __set(string $key, $value): void
