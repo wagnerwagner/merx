@@ -13,10 +13,10 @@
         </ignoreFiles>
     </projectFiles>
     <issueHandlers>
-      <UndefinedClass>
-        <errorLevel type="suppress">
-          <referencedClass name="OrderPage" />
-        </errorLevel>
-      </UndefinedClass>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <referencedClass name="OrderPage" />
+            </errorLevel>
+        </UndefinedClass>
     </issueHandlers>
 </psalm>
