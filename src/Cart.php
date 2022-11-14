@@ -22,7 +22,7 @@ class Cart extends ProductList
             $data = $kirby->session()->get($this->sessionName);
         }
         parent::__construct($data);
-        Merx::triggerHook('ww.merx.cart', ['cart' => $this]);
+        kirby()->trigger('ww.merx.cart', ['cart' => $this]);
         $this->save();
     }
 
@@ -126,7 +126,7 @@ class Cart extends ProductList
     /**
      * Updates existing item.
      *
-     * @param array $updatedItem Must contain a valid product page id.
+     * @param array $item Must contain a valid product page id.
      */
     public function updateItem(array $item): parent
     {

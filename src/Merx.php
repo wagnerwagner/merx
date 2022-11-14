@@ -185,7 +185,7 @@ class Merx
             $cart = $this->cart;
 
             // run hook
-            Merx::triggerHook('ww.merx.initializePayment:before', compact('data', 'cart'));
+            kirby()->trigger('ww.merx.initializePayment:before', compact('data', 'cart'));
 
             // check cart
             if ($cart->count() <= 0) {
@@ -247,7 +247,7 @@ class Merx
             kirby()->session()->set('ww.merx.virtualOrderPage', $virtualOrderPage->toArray());
 
             // run hook
-            Merx::triggerHook('ww.merx.initializePayment:after', compact('virtualOrderPage', 'redirect'));
+            kirby()->trigger('ww.merx.initializePayment:after', compact('virtualOrderPage', 'redirect'));
 
             return $redirect;
         } catch (\Exception $ex) {
@@ -280,7 +280,7 @@ class Merx
             $virtualOrderPage = $this->getVirtualOrderPageFromSession();
             $gateway = $this->getGateway($virtualOrderPage->paymentMethod()->toString());
 
-            Merx::triggerHook('ww.merx.completePayment:before', compact('virtualOrderPage', 'gateway', 'data'));
+            kirby()->trigger('ww.merx.completePayment:before', compact('virtualOrderPage', 'gateway', 'data'));
 
             if (is_callable($gateway['completePayment'])) {
                 $gateway['completePayment']($virtualOrderPage, $data);
@@ -311,7 +311,7 @@ class Merx
             $this->cart->delete();
             kirby()->session()->remove('ww.merx.virtualOrderPage');
 
-            Merx::triggerHook('ww.merx.completePayment:after', compact('orderPage'));
+            kirby()->trigger('ww.merx.completePayment:after', compact('orderPage'));
 
             return $orderPage;
         } catch (\Exception $ex) {
@@ -369,21 +369,6 @@ class Merx
             ];
         } else {
             return [];
-        }
-    }
-
-    /**
-    * Helper method to make hooks compatible with Kirby 3.4 and older versions.
-    * via https://forum.getkirby.com/t/updating-plugins-with-custom-hooks-for-kirby-3-4/18682
-    *
-    * @deprecated 1.4.0 Future versions will only be compatible with Kirby 3.4 or newer.
-    */
-    public static function triggerHook(string $hook, array $vars)
-    {
-        if (version_compare(\Kirby\Cms\App::version(), '3.4.0-rc.1', '<') === true) {
-            kirby()->trigger($hook, ...array_values($vars));
-        } else {
-            kirby()->trigger($hook, $vars);
         }
     }
 }
