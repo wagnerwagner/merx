@@ -156,7 +156,7 @@ class ProductList extends Collection
 
         $value['key'] = $key;
 
-        $this->data[strtolower($key)] = $value;
+        $this->data[$key] = $value;
 
         if ($this->getTax() < 0) {
             throw new \Exception('The tax of the cart must not be negative');
