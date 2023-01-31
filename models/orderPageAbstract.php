@@ -35,7 +35,10 @@ abstract class OrderPageAbstract extends Page
         return $form->errors();
     }
 
-    public function title(): \Kirby\Cms\Field
+    /**
+     * Returns invoiceNumber
+     */
+    public function title(): Field
     {
         return new Field($this, 'title', $this->invoiceNumber());
     }
