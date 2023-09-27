@@ -1,7 +1,7 @@
 {
     "name": "wagnerwagner/merx",
     "description": "A toolkit to create online shops with Kirby 3",
-    "version": "1.7.1",
+    "version": "1.7.2",
     "license": "proprietary",
     "homepage": "https://merx.wagnerwagner.de",
     "type": "kirby-plugin",
@@ -16,7 +16,7 @@
         "source": "https://github.com/wagnerwagner/merx"
     },
     "require": {
-        "php": ">=7.4.0 <8.2",
+        "php": ">=7.4.0 <8.3",
         "getkirby/composer-installer": "^1.1",
         "stripe/stripe-php": "^7.44",
         "paypal/paypal-checkout-sdk": "^1.0.0"
