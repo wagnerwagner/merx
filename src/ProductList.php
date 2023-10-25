@@ -228,10 +228,13 @@ class ProductList extends Collection
     public function getFormattedItems(): array
     {
         return array_map(function ($item) {
-            $item['price'] = Merx::formatPrice((float)$item['price']);
-            $item['tax'] = Merx::formatPrice((float)$item['tax']);
-            $item['sum'] = Merx::formatPrice((float)($item['sum']));
-            $item['sumTax'] = Merx::formatPrice((float)($item['sumTax']));
+            if ($currency = $item['currency']) {
+                $currencySymbol = option('ww.merx.currencySymbols', [])[$currency] ?? null;
+            }
+            $item['price'] = Merx::formatPrice((float)$item['price'], currencySymbol: $currencySymbol ?? null);
+            $item['tax'] = Merx::formatPrice((float)$item['tax'], currencySymbol: $currencySymbol ?? null);
+            $item['sum'] = Merx::formatPrice((float)$item['sum'], currencySymbol: $currencySymbol ?? null);
+            $item['sumTax'] = Merx::formatPrice((float)$item['sumTax'], currencySymbol: $currencySymbol ?? null);
             return $item;
         }, $this->values());
     }

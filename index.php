@@ -25,9 +25,9 @@ function productList(array $data = []): ProductList
     return new ProductList($data);
 }
 
-function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null): string
+function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null, string $currencySymbol = null): string
 {
-    return Merx::formatPrice($price, $currencyPositionPrecedes, $currencySeparateBySpace);
+    return Merx::formatPrice($price, $currencyPositionPrecedes, $currencySeparateBySpace, $currencySymbol);
 }
 
 function formatIBAN(string $iban): string
@@ -60,6 +60,11 @@ Kirby::plugin('ww/merx', [
         'ordersPage' => 'orders',
         'currency' => 'EUR',
         'currencySymbol' => '€',
+        'currencySymbols' => [
+            'EUR' => '€',
+            'USD' => '$',
+            'CHF' => 'CHF',
+        ],
         'production' => false,
     ],
     'templates' => [
@@ -164,8 +169,8 @@ Kirby::plugin('ww/merx', [
         },
     ],
     'fieldMethods' => [
-        'toFormattedPrice' => function ($field, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null) {
-            return Merx::formatPrice($field->toFloat(), $currencyPositionPrecedes, $currencySeparateBySpace);
+        'toFormattedPrice' => function ($field, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null, string $currencySymbol = null) {
+            return Merx::formatPrice($field->toFloat(), $currencyPositionPrecedes, $currencySeparateBySpace, $currencySymbol);
         },
     ],
 ]);

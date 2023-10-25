@@ -30,10 +30,11 @@ class Merx
      * @param float $price
      * @param bool $currencyPositionPrecedes `true` if currency symbol precedes, `false` if it succeeds one
      * @param bool $currencySeparateBySpace `true` if a space separates currency_symbol, `false` otherwise
+     * @param null|string $currencySymbol if `null` currency symbol of `ww.merx.currencySymbol` is used
      *
      * @return string
      */
-    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null): string
+    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null, string $currencySymbol = null): string
     {
         // set locale for single language installations
         if (!option('languages', false) && option('locale', false)) {
@@ -47,10 +48,11 @@ class Merx
         if ($currencySeparateBySpace === null) {
             $currencySeparateBySpace = option('ww.merx.currencySeparateBySpace', $localeFormatting['p_sep_by_space']);
         }
+        $currencySymbol = is_string($currencySymbol) ? $currencySymbol : option('ww.merx.currencySymbol');
 
         $string = '';
         if ($currencyPositionPrecedes) {
-            $string .= option('ww.merx.currencySymbol', '€');
+            $string .= $currencySymbol;
             if ($currencySeparateBySpace) {
                 $string .= ' '; // non breaking space
             }
@@ -66,7 +68,7 @@ class Merx
             if ($currencySeparateBySpace) {
                 $string .= ' '; // non breaking space
             }
-            $string .= option('ww.merx.currencySymbol', '€');
+            $string .= $currencySymbol;
         }
         return $string;
     }
