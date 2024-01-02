@@ -231,7 +231,7 @@ class ProductList extends Collection
     public function getFormattedItems(): array
     {
         return array_map(function ($item) {
-            if ($currency = $item['currency']) {
+            if ($currency = $item['currency'] ?? null) {
                 $currencySymbol = option('ww.merx.currencySymbols', [])[$currency] ?? null;
             }
             $item['price'] = Merx::formatPrice((float)$item['price'], currencySymbol: $currencySymbol ?? null);
