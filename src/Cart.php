@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx;
 
 use Wagnerwagner\Merx\ProductList;
 use Kirby\Exception\Exception;
+use stdClass;
 
 class Cart extends ProductList
 {
@@ -180,11 +181,14 @@ class Cart extends ProductList
         return $this;
     }
 
-
     /**
-     * Returns an array in the format of PayPal’s purchase_unit_request.
+     * creates the cart array if needed to send it to paypal. function is called in config 'ww.merx.paypal.purchaseUnits'
      *
+     * @author  Tobias Wolf <tobias.wolf@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
      * @since 1.3.0
+     *
+     * @return array
      */
     public function payPalPurchaseUnits(): array
     {
@@ -219,12 +223,13 @@ class Cart extends ProductList
                     ],
                 ],
                 "items" => array_map(function ($cartItem) {
+                    $cartUnitAmount = new stdClass;
+                    $cartUnitAmount->value = number_format($cartItem['price'], 2, '.', '');
+                    $cartUnitAmount->currency_code =  option('ww.merx.currency');
+
                     return [
                         'name' => $cartItem['title'] ?? $cartItem['id'],
-                        'unit_amount' => [
-                            "value" => number_format($cartItem['price'], 2, '.', ''),
-                            "currency_code" => option('ww.merx.currency'),
-                        ],
+                        'unit_amount' => $cartUnitAmount,
                         'quantity' => $cartItem['quantity'],
                     ];
                 }, $items),
