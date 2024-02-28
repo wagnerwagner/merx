@@ -2,31 +2,31 @@
 
 namespace Wagnerwagner\Merx;
 
-use PayPalHttp\HttpResponse;
-use PayPalCheckoutSdk\Core\PayPalHttpClient;
-use PayPalCheckoutSdk\Core\SandboxEnvironment;
-use PayPalCheckoutSdk\Core\ProductionEnvironment;
-use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
-use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
 use Stripe\Stripe;
 use Stripe\Charge;
 use Stripe\Source;
 use Stripe\ApiResource;
 
+/**
+ * Payment Gateway Class for Stripe Payment.
+ *
+ * @category Payment Gateway
+ * @package  Payment Gateway
+ * @author   Alexander Kovac <a.kovac@wagnerwagner.de>
+ * @license  https://wagnerwagner.de Copyright
+ * @link     https://wagnerwagner.de
+ */
 class Payment
 {
-    private static function getPayPalClient(): PayPalHttpClient
-    {
-        if (option('ww.merx.production') === true) {
-            $environment = new ProductionEnvironment(option('ww.merx.paypal.live.clientID'), option('ww.merx.paypal.live.secret'));
-        } else {
-            $environment = new SandboxEnvironment(option('ww.merx.paypal.sandbox.clientID'), option('ww.merx.paypal.sandbox.secret'));
-        }
 
-        return new PayPalHttpClient($environment);
-    }
-
-
+    /**
+     * configure stripe Payment connection settings
+     *
+     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
+     *
+     * @return void
+     */
     private static function setStripeApiKey(): void
     {
         if (option('ww.merx.production') === true) {
@@ -36,55 +36,18 @@ class Payment
         }
     }
 
-
-    public static function createPayPalPayment(float $total): HttpResponse
-    {
-        $client = self::getPayPalClient();
-        $siteTitle = (string)site()->title();
-
-        $request = new OrdersCreateRequest();
-
-        $applicationContext = array_merge([
-            'cancel_url' => url(option('ww.merx.successPage')),
-            'return_url' => url(option('ww.merx.successPage')),
-            'user_action' => 'PAY_NOW',
-            'shipping_preference' => 'NO_SHIPPING',
-            'brand_name' => $siteTitle,
-        ], option('ww.merx.paypal.applicationContext', []));
-
-        if (option('ww.merx.paypal.purchaseUnits')) {
-            $purchaseUnits = option('ww.merx.paypal.purchaseUnits')();
-        } else {
-            $purchaseUnits = [
-                [
-                    "description" => $siteTitle,
-                    "amount" => [
-                        "value" => number_format($total, 2, '.', ''),
-                        "currency_code" => option('ww.merx.currency'),
-                    ],
-                ],
-            ];
-        }
-        $request->body = [
-            "intent" => "CAPTURE",
-            "purchase_units" => $purchaseUnits,
-            "application_context" => $applicationContext,
-        ];
-
-        $response = $client->execute($request);
-        return $response;
-    }
-
-
-    public static function executePayPalPayment(string $orderId): HttpResponse
-    {
-        $client = self::getPayPalClient();
-        $request = new OrdersCaptureRequest($orderId);
-        $response = $client->execute($request);
-        return $response;
-    }
-
-
+    /**
+     * create stripe Payment
+     *
+     * @param  float $amount
+     * @param  array $params
+     * @param  array $options
+     *
+     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
+     *
+     * @return \Stripe\ApiResource
+     */
     public static function createStripePaymentIntent(float $amount, array $params = [], $options = []): ApiResource
     {
         self::setStripeApiKey();
@@ -99,7 +62,16 @@ class Payment
         return $intent;
     }
 
-
+    /**
+     * get the stripe payment informations
+     *
+     * @param  string $paymentIntentId
+     *
+     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
+     *
+     * @return \Stripe\ApiResource
+     */
     public static function getStripePaymentIntent(string $paymentIntentId): ApiResource
     {
         self::setStripeApiKey();
@@ -108,7 +80,18 @@ class Payment
         return $intent;
     }
 
-
+    /**
+     * send the request to Stripe
+     *
+     * @param  float               $amount
+     * @param  string              $type
+     * @param  array               $data
+     *
+     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
+     *
+     * @return \Stripe\ApiResource
+     */
     public static function createStripeSource(float $amount, string $type = 'sofort', array $data = []): ApiResource
     {
         self::setStripeApiKey();
@@ -126,7 +109,16 @@ class Payment
         return $source;
     }
 
-
+    /**
+     * get status of request from stripe
+     *
+     * @param  string $sourceString
+     *
+     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
+     *
+     * @return string
+     */
     public static function getStatusOfSource(string $sourceString): string
     {
         self::setStripeApiKey();
@@ -135,7 +127,17 @@ class Payment
         return $source->status;
     }
 
-
+    /**
+     * create charge
+     *
+     * @param  float               $amount
+     * @param  string              $source
+     *
+     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
+     *
+     * @return \Stripe\ApiResource
+     */
     public static function createStripeCharge(float $amount, string $source): ApiResource
     {
         self::setStripeApiKey();

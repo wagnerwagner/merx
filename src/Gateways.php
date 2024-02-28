@@ -24,12 +24,25 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     ]);
     return $virtualOrderPage;
 }
-
+/**
+ * Gatway Class dummy holder
+ *
+ * This Class only holds the static $gateway Array.
+ *
+ * @category Gatway Class dummy holder
+ * @package  Gatway Class dummy holder
+ * @author   Alexander Kovac <a.kovac@wagnerwagner.de>
+ * @license  https://wagnerwagner.de Copyright
+ * @link     https://wagnerwagner.de
+ */
 class Gateways
 {
     public static $gateways = [];
 }
 
+/**
+ *  Definition of the initializePayment and complete Payment Methods stored in the $gateway Array
+ */
 Gateways::$gateways['paypal'] = [
     'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
         if (option('ww.merx.production') === true) {
@@ -41,11 +54,10 @@ Gateways::$gateways['paypal'] = [
                 throw new Exception('Missing PayPal sandbox keys');
             }
         }
-
-        $response = Payment::createPayPalPayment($virtualOrderPage->cart()->getSum());
+        $response = PayPalPayment::createPayPalPayment($virtualOrderPage);
         $virtualOrderPage->content()->update([
-            'orderId' => $response->result->id,
-            'redirect' => $response->result->links[1]->href,
+            'orderId' => $response['id'],
+            'redirect' => $response['links'][1]['href'],
         ]);
         return $virtualOrderPage;
     },
@@ -58,9 +70,9 @@ Gateways::$gateways['paypal'] = [
             ]);
         }
         // execute payment
-        $paypalResponse = Payment::executePayPalPayment((string)$virtualOrderPage->orderId());
+        $paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->orderId());
         $virtualOrderPage->content()->update([
-            'paymentDetails' => (array)$paypalResponse->result,
+            'paymentDetails' => (string) $paypalResponse,
             'paymentComplete' => true,
             'paidDate' => date('c'),
         ]);
@@ -68,12 +80,18 @@ Gateways::$gateways['paypal'] = [
     }
 ];
 
+/**
+ * Credit Card Payment Gateway
+ */
 Gateways::$gateways['credit-card'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         return completeStripePayment($virtualOrderPage, $data);
     },
 ];
 
+/**
+ *  Credit Card Payment Gateway using Stripe
+ */
 Gateways::$gateways['credit-card-sca'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         $stripePaymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
