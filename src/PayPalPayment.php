@@ -17,6 +17,19 @@ use OrderPage;
  */
 class PayPalPayment
 {
+    /**
+     * handles the request for the gateway. Use 'use Kirby\Http\Remote'
+     *
+     * @param  string             $endpoint
+     * @param  string             $data
+     * @param  array              $auth
+     * @param  array              $requestoptions
+     *
+     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
+     *
+     * @return \Kirby\Http\Remote
+     */
     private static function request(string $endpoint, string $data, array $auth = [], array $requestoptions = []): \Kirby\Http\Remote
     {
 
@@ -39,7 +52,6 @@ class PayPalPayment
             $auth,
             $requestoptions
         );
-        file_put_contents('test.txt',print_r($options,true)."\n", FILE_APPEND);
         $requestClient = Remote::request(
             $endpoint,
             $options
