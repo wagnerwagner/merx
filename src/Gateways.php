@@ -8,7 +8,7 @@ use OrderPage;
 function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderPage
 {
     // check if user canceled payment
-    if (isset($data['source']) && Payment::getStatusOfSource($data['source']) === 'failed') {
+    if (isset($data['source']) && StripePayment::getStatusOfSource($data['source']) === 'failed') {
         throw new Exception([
             'key' => 'merx.paymentCanceled',
             'httpCode' => 400,
@@ -16,7 +16,7 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     }
     // charge payment
     $sourceString = $data['source'] ?? $virtualOrderPage->stripeToken()->toString();
-    $stripeCharge = Payment::createStripeCharge($virtualOrderPage->cart()->getSum(), $sourceString);
+    $stripeCharge = StripePayment::createStripeCharge($virtualOrderPage->cart()->getSum(), $sourceString);
     $virtualOrderPage->content()->update([
         'paymentDetails' => (array)$stripeCharge,
         'paymentComplete' => true,
@@ -25,15 +25,10 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     return $virtualOrderPage;
 }
 /**
- * Gatway Class dummy holder
+ * Gateway class dummy holder
  *
- * This Class only holds the static $gateway Array.
+ * This class only holds the static $gateways array.
  *
- * @category Gatway Class dummy holder
- * @package  Gatway Class dummy holder
- * @author   Alexander Kovac <a.kovac@wagnerwagner.de>
- * @license  https://wagnerwagner.de Copyright
- * @link     https://wagnerwagner.de
  */
 class Gateways
 {
@@ -41,7 +36,7 @@ class Gateways
 }
 
 /**
- *  Definition of the initializePayment and complete Payment Methods stored in the $gateway Array
+ *  Definition of the initializePayment and completePayment methods stored in the $gateways array
  */
 Gateways::$gateways['paypal'] = [
     'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
@@ -81,7 +76,10 @@ Gateways::$gateways['paypal'] = [
 ];
 
 /**
- * Credit Card Payment Gateway
+ * Credit Card payment gateway
+ *
+ * @deprecated 1.7.3
+ *
  */
 Gateways::$gateways['credit-card'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
@@ -90,12 +88,12 @@ Gateways::$gateways['credit-card'] = [
 ];
 
 /**
- *  Credit Card Payment Gateway using Stripe
+ *  Credit Card payment gateway using Stripe
  */
 Gateways::$gateways['credit-card-sca'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         $stripePaymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
-        $paymentIntent = Payment::getStripePaymentIntent($stripePaymentIntentId);
+        $paymentIntent = StripePayment::getStripePaymentIntent($stripePaymentIntentId);
         $paymentIntent->capture();
         $virtualOrderPage->content()->update([
             'paymentComplete' => true,
@@ -118,7 +116,7 @@ Gateways::$gateways['sofort'] = [
                 "country" => "DE",
             ],
         ];
-        $source = Payment::createStripeSource($virtualOrderPage->cart()->getSum(), 'sofort', $data);
+        $source = StripePayment::createStripeSource($virtualOrderPage->cart()->getSum(), 'sofort', $data);
         $virtualOrderPage->content()->update([
             'redirect' => $source->redirect->url,
         ]);

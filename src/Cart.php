@@ -161,7 +161,7 @@ class Cart extends ProductList
                 'httpCode' => 400,
             ]);
         }
-        return Payment::createStripePaymentIntent($this->getSum(), $params, $options);
+        return StripePayment::createStripePaymentIntent($this->getSum(), $params, $options);
     }
 
 
@@ -182,13 +182,13 @@ class Cart extends ProductList
     }
 
     /**
-     * creates the cart array if needed to send it to paypal. function is called in config 'ww.merx.paypal.purchaseUnits'
+     * Could be used for ww.merx.paypal.purchaseUnits
      *
      * @author  Tobias Wolf <tobias.wolf@wagnerwagner.de>
      * @license https://wagnerwagner.de Copyright
      * @since 1.3.0
      *
-     * @return array
+     * @return array Returns an array in the format of PayPal’s purchase_unit_request
      */
     public function payPalPurchaseUnits(): array
     {
