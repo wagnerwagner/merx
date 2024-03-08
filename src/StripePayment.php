@@ -8,14 +8,13 @@ use Stripe\Source;
 use Stripe\ApiResource;
 
 /**
- * Payment class for Stripe payment.
+ * Payment class for Stripe Payment.
  *
  */
 class StripePayment
 {
-
     /**
-     * configure stripe Payment connection settings
+     * Configure Stripe Payment connection settings
      *
      *
      * @return void
@@ -30,14 +29,11 @@ class StripePayment
     }
 
     /**
-     * create stripe Payment
+     * Create Stripe Payment
      *
      * @param  float $amount
      * @param  array $params
      * @param  array $options
-     *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
      *
      * @return \Stripe\ApiResource
      */
@@ -56,12 +52,9 @@ class StripePayment
     }
 
     /**
-     * get the stripe payment informations
+     * Get the Stripe Payment informations
      *
      * @param  string $paymentIntentId
-     *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
      *
      * @return \Stripe\ApiResource
      */
@@ -74,14 +67,11 @@ class StripePayment
     }
 
     /**
-     * send the request to Stripe
+     * Send the request to Stripe Payment api
      *
-     * @param  float               $amount
-     * @param  string              $type
-     * @param  array               $data
-     *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
+     * @param  float  $amount
+     * @param  string $type
+     * @param  array  $data
      *
      * @return \Stripe\ApiResource
      */
@@ -103,12 +93,9 @@ class StripePayment
     }
 
     /**
-     * get status of request from stripe
+     * Get status of request from Stripe Payment api
      *
      * @param  string $sourceString
-     *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
      *
      * @return string
      */
@@ -121,13 +108,10 @@ class StripePayment
     }
 
     /**
-     * create charge
+     * Create an account debit for the selected payment method with Stripe Payment
      *
-     * @param  float               $amount
-     * @param  string              $source
-     *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
+     * @param  float  $amount
+     * @param  string $source
      *
      * @return \Stripe\ApiResource
      */

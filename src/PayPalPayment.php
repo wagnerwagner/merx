@@ -6,8 +6,8 @@ use Kirby\Http\Remote;
 use OrderPage;
 
 /**
- * Payment Class for Paypal Payments unsing Paypal rest api v2
- * For further information, please visit https://developer.paypal.com/api/rest/
+ * Payment Class for PayPal Payments unsing PayPal rest api v2
+ * For further information about the PayPal REST API, please visit https://developer.paypal.com/api/rest/
  *
  */
 class PayPalPayment
@@ -16,19 +16,16 @@ class PayPalPayment
     private static $paypalSandboxApiEntry = 'https://api-m.sandbox.paypal.com';
 
     /**
-     * handles the request for the gateway. Use 'use Kirby\Http\Remote'
+     * Handles the request for the gateway. Use 'use Kirby\Http\Remote'
      *
      * @param  string $endpoint
      * @param  string $data
      * @param  array  $auth
-     * @param  array  $requestoptions
-     *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
+     * @param  array  $requestOptions
      *
      * @return \Kirby\Http\Remote
      */
-    private static function request(string $endpoint, string $data, array $auth = [], array $requestoptions = []): Remote
+    private static function request(string $endpoint, string $data, array $auth = [], array $requestOptions = []): Remote
     {
         if (option('ww.merx.production') === true) {
             $baseUrl = self::$paypalLiveApiEntry;
@@ -46,7 +43,7 @@ class PayPalPayment
         $options = array_replace_recursive(
             $options,
             $auth,
-            $requestoptions
+            $requestOptions
         );
         $requestClient = Remote::request(
             $endpoint,
@@ -56,12 +53,9 @@ class PayPalPayment
     }
 
     /**
-     * create a authorization token
+     * Create an authorization token for the next request
      *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
-     *
-     * @return array contains the auth-informations provided by paypal
+     * @return array contains the auth-informations provided by PayPal
      */
     private static function getAccessToken(): array
     {
@@ -85,19 +79,15 @@ class PayPalPayment
                 'basicAuth' => $auth,
             ],
         );
-        kirby()->session()->set('ww.merx.auth', $token->json());
         return $token->json();
     }
 
     /**
-     * create an order, send it to paypal and return the result as array to initializePayment of the Gateway
+     * Create an order, send it to PayPal and returns the result as an array to initializePayment of the Gateway
      *
      * @param  \OrderPage $orderPage
      *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
-     *
-     * @return array with the orderinformations provided by paypal.
+     * @return array with the orderinformations provided by PayPal.
      */
     public static function createPayPalPayment(OrderPage $orderPage): array
     {
@@ -181,14 +171,11 @@ class PayPalPayment
     }
 
     /**
-     * capture the payment for given order.
+     * Capture the payment for order with id $orderId.
      *
-     * @param  string $orderId
+     * @param  string $orderId is the Id of the order that was delivered by calling initializePayment
      *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
-     *
-     * @return array with the capture informations provided by paypal
+     * @return array with the capture informations provided by PayPal
      */
     public static function executePayPalPayment(string $orderId) : array
     {
@@ -199,7 +186,7 @@ class PayPalPayment
          *  -H 'Authorization: Bearer access_token[AUTHTOKEN]-g'
          *
          */
-        $access = kirby()->session()->get('ww.merx.auth');
+        $access = self::getAccessToken();
         $endpoint = "/v2/checkout/orders/$orderId/capture";
         $response = self::request(
             $endpoint,

@@ -36,7 +36,7 @@ class Gateways
 }
 
 /**
- *  Definition of the initializePayment and completePayment methods stored in the $gateways array
+ *  Definition of the initializePayment and completePayment methods for PayPal stored in the $gateways array
  */
 Gateways::$gateways['paypal'] = [
     'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
