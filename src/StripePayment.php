@@ -8,22 +8,15 @@ use Stripe\Source;
 use Stripe\ApiResource;
 
 /**
- * Payment Gateway Class for Stripe Payment.
+ * Payment class for Stripe payment.
  *
- * @category Payment Gateway
- * @package  Payment Gateway
- * @author   Alexander Kovac <a.kovac@wagnerwagner.de>
- * @license  https://wagnerwagner.de Copyright
- * @link     https://wagnerwagner.de
  */
-class Payment
+class StripePayment
 {
 
     /**
      * configure stripe Payment connection settings
      *
-     * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
      *
      * @return void
      */
