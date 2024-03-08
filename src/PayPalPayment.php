@@ -9,37 +9,33 @@ use OrderPage;
  * Payment Class for Paypal Payments unsing Paypal rest api v2
  * For further information, please visit https://developer.paypal.com/api/rest/
  *
- * @category PayPalPayment
- * @package  PayPalPayment
- * @author   Alexander Kovac <a.kovac@wagnerwagner.de>
- * @license  https://wagnerwagner.de Copyright
- * @link     https://wagnerwagner.de
  */
 class PayPalPayment
 {
+    private static $paypalLiveApiEntry = 'https://api-m.paypal.com';
+    private static $paypalSandboxApiEntry = 'https://api-m.sandbox.paypal.com';
+
     /**
      * handles the request for the gateway. Use 'use Kirby\Http\Remote'
      *
-     * @param  string             $endpoint
-     * @param  string             $data
-     * @param  array              $auth
-     * @param  array              $requestoptions
+     * @param  string $endpoint
+     * @param  string $data
+     * @param  array  $auth
+     * @param  array  $requestoptions
      *
      * @author  Alexander Kovac <a.kovac@wagnerwagner.de>
      * @license https://wagnerwagner.de Copyright
      *
      * @return \Kirby\Http\Remote
      */
-    private static function request(string $endpoint, string $data, array $auth = [], array $requestoptions = []): \Kirby\Http\Remote
+    private static function request(string $endpoint, string $data, array $auth = [], array $requestoptions = []): Remote
     {
-
         if (option('ww.merx.production') === true) {
-            $baseUrl = option('ww.merx.paypal.live.url');
+            $baseUrl = self::$paypalLiveApiEntry;
         } else {
-            $baseUrl = option('ww.merx.paypal.sandbox.url');
+            $baseUrl = self::$paypalSandboxApiEntry;
         }
-
-        $endpoint = $baseUrl.$endpoint;
+        $endpoint = $baseUrl . $endpoint;
         $options = [
             'method' => 'POST',
             'headers' => [
@@ -67,7 +63,7 @@ class PayPalPayment
      *
      * @return array contains the auth-informations provided by paypal
      */
-    private static function getAccessTokken(): array
+    private static function getAccessToken(): array
     {
         /**
          * Rquest Example
@@ -110,7 +106,7 @@ class PayPalPayment
          * curl -v -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders \
          *  -H 'Content-Type: application/json' \
          *  -H 'PayPal-Request-Id: 7b92603e-77ed-4896-8e78-5dea2050476a' \
-         *  -H 'Authorization: Bearer 6V7rbVwmlM1gFZKW_8QtzWXqpcwQ6T5vhEGYNJDAAdn3paCgRpdeMdVYmWzgbKSsECednupJ3Zx5Xd-g' \
+         *  -H 'Authorization: Bearer [AUTHTOKEN]-g' \
          *  -d '{
          *    "intent": "CAPTURE",
          *    "purchase_units": [
@@ -139,7 +135,7 @@ class PayPalPayment
          *  }'
          */
         $siteTitle = (string)site()->title();
-        $access = self::getAccessTokken();
+        $access = self::getAccessToken();
 
         if (option('ww.merx.paypal.purchaseUnits')) {
             $purchaseUnits = option('ww.merx.paypal.purchaseUnits')();
@@ -200,7 +196,7 @@ class PayPalPayment
          * Request Example
          * curl -v -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T/capture \
          *  -H 'PayPal-Request-Id: 7b92603e-77ed-4896-8e78-5dea2050476a' \
-         *  -H 'Authorization: Bearer access_token6V7rbVwmlM1gFZKW_8QtzWXqpcwQ6T5vhEGYNJDAAdn3paCgRpdeMdVYmWzgbKSsECednupJ3Zx5Xd-g'
+         *  -H 'Authorization: Bearer access_token[AUTHTOKEN]-g'
          *
          */
         $access = kirby()->session()->get('ww.merx.auth');
