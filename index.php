@@ -1,4 +1,5 @@
 <?php
+
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\ProductList;
