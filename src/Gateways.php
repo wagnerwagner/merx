@@ -52,7 +52,7 @@ Gateways::$gateways['paypal'] = [
         }
         $response = PayPalPayment::createPayPalPayment($virtualOrderPage);
         $virtualOrderPage->content()->update([
-            'orderId' => $response['id'],
+            'payPalOrderId' => $response['id'],
             'redirect' => $response['links'][1]['href'],
         ]);
         return $virtualOrderPage;
@@ -66,7 +66,7 @@ Gateways::$gateways['paypal'] = [
             ]);
         }
         // execute payment
-        $paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->orderId());
+        $paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
         $virtualOrderPage->content()->update([
             'paymentDetails' => (string) Data::encode($paypalResponse,'yaml'),
             'paymentComplete' => true,
