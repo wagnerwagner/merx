@@ -6,9 +6,8 @@ use Kirby\Http\Remote;
 use OrderPage;
 
 /**
- * Payment Class for PayPal Payments unsing PayPal rest api v2
+ * Payment Class for PayPal Payments using PayPal REST API v2
  * For further information about the PayPal REST API, please visit https://developer.paypal.com/api/rest/
- *
  */
 class PayPalPayment
 {
@@ -184,7 +183,6 @@ class PayPalPayment
          * curl -v -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T/capture \
          *  -H 'PayPal-Request-Id: 7b92603e-77ed-4896-8e78-5dea2050476a' \
          *  -H 'Authorization: Bearer access_token[AUTHTOKEN]-g'
-         *
          */
         $access = self::getAccessToken();
         $endpoint = "/v2/checkout/orders/$orderId/capture";
