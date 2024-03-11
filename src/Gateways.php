@@ -3,6 +3,7 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
+use Kirby\Data\Data;
 use OrderPage;
 
 function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderPage
@@ -67,7 +68,7 @@ Gateways::$gateways['paypal'] = [
         // execute payment
         $paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->orderId());
         $virtualOrderPage->content()->update([
-            'paymentDetails' => (string) $paypalResponse,
+            'paymentDetails' => (string) Data::encode($paypalResponse,'yaml'),
             'paymentComplete' => true,
             'paidDate' => date('c'),
         ]);
