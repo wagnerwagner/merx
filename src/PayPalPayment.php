@@ -11,20 +11,18 @@ use OrderPage;
  */
 class PayPalPayment
 {
-    private static $paypalLiveApiEntry = 'https://api-m.paypal.com';
-    private static $paypalSandboxApiEntry = 'https://api-m.sandbox.paypal.com';
+    private static string $paypalLiveApiEntry = 'https://api-m.paypal.com';
+    private static string $paypalSandboxApiEntry = 'https://api-m.sandbox.paypal.com';
 
     /**
      * Handles the request for the gateway. Use 'use Kirby\Http\Remote'
      *
-     * @param  string $endpoint
-     * @param  string $data
-     * @param  array  $auth
-     * @param  array  $requestOptions
+     * @param string $endpoint
+     * @param array  $params Request parameters as described in https://getkirby.com/docs/reference/objects/http/remote/request#params-array
      *
-     * @return \Kirby\Http\Remote
+     * @return array PayPal REST API response
      */
-    private static function request(string $endpoint, string $data, array $auth = [], array $requestOptions = []): Remote
+    private static function request(string $endpoint, array $params = []): array
     {
         if (option('ww.merx.production') === true) {
             $baseUrl = self::$paypalLiveApiEntry;
@@ -32,97 +30,60 @@ class PayPalPayment
             $baseUrl = self::$paypalSandboxApiEntry;
         }
         $endpoint = $baseUrl . $endpoint;
-        $options = [
-            'method' => 'POST',
-            'headers' => [
-                'Content-Type' => 'application/x-www-form-urlencoded'
-            ],
-            'data' => $data,
-        ];
-        $options = array_replace_recursive(
-            $options,
-            $auth,
-            $requestOptions
-        );
-        $requestClient = Remote::request(
+        $response = Remote::request(
             $endpoint,
-            $options
+            $params,
         );
-        return $requestClient;
+        return (array)$response->json();
     }
 
     /**
-     * Create an authorization token for the next request
+     * Create OAuth 2.0 access tokens
      *
-     * @return array contains the auth-informations provided by PayPal
+     * @see https://developer.paypal.com/api/rest/authentication/ PayPal REST API Documentation
+     *
+     * @return array Contains the authentication information with the following structure:
+     *     - 'scope': (string) A space-separated list of permissions granted by the access token.
+     *     - 'access_token': (string) The token that can be used to access PayPal APIs.
+     *     - 'token_type': (string) Indicates the type of token, typically "Bearer".
+     *     - 'app_id': (string) The PayPal application ID to which this token applies.
+     *     - 'expires_in': (int) The number of seconds until the token expires.
+     *     - 'nonce': (string) A unique nonce value associated with this token, used for validation purposes.
      */
     private static function getAccessToken(): array
     {
-        /**
-         * Rquest Example
-         * curl -v -X POST "https://api-m.sandbox.paypal.com/v1/oauth2/token"\
-         *  -u "CLIENT_ID:CLIENT_SECRET"\
-         *  -H "Content-Type: application/x-www-form-urlencoded"\
-         *  -d "grant_type=client_credentials"
-         */
         if (option('ww.merx.production') === true) {
-            $auth = option('ww.merx.paypal.live.clientID').':'.option('ww.merx.paypal.live.secret');
+            $auth = option('ww.merx.paypal.live.clientID') . ':' . option('ww.merx.paypal.live.secret');
         } else {
-            $auth = option('ww.merx.paypal.sandbox.clientID').':'.option('ww.merx.paypal.sandbox.secret');
+            $auth = option('ww.merx.paypal.sandbox.clientID') . ':' . option('ww.merx.paypal.sandbox.secret');
         }
         $endpoint = '/v1/oauth2/token';
-        $token = self::request(
+        $response = self::request(
             $endpoint,
-            'grant_type=client_credentials',
             [
+                'method' => 'POST',
                 'basicAuth' => $auth,
+                'data' => 'grant_type=client_credentials',
             ],
         );
-        return $token->json();
+        return $response;
     }
 
     /**
-     * Create an order, send it to PayPal and returns the result as an array to initializePayment of the Gateway
+     * Create PayPal order from OrderPage
      *
-     * @param  \OrderPage $orderPage
+     * @see https://developer.paypal.com/docs/api/orders/v2/#orders_create PayPal REST API Documentation
      *
-     * @return array with the orderinformations provided by PayPal.
+     * @param \OrderPage $orderPage
+     *
+     * @return array PayPal order details.
+     *     - 'id': (string) The ID of the order.
+     *     - 'status': (string) The order status.
+     *     - 'payment_source': (array) The payment source used to fund the payment.
+     *     - 'links': (array) An array of request-related HATEOAS links. To complete payer approval, use the approve link to redirect the payer.
      */
     public static function createPayPalPayment(OrderPage $orderPage): array
     {
-        /**
-         * Request Example
-         * curl -v -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders \
-         *  -H 'Content-Type: application/json' \
-         *  -H 'PayPal-Request-Id: 7b92603e-77ed-4896-8e78-5dea2050476a' \
-         *  -H 'Authorization: Bearer [AUTHTOKEN]-g' \
-         *  -d '{
-         *    "intent": "CAPTURE",
-         *    "purchase_units": [
-         *      {
-         *        "reference_id": "d9f80740-38f0-11e8-b467-0ed5f89f718b",
-         *        "amount": {
-         *          "currency_code": "USD",
-         *          "value": "100.00"
-         *        }
-         *      }
-         *    ],
-         *    "payment_source": {
-         *      "paypal": {
-         *        "experience_context": {
-         *          "payment_method_preference": "IMMEDIATE_PAYMENT_REQUIRED",
-         *          "brand_name": "EXAMPLE INC",
-         *          "locale": "en-US",
-         *          "landing_page": "LOGIN",
-         *          "shipping_preference": "SET_PROVIDED_ADDRESS",
-         *          "user_action": "PAY_NOW",
-         *          "return_url": "https://example.com/returnUrl",
-         *          "cancel_url": "https://example.com/cancelUrl"
-         *        }
-         *      }
-         *    }
-         *  }'
-         */
         $siteTitle = (string)site()->title();
         $access = self::getAccessToken();
 
@@ -131,14 +92,15 @@ class PayPalPayment
         } else {
             $purchaseUnits = [
                 [
-                    "description" => $siteTitle,
-                    "amount" => [
-                        "value" => number_format($orderPage->cart()->getSum(), 2, '.', ''),
-                        "currency_code" => option('ww.merx.currency'),
+                    'description' => $siteTitle,
+                    'amount' => [
+                        'value' => number_format($orderPage->cart()->getSum(), 2, '.', ''),
+                        'currency_code' => option('ww.merx.currency'),
                     ],
                 ],
             ];
         }
+
         $applicationContext = array_merge([
             'cancel_url' => url(option('ww.merx.successPage')),
             'return_url' => url(option('ww.merx.successPage')),
@@ -156,49 +118,51 @@ class PayPalPayment
                 ]
             ]
         ];
+
         $endpoint = '/v2/checkout/orders';
-        $paypalOrder = self::request(
+        $response = self::request(
             $endpoint,
-            json_encode($data),
-            [],
-            ['headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => $access['token_type'].' '.$access['access_token'],
-            ]]
+            [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
+                ],
+                'data' => json_encode($data),
+            ],
         );
-        return $paypalOrder->json();
+        return $response;
     }
 
     /**
-     * Capture the payment for order with id $orderId.
+     * Capture PayPal payment for order
      *
-     * @param  string $orderId is the Id of the order that was delivered by calling initializePayment
+     * @see https://developer.paypal.com/docs/api/orders/v2/#orders_capture PayPal REST API Documentation
      *
-     * @return array with the capture informations provided by PayPal
+     * @param string $payPalOrderId The ID of the PayPal order for which to capture a payment.
+     *
+     * @return array Captured PayPal payment details
+     *     - 'id': (string) The ID of the order.
+     *     - 'status': (string) The order status.
+     *     - 'payment_source': (array) The payment source used to fund the payment.
+     *     - 'purchase_units': (array) An array of purchase units.
+     *     - 'payer': (array) The customer who approves and pays for the order. The customer is also known as the payer.
+     *     - 'links': (array) An array of request-related HATEOAS links.
      */
-    public static function executePayPalPayment(string $orderId) : array
+    public static function executePayPalPayment(string $payPalOrderId): array
     {
-        /**
-         * Request Example
-         * curl -v -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T/capture \
-         *  -H 'PayPal-Request-Id: 7b92603e-77ed-4896-8e78-5dea2050476a' \
-         *  -H 'Authorization: Bearer access_token[AUTHTOKEN]-g'
-         */
         $access = self::getAccessToken();
-        $endpoint = "/v2/checkout/orders/$orderId/capture";
+        $endpoint = '/v2/checkout/orders/' . $payPalOrderId . '/capture';
         $response = self::request(
             $endpoint,
-            '',
-            [],
             [
                 'method' => 'POST',
-                'headers' =>
-                [
+                'headers' => [
                     'Content-Type' => 'application/json',
-                    'Authorization' => $access['token_type'].' '.$access['access_token'],
-                ]
-            ]
+                    'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
+                ],
+            ],
         );
-        return $response->json();
+        return $response;
     }
 }

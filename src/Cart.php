@@ -8,7 +8,7 @@ use stdClass;
 
 class Cart extends ProductList
 {
-    protected $sessionName = 'ww.merx.cartItems';
+    protected string $sessionName = 'ww.merx.cartItems';
 
 
     /**

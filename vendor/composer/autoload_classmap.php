@@ -261,6 +261,6 @@ return array(
     'Wagnerwagner\\Merx\\Gateways' => $baseDir . '/src/Gateways.php',
     'Wagnerwagner\\Merx\\Merx' => $baseDir . '/src/Merx.php',
     'Wagnerwagner\\Merx\\PayPalPayment' => $baseDir . '/src/PayPalPayment.php',
-    'Wagnerwagner\\Merx\\Payment' => $baseDir . '/src/Payment.php',
     'Wagnerwagner\\Merx\\ProductList' => $baseDir . '/src/ProductList.php',
+    'Wagnerwagner\\Merx\\StripePayment' => $baseDir . '/src/StripePayment.php',
 );

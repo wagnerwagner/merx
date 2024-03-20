@@ -25,6 +25,7 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     ]);
     return $virtualOrderPage;
 }
+
 /**
  * Gateway class dummy holder
  *
@@ -33,7 +34,7 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
  */
 class Gateways
 {
-    public static $gateways = [];
+    public static array $gateways = [];
 }
 
 /**
@@ -65,10 +66,11 @@ Gateways::$gateways['paypal'] = [
                 'httpCode' => 400,
             ]);
         }
+
         // execute payment
         $paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
         $virtualOrderPage->content()->update([
-            'paymentDetails' => (string) Data::encode($paypalResponse,'yaml'),
+            'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
             'paymentComplete' => true,
             'paidDate' => date('c'),
         ]);
