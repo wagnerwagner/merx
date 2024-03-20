@@ -1,6 +1,5 @@
 <?php
 
-use Kirby\Cms\Field;
 use Kirby\Cms\Page;
 use Kirby\Form\Form;
 use Wagnerwagner\Merx\Merx;

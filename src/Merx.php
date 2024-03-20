@@ -8,14 +8,13 @@ use Kirby\Toolkit\Str;
 use Kirby\Toolkit\Escape;
 use Kirby\Toolkit\V;
 use Kirby\Exception\Exception;
-use Kirby\Cms\Field;
 use Kirby\Data\Yaml;
 use OrderPage;
 
 class Merx
 {
-    protected $cart;
-    protected $gateways = [];
+    protected Cart $cart;
+    protected array $gateways = [];
 
     public function __construct()
     {
@@ -303,6 +302,8 @@ class Merx
             $ordersPage = page(option('ww.merx.ordersPage', 'orders'));
             $virtualOrderPageArray = $virtualOrderPage->toArray();
             $virtualOrderPageArray['template'] = $virtualOrderPageArray['template']->name();
+
+            /** @var OrderPage $orderPage */
             $orderPage = $ordersPage->createChild($virtualOrderPageArray)->publish()->changeStatus('listed');
 
             // Reset language
@@ -333,7 +334,7 @@ class Merx
     }
 
 
-    public static function setMessage($message)
+    public static function setMessage(mixed $message): void
     {
         kirby()->session()->set('ww.merx.message', $message);
     }
@@ -344,7 +345,7 @@ class Merx
      *
      * @return null|mixed
      */
-    public static function getMessage()
+    public static function getMessage(): mixed
     {
         $messageSession = kirby()->session()->get('ww.merx.message');
         if ($messageSession) {
@@ -356,7 +357,7 @@ class Merx
     }
 
 
-    public static function getFieldError(Field $field, array $rules): array
+    public static function getFieldError(\Field $field, array $rules): array
     {
         $errors = V::errors($field->value(), $rules);
         $fields = array_change_key_case($field->parent()->blueprint()->fields(), CASE_LOWER);

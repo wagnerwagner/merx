@@ -3,12 +3,13 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
+use Kirby\Data\Data;
 use OrderPage;
 
 function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderPage
 {
     // check if user canceled payment
-    if (isset($data['source']) && Payment::getStatusOfSource($data['source']) === 'failed') {
+    if (isset($data['source']) && StripePayment::getStatusOfSource($data['source']) === 'failed') {
         throw new Exception([
             'key' => 'merx.paymentCanceled',
             'httpCode' => 400,
@@ -16,7 +17,7 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     }
     // charge payment
     $sourceString = $data['source'] ?? $virtualOrderPage->stripeToken()->toString();
-    $stripeCharge = Payment::createStripeCharge($virtualOrderPage->cart()->getSum(), $sourceString);
+    $stripeCharge = StripePayment::createStripeCharge($virtualOrderPage->cart()->getSum(), $sourceString);
     $virtualOrderPage->content()->update([
         'paymentDetails' => (array)$stripeCharge,
         'paymentComplete' => true,
@@ -25,11 +26,20 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     return $virtualOrderPage;
 }
 
+/**
+ * Gateway class dummy holder
+ *
+ * This class only holds the static $gateways array.
+ *
+ */
 class Gateways
 {
-    public static $gateways = [];
+    public static array $gateways = [];
 }
 
+/**
+ *  Definition of the initializePayment and completePayment methods for PayPal stored in the $gateways array
+ */
 Gateways::$gateways['paypal'] = [
     'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
         if (option('ww.merx.production') === true) {
@@ -41,11 +51,10 @@ Gateways::$gateways['paypal'] = [
                 throw new Exception('Missing PayPal sandbox keys');
             }
         }
-
-        $response = Payment::createPayPalPayment($virtualOrderPage->cart()->getSum());
+        $response = PayPalPayment::createPayPalPayment($virtualOrderPage);
         $virtualOrderPage->content()->update([
-            'orderId' => $response->result->id,
-            'redirect' => $response->result->links[1]->href,
+            'payPalOrderId' => $response['id'],
+            'redirect' => $response['links'][1]['href'],
         ]);
         return $virtualOrderPage;
     },
@@ -57,10 +66,11 @@ Gateways::$gateways['paypal'] = [
                 'httpCode' => 400,
             ]);
         }
+
         // execute payment
-        $paypalResponse = Payment::executePayPalPayment((string)$virtualOrderPage->orderId());
+        $paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
         $virtualOrderPage->content()->update([
-            'paymentDetails' => (array)$paypalResponse->result,
+            'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
             'paymentComplete' => true,
             'paidDate' => date('c'),
         ]);
@@ -68,16 +78,25 @@ Gateways::$gateways['paypal'] = [
     }
 ];
 
+/**
+ * Credit Card payment gateway
+ *
+ * @deprecated 1.7.3
+ *
+ */
 Gateways::$gateways['credit-card'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         return completeStripePayment($virtualOrderPage, $data);
     },
 ];
 
+/**
+ *  Credit Card payment gateway using Stripe
+ */
 Gateways::$gateways['credit-card-sca'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         $stripePaymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
-        $paymentIntent = Payment::getStripePaymentIntent($stripePaymentIntentId);
+        $paymentIntent = StripePayment::getStripePaymentIntent($stripePaymentIntentId);
         $paymentIntent->capture();
         $virtualOrderPage->content()->update([
             'paymentComplete' => true,
@@ -100,7 +119,7 @@ Gateways::$gateways['sofort'] = [
                 "country" => "DE",
             ],
         ];
-        $source = Payment::createStripeSource($virtualOrderPage->cart()->getSum(), 'sofort', $data);
+        $source = StripePayment::createStripeSource($virtualOrderPage->cart()->getSum(), 'sofort', $data);
         $virtualOrderPage->content()->update([
             'redirect' => $source->redirect->url,
         ]);
