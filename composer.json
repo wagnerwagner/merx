@@ -22,12 +22,15 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9",
-        "getkirby/cms": "^4"
+        "getkirby/cms": "^3.9 || ^4.0"
     },
     "autoload": {
         "psr-4": {
             "Wagnerwagner\\Merx\\": "src/"
         }
+    },
+    "extra": {
+      "kirby-cms-path": false
     },
     "scripts": {
         "analyze:psalm": "psalm",
