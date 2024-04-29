@@ -86,10 +86,11 @@ class Cart extends ProductList
      */
     public function remove($key)
     {
-        if (isset($this->data[$key])) {
-            parent::remove($key);
-            $this->save();
+        if ($this->caseSensitive !== true) {
+            $key = strtolower($key);
         }
+        parent::remove($key);
+        $this->save();
         return $this;
     }
 
