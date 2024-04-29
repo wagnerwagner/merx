@@ -124,9 +124,7 @@ class ProductList extends Collection
             }
             foreach (option('ww.merx.cart.fields', []) as $fieldName) {
                 $field = $page->{$fieldName}();
-                if (is_a($field, '\Kirby\Cms\Field') && $field->isNotEmpty()) {
-                    $value[$fieldName] = $field->toString();
-                } elseif (
+                if (
                     $field === null ||
                     is_scalar($field) ||
                     is_string($field) ||
