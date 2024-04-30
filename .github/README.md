@@ -1,6 +1,6 @@
 # Merx
 
-Merx is a plugin to create online shops with [Kirby 3](https://getkirby.com).
+Merx is a plugin to create online shops with [Kirby](https://getkirby.com).
 
 ## Documentation
 

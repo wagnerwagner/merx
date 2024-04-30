@@ -4,10 +4,11 @@ namespace Wagnerwagner\Merx;
 
 use Wagnerwagner\Merx\ProductList;
 use Kirby\Exception\Exception;
+use stdClass;
 
 class Cart extends ProductList
 {
-    protected $sessionName = 'ww.merx.cartItems';
+    protected string $sessionName = 'ww.merx.cartItems';
 
 
     /**
@@ -86,10 +87,11 @@ class Cart extends ProductList
      */
     public function remove($key)
     {
-        if (isset($this->data[$key])) {
-            parent::remove($key);
-            $this->save();
+        if ($this->caseSensitive !== true) {
+            $key = strtolower($key);
         }
+        parent::remove($key);
+        $this->save();
         return $this;
     }
 
@@ -159,7 +161,7 @@ class Cart extends ProductList
                 'httpCode' => 400,
             ]);
         }
-        return Payment::createStripePaymentIntent($this->getSum(), $params, $options);
+        return StripePayment::createStripePaymentIntent($this->getSum(), $params, $options);
     }
 
 
@@ -175,15 +177,22 @@ class Cart extends ProductList
 
     private function save(): self
     {
-        kirby()->session()->set($this->sessionName, $this->toArray());
+        if ($this->count() === 0) {
+            kirby()->session()->remove($this->sessionName);
+        } else {
+            kirby()->session()->set($this->sessionName, $this->toArray());
+        }
         return $this;
     }
 
-
     /**
-     * Returns an array in the format of PayPal’s purchase_unit_request.
+     * Could be used for ww.merx.paypal.purchaseUnits
      *
+     * @author  Tobias Wolf <tobias.wolf@wagnerwagner.de>
+     * @license https://wagnerwagner.de Copyright
      * @since 1.3.0
+     *
+     * @return array Returns an array in the format of PayPal’s purchase_unit_request
      */
     public function payPalPurchaseUnits(): array
     {
@@ -218,12 +227,13 @@ class Cart extends ProductList
                     ],
                 ],
                 "items" => array_map(function ($cartItem) {
+                    $cartUnitAmount = new stdClass;
+                    $cartUnitAmount->value = number_format($cartItem['price'], 2, '.', '');
+                    $cartUnitAmount->currency_code =  option('ww.merx.currency');
+
                     return [
                         'name' => $cartItem['title'] ?? $cartItem['id'],
-                        'unit_amount' => [
-                            "value" => number_format($cartItem['price'], 2, '.', ''),
-                            "currency_code" => option('ww.merx.currency'),
-                        ],
+                        'unit_amount' => $cartUnitAmount,
                         'quantity' => $cartItem['quantity'],
                     ];
                 }, $items),
