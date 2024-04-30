@@ -223,6 +223,19 @@ class ProductList extends Collection
     }
 
 
+    public function currency(): ?string
+    {
+        return $this->first()['currency'] ?? null;
+    }
+
+
+    public function currencySymbol(): ?string
+    {
+        $currency = $this->currency();
+        return option('ww.merx.currencySymbols', [])[$currency] ?? null;
+    }
+
+
     /**
      * Formats price, tax and sum.
      */
