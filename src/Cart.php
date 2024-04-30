@@ -176,7 +176,11 @@ class Cart extends ProductList
 
     private function save(): self
     {
-        kirby()->session()->set($this->sessionName, $this->toArray());
+        if ($this->count() === 0) {
+            kirby()->session()->remove($this->sessionName);
+        } else {
+            kirby()->session()->set($this->sessionName, $this->toArray());
+        }
         return $this;
     }
 
