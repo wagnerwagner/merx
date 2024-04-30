@@ -61,7 +61,7 @@ class ProductList extends Collection
         }
         $key = $item['key'];
         $existingItem = $this->get($key);
-        $quantity = (float)($item['quantity'] ?? $existingItem['quantity']);
+        $quantity = (float)($item['quantity'] ?? $existingItem['quantity'] ?? 1);
         if ($existingItem) {
             if ($quantity <= 0) {
                 $this->remove($key);
