@@ -137,9 +137,6 @@ class ProductList extends Collection
         if (!isset($value['price'])) {
             throw new \Exception('You have to provide a "price" or a page with a price field.');
         }
-        if (isset($value['quantifier'])) {
-            $value['price'] = (float)$value['quantifier'] * $value['price'];
-        }
         if (!isset($value['taxRate'])) {
             $value['taxRate'] = 0;
         }
