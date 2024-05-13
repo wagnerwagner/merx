@@ -1,8 +1,8 @@
 <?php return array(
     'root' => array(
         'name' => 'wagnerwagner/merx',
-        'pretty_version' => '1.8.0-beta.1',
-        'version' => '1.8.0.0-beta1',
+        'pretty_version' => '1.8.0',
+        'version' => '1.8.0.0',
         'reference' => null,
         'type' => 'kirby-plugin',
         'install_path' => __DIR__ . '/../../',
@@ -29,8 +29,8 @@
             'dev_requirement' => false,
         ),
         'wagnerwagner/merx' => array(
-            'pretty_version' => '1.8.0-beta.1',
-            'version' => '1.8.0.0-beta1',
+            'pretty_version' => '1.8.0',
+            'version' => '1.8.0.0',
             'reference' => null,
             'type' => 'kirby-plugin',
             'install_path' => __DIR__ . '/../../',
