@@ -127,6 +127,7 @@ Gateways::$gateways['sepa-debit'] = [
     },
 ];
 
+/** @deprecated Use Klarna instead. More information: https://support.stripe.com/questions/sofort-is-being-deprecated-as-a-standalone-payment-method */
 Gateways::$gateways['sofort'] = [
     'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
         $country = $virtualOrderPage->country()->toString();
