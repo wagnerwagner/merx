@@ -38,12 +38,14 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     $metadata = [
         'order_uid' => (string)$virtualOrderPage->uid(),
     ];
-    // Capture Payment Intent
+
     if ($paymentIntent->status === 'requires_capture') {
+        // Capture Payment Intent
         $paymentIntent = $paymentIntent->capture([
             'metadata' => $metadata,
         ]);
     } else {
+        // Update Payment Intent
         $paymentIntent = $paymentIntent->update($paymentIntentId, [
             'metadata' => $metadata,
         ]);
