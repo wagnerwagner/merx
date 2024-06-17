@@ -2,8 +2,9 @@
 
 namespace Wagnerwagner\Merx;
 
+use Exception;
+use Stripe\Event;
 use Stripe\Stripe;
-use Stripe\ApiResource;
 use Stripe\PaymentIntent;
 
 /**
@@ -27,12 +28,41 @@ class StripePayment
         }
     }
 
-    private static function createStripeClient()
+    /**
+     * summary
+     *
+     * @see https://docs.stripe.com/webhooks#verify-official-libraries
+     * @param string $payload Payload from stripe webhook
+     *
+     * @return \Stripe\Event
+     */
+    public static function constructEvent(string $payload): Event
     {
-        if (option('ww.merx.production') === true) {
-            return new \Stripe\StripeClient(option('ww.merx.stripe.live.secret_key'));
-        } else {
-            return new \Stripe\StripeClient(option('ww.merx.stripe.test.secret_key'));
+        self::setStripeApiKey();
+
+        $endpoint_secret = option('ww.merx.stripe.webhook_signing_secret', false);
+        if ($endpoint_secret === false) {
+            throw new Exception('No Stripe Webhook signing secret');
+        }
+
+        $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
+        $event = null;
+
+        try {
+            $event = \Stripe\Webhook::constructEvent(
+                $payload, $sig_header, $endpoint_secret
+            );
+            return $event;
+        } catch(\UnexpectedValueException $e) {
+            // Invalid payload
+          http_response_code(400);
+          echo json_encode(['Error parsing payload: ' => $e->getMessage()]);
+          exit();
+        } catch(\Stripe\Exception\SignatureVerificationException $e) {
+            // Invalid signature
+            http_response_code(400);
+            echo json_encode(['Error verifying webhook signature: ' => $e->getMessage()]);
+            exit();
         }
     }
 
@@ -66,7 +96,7 @@ class StripePayment
      *
      * @return \Stripe\PaymentIntent
      */
-    public static function retriveStripePaymentIntent(string $paymentIntentId): PaymentIntent
+    public static function retrieveStripePaymentIntent(string $paymentIntentId): PaymentIntent
     {
         self::setStripeApiKey();
 

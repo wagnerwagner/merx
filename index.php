@@ -55,6 +55,11 @@ function crossfoot(int $int): string
 }
 
 Kirby::plugin('ww/merx', [
+    'api' => [
+        'routes' => [
+            require_once(__DIR__ . '/api/routes/hooks-stripe.php'),
+        ],
+    ],
     'options' => [
         'successPage' => 'success',
         'ordersPage' => 'orders',
@@ -164,6 +169,29 @@ Kirby::plugin('ww/merx', [
             ]);
             site()->children()->add($successPage);
         },
+        'ww.merx.stripe-hooks' => function (\Stripe\Event $stripeEvent) {
+            switch ($stripeEvent->type) {
+                case 'payment_intent.succeeded':
+                    /** @var \Stripe\PaymentIntent $paymentIntent */
+                    $paymentIntent = $stripeEvent->data->object;
+                    $orderId = $paymentIntent->metadata->order_uid;
+                    if ($orderId) {
+                        try {
+                            /** @var ?OrderPage $orderPage */
+                            $orderPage = page(option('ww.merx.ordersPage'). '/' . $orderId);
+                            $kirby = $orderPage->kirby();
+                            $kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent) {
+                                $orderPage?->update([
+                                    'paymentDetails' => (array)$paymentIntent->toArray(),
+                                    'paymentComplete' => true,
+                                    'paidDate' => date('c'),
+                                ]);
+                            });
+                        } catch(Exception) {}
+                    }
+                    break;
+            }
+        }
     ],
     'fieldMethods' => [
         'toFormattedPrice' => function ($field, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null) {

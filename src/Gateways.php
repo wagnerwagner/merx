@@ -17,7 +17,7 @@ use OrderPage;
  */
 function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderPage
 {
-    // check if user canceled payment
+    // Check if user canceled payment
     if (isset($data['redirect_status']) ? $data['redirect_status'] === 'failed' : false) {
         throw new Exception([
             'key' => 'merx.paymentCanceled',
@@ -25,26 +25,37 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
         ]);
     }
 
-    // Capture payment intent
-    $paymentIntentId = $data['payment_intent'] ?? $virtualOrderPage->stripePaymentIntentId()->toString();
+    // Retrieve Payment Intent
+    $paymentIntentId = (string)($data['payment_intent'] ?? $virtualOrderPage->stripePaymentIntentId()->toString());
+    $paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
 
-    $paymentIntent = StripePayment::retriveStripePaymentIntent($paymentIntentId);
-
-    if ($paymentIntent->status === 'requires_capture') {
-        $paymentIntent = $paymentIntent->capture();
-    }
+    // Update content of VirtualOrderPage
     $content = [
         'paymentDetails' => (array)$paymentIntent->toArray(),
     ];
-
     if ($paymentIntent->status === 'succeeded') {
         $content = array_merge($content, [
             'paymentComplete' => true,
             'paidDate' => date('c'),
         ]);
     }
-
     $virtualOrderPage->content()->update($content);
+
+    // Prepare meta data
+    $metadata = [
+        'order_uid' => (string)$virtualOrderPage->uid(),
+    ];
+    // Capture Payment Intent
+    if ($paymentIntent->status === 'requires_capture') {
+        $paymentIntent = $paymentIntent->capture([
+            'metadata' => $metadata,
+        ]);
+    } else {
+        $paymentIntent->update($paymentIntentId, [
+            'metadata' => $metadata,
+        ]);
+    }
+
     return $virtualOrderPage;
 }
 
