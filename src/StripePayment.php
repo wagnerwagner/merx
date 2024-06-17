@@ -3,9 +3,8 @@
 namespace Wagnerwagner\Merx;
 
 use Stripe\Stripe;
-use Stripe\Charge;
-use Stripe\Source;
 use Stripe\ApiResource;
+use Stripe\PaymentIntent;
 
 /**
  * Payment class for Stripe Payment.
@@ -28,6 +27,15 @@ class StripePayment
         }
     }
 
+    private static function createStripeClient()
+    {
+        if (option('ww.merx.production') === true) {
+            return new \Stripe\StripeClient(option('ww.merx.stripe.live.secret_key'));
+        } else {
+            return new \Stripe\StripeClient(option('ww.merx.stripe.test.secret_key'));
+        }
+    }
+
     /**
      * Create Stripe Payment
      *
@@ -35,9 +43,9 @@ class StripePayment
      * @param  array $params
      * @param  array $options
      *
-     * @return \Stripe\ApiResource
+     * @return \Stripe\PaymentIntent
      */
-    public static function createStripePaymentIntent(float $amount, array $params = [], $options = []): ApiResource
+    public static function createStripePaymentIntent(float $amount, array $params = [], $options = []): PaymentIntent
     {
         self::setStripeApiKey();
 
@@ -56,73 +64,13 @@ class StripePayment
      *
      * @param  string $paymentIntentId
      *
-     * @return \Stripe\ApiResource
+     * @return \Stripe\PaymentIntent
      */
-    public static function getStripePaymentIntent(string $paymentIntentId): ApiResource
+    public static function retriveStripePaymentIntent(string $paymentIntentId): PaymentIntent
     {
         self::setStripeApiKey();
 
         $intent = \Stripe\PaymentIntent::retrieve($paymentIntentId);
         return $intent;
-    }
-
-    /**
-     * Send the request to Stripe Payment api
-     *
-     * @param  float  $amount
-     * @param  string $type
-     * @param  array  $data
-     *
-     * @return \Stripe\ApiResource
-     */
-    public static function createStripeSource(float $amount, string $type = 'sofort', array $data = []): ApiResource
-    {
-        self::setStripeApiKey();
-
-        $params = array_merge([
-            "type" => $type,
-            "amount" => round($amount * 100),
-            "currency" => option('ww.merx.currency'),
-            "redirect" => [
-                "return_url" => url(option('ww.merx.successPage')),
-            ]
-        ], $data);
-
-        $source = Source::create($params);
-        return $source;
-    }
-
-    /**
-     * Get status of request from Stripe Payment api
-     *
-     * @param  string $sourceString
-     *
-     * @return string
-     */
-    public static function getStatusOfSource(string $sourceString): string
-    {
-        self::setStripeApiKey();
-
-        $source = \Stripe\Source::retrieve($sourceString);
-        return $source->status;
-    }
-
-    /**
-     * Create an account debit for the selected payment method with Stripe Payment
-     *
-     * @param  float  $amount
-     * @param  string $source
-     *
-     * @return \Stripe\ApiResource
-     */
-    public static function createStripeCharge(float $amount, string $source): ApiResource
-    {
-        self::setStripeApiKey();
-        $charge = Charge::create(array(
-            'amount'   => round($amount * 100),
-            'currency' => option('ww.merx.currency'),
-            'source' => $source,
-        ));
-        return $charge;
     }
 }
