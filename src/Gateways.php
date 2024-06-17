@@ -79,18 +79,6 @@ Gateways::$gateways['paypal'] = [
 ];
 
 /**
- * Credit Card payment gateway
- *
- * @deprecated 1.7.3
- *
- */
-Gateways::$gateways['credit-card'] = [
-    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-        return completeStripePayment($virtualOrderPage, $data);
-    },
-];
-
-/**
  *  Credit Card payment gateway using Stripe
  */
 Gateways::$gateways['credit-card-sca'] = [
