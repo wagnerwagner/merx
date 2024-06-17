@@ -61,7 +61,7 @@ class ProductList extends Collection
         }
         $key = $item['key'];
         $existingItem = $this->get($key);
-        $quantity = (float)($item['quantity'] ?? $existingItem['quantity']);
+        $quantity = (float)($item['quantity'] ?? $existingItem['quantity'] ?? 1);
         if ($existingItem) {
             if ($quantity <= 0) {
                 $this->remove($key);
@@ -156,7 +156,7 @@ class ProductList extends Collection
 
         $value['key'] = $key;
 
-        $this->data[strtolower($key)] = $value;
+        $this->data[$key] = $value;
 
         if ($this->getTax() < 0) {
             throw new \Exception('The tax of the cart must not be negative');
