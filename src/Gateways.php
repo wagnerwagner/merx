@@ -187,3 +187,27 @@ Gateways::$gateways['klarna'] = [
         return $virtualOrderPage;
     },
 ];
+
+Gateways::$gateways['ideal'] = [
+    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
+        $cart = new Cart();
+        $paymentIntent = $cart->getStripePaymentIntent([
+            'payment_method_types' => ['ideal'],
+            'capture_method' => 'automatic',
+            'confirm' => true,
+            'payment_method_data' => [
+                'type' => 'ideal',
+            ],
+            'return_url' => url(option('ww.merx.successPage')),
+        ]);
+
+        $virtualOrderPage->content()->update([
+            'redirect' => $paymentIntent->next_action->redirect_to_url->url,
+        ]);
+        return $virtualOrderPage;
+    },
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
+        $virtualOrderPage = completeStripePayment($virtualOrderPage, $data);
+        return $virtualOrderPage;
+    },
+];
