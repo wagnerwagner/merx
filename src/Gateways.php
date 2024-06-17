@@ -30,16 +30,9 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     $paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
 
     // Update content of VirtualOrderPage
-    $content = [
+    $virtualOrderPage->content()->update([
         'paymentDetails' => (array)$paymentIntent->toArray(),
-    ];
-    if ($paymentIntent->status === 'succeeded') {
-        $content = array_merge($content, [
-            'paymentComplete' => true,
-            'paidDate' => date('c'),
-        ]);
-    }
-    $virtualOrderPage->content()->update($content);
+    ]);
 
     // Prepare meta data
     $metadata = [
@@ -53,6 +46,14 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     } else {
         $paymentIntent->update($paymentIntentId, [
             'metadata' => $metadata,
+        ]);
+    }
+
+    // Update content of VirtualOrderPage
+    if ($paymentIntent->status === 'succeeded') {
+        $virtualOrderPage->content()->update([
+            'paymentComplete' => true,
+            'paidDate' => date('c'),
         ]);
     }
 

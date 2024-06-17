@@ -179,14 +179,16 @@ Kirby::plugin('ww/merx', [
                         try {
                             /** @var ?OrderPage $orderPage */
                             $orderPage = page(option('ww.merx.ordersPage'). '/' . $orderId);
-                            $kirby = $orderPage->kirby();
-                            $kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent) {
-                                $orderPage?->update([
-                                    'paymentDetails' => (array)$paymentIntent->toArray(),
-                                    'paymentComplete' => true,
-                                    'paidDate' => date('c'),
-                                ]);
-                            });
+                            if ($orderPage) {
+                                $kirby = $orderPage->kirby();
+                                $kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent) {
+                                    $orderPage?->update([
+                                        'paymentDetails' => (array)$paymentIntent->toArray(),
+                                        'paymentComplete' => true,
+                                        'paidDate' => date('c'),
+                                    ]);
+                                });
+                            }
                         } catch(Exception) {}
                     }
                     break;
