@@ -44,7 +44,7 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
             'metadata' => $metadata,
         ]);
     } else {
-        $paymentIntent->update($paymentIntentId, [
+        $paymentIntent = $paymentIntent->update($paymentIntentId, [
             'metadata' => $metadata,
         ]);
     }
