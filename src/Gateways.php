@@ -131,10 +131,9 @@ Gateways::$gateways['sepa-debit'] = [
 
 /** @deprecated Use Klarna instead. More information: https://support.stripe.com/questions/sofort-is-being-deprecated-as-a-standalone-payment-method */
 Gateways::$gateways['sofort'] = [
-    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
+    'initializePayment' => function (OrderPage $virtualOrderPage, Cart $cart): OrderPage {
         $country = $virtualOrderPage->country()->toString();
 
-        $cart = new Cart();
         $paymentIntent = $cart->getStripePaymentIntent([
             'payment_method_types' => ['sofort'],
             'capture_method' => 'automatic',
@@ -160,22 +159,25 @@ Gateways::$gateways['sofort'] = [
 ];
 
 Gateways::$gateways['klarna'] = [
-    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-        $email = $virtualOrderPage->email()->toString();
-        $country = $virtualOrderPage->country()->toString();
+    'initializePayment' => function (OrderPage $virtualOrderPage, Cart $cart): OrderPage {
+        $billingDetails = null;
+        if (is_callable(option('ww.merx.stripe.billing_details'))) {
+            $billingDetails = option('ww.merx.stripe.billing_details')($virtualOrderPage, 'klarna');
+        } else {
+            $billingDetails = [
+              'email' => $virtualOrderPage->email()->toString(),
+              'address' => [
+                  'country' => $virtualOrderPage->country()->toString(),
+              ],
+            ];
+        }
 
-        $cart = new Cart();
         $paymentIntent = $cart->getStripePaymentIntent([
             'payment_method_types' => ['klarna'],
             'confirm' => true,
             'payment_method_data' => [
                 'type' => 'klarna',
-                'billing_details' => [
-                  'email' => $email,
-                  'address' => [
-                      'country' => $country,
-                  ],
-                ],
+                'billing_details' => $billingDetails,
             ],
             'return_url' => url(option('ww.merx.successPage')),
         ]);
@@ -192,14 +194,19 @@ Gateways::$gateways['klarna'] = [
 ];
 
 Gateways::$gateways['ideal'] = [
-    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-        $cart = new Cart();
+    'initializePayment' => function (OrderPage $virtualOrderPage, Cart $cart): OrderPage {
+        $billingDetails = null;
+        if (is_callable(option('ww.merx.stripe.billing_details'))) {
+            $billingDetails = option('ww.merx.stripe.billing_details')($virtualOrderPage, 'ideal');
+        }
+
         $paymentIntent = $cart->getStripePaymentIntent([
             'payment_method_types' => ['ideal'],
             'capture_method' => 'automatic',
             'confirm' => true,
             'payment_method_data' => [
                 'type' => 'ideal',
+                'billing_details' => $billingDetails,
             ],
             'return_url' => url(option('ww.merx.successPage')),
         ]);
