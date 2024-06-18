@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Exception\Exception;
 use Kirby\Http\Remote;
 use OrderPage;
 
@@ -34,6 +35,15 @@ class PayPalPayment
             $endpoint,
             $params,
         );
+        if (in_array(substr($response->code(), 0, 1), ['4', '5'])) {
+            throw new Exception([
+                'key' => 'merx.paypalError',
+                'httpCode' => $response->code(),
+                'details' => [
+                    'paypalResponse' => $response->json(),
+                ],
+            ]);
+        }
         return (array)$response->json();
     }
 
