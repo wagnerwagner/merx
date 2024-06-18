@@ -236,7 +236,7 @@ class Merx
             // run gateway
             $gateway = $this->getGateway($data['paymentMethod']);
             if (is_callable($gateway['initializePayment'])) {
-                $virtualOrderPage = $gateway['initializePayment']($virtualOrderPage);
+                $virtualOrderPage = $gateway['initializePayment']($virtualOrderPage, $cart);
                 if ($virtualOrderPage->redirect()->isNotEmpty()) {
                     $redirect = (string)$virtualOrderPage->redirect();
                 }
