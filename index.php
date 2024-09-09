@@ -55,6 +55,11 @@ function crossfoot(int $int): string
 }
 
 Kirby::plugin('ww/merx', [
+    'api' => [
+        'routes' => [
+            require_once(__DIR__ . '/api/routes/hooks-stripe.php'),
+        ],
+    ],
     'options' => [
         'successPage' => 'success',
         'ordersPage' => 'orders',
@@ -92,6 +97,7 @@ Kirby::plugin('ww/merx', [
             'error.merx.emptycart' => 'Cart is empty.',
             'error.merx.completePayment' => 'The payment could not be completed.',
             'error.merx.paymentCanceled' => 'You canceled the payment.',
+            'error.merx.paypalError' => 'PayPal error',
             'error.merx.cart.add' => 'Item "{id}" could not be added to cart.',
             'error.merx.cart.update' => 'Cart items could not be updated.',
             'error.merx.order.changeNum' => 'Sorting number of a complete order cannot be changed.',
@@ -121,6 +127,7 @@ Kirby::plugin('ww/merx', [
             'error.merx.emptycart' => 'Der Warenkorb ist leer.',
             'error.merx.completePayment' => 'Die Bezahlung konnte nicht abgeschlossen werden.',
             'error.merx.paymentCanceled' => 'Die Bezahlung wurde abgebrochen.',
+            'error.merx.paypalError' => 'PayPal Fehler',
             'error.merx.cart.add' => 'Produkt "{id}" konnte nicht zum Warenkorb hinzugefügt werden.',
             'error.merx.cart.update' => 'Produkte konnten nicht aktualisiert werden.',
             'error.merx.order.changeNum' => 'Die Position einer vollständigen Bestellung kann nicht geändert werden.',
@@ -162,6 +169,31 @@ Kirby::plugin('ww/merx', [
             ]);
             site()->children()->add($successPage);
         },
+        'ww.merx.stripe-hooks' => function (\Stripe\Event $stripeEvent) {
+            switch ($stripeEvent->type) {
+                case 'payment_intent.succeeded':
+                    /** @var \Stripe\PaymentIntent $paymentIntent */
+                    $paymentIntent = $stripeEvent->data->object;
+                    $orderId = $paymentIntent->metadata->order_uid;
+                    if ($orderId) {
+                        try {
+                            /** @var ?OrderPage $orderPage */
+                            $orderPage = page(option('ww.merx.ordersPage'). '/' . $orderId);
+                            if ($orderPage) {
+                                $kirby = $orderPage->kirby();
+                                $kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent) {
+                                    $orderPage?->update([
+                                        'paymentDetails' => (array)$paymentIntent->toArray(),
+                                        'paymentComplete' => true,
+                                        'paidDate' => date('c'),
+                                    ]);
+                                });
+                            }
+                        } catch(Exception) {}
+                    }
+                    break;
+            }
+        }
     ],
     'fieldMethods' => [
         'toFormattedPrice' => function ($field, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null) {

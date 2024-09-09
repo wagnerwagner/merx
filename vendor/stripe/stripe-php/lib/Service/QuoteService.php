@@ -4,6 +4,10 @@
 
 namespace Stripe\Service;
 
+/**
+ * @phpstan-import-type RequestOptionsArray from \Stripe\Util\RequestOptions
+ * @psalm-import-type RequestOptionsArray from \Stripe\Util\RequestOptions
+ */
 class QuoteService extends \Stripe\Service\AbstractService
 {
     /**
@@ -11,7 +15,7 @@ class QuoteService extends \Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -26,7 +30,7 @@ class QuoteService extends \Stripe\Service\AbstractService
      * Returns a list of your quotes.
      *
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -45,11 +49,11 @@ class QuoteService extends \Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection<\Stripe\Quote>
+     * @return \Stripe\Collection<\Stripe\LineItem>
      */
     public function allComputedUpfrontLineItems($id, $params = null, $opts = null)
     {
@@ -63,11 +67,11 @@ class QuoteService extends \Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection<\Stripe\Quote>
+     * @return \Stripe\Collection<\Stripe\LineItem>
      */
     public function allLineItems($id, $params = null, $opts = null)
     {
@@ -79,7 +83,7 @@ class QuoteService extends \Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -97,7 +101,7 @@ class QuoteService extends \Stripe\Service\AbstractService
      * href="https://dashboard.stripe.com/settings/billing/quote">quote template</a>.
      *
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -113,7 +117,7 @@ class QuoteService extends \Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -125,11 +129,34 @@ class QuoteService extends \Stripe\Service\AbstractService
     }
 
     /**
+     * Download the PDF for a finalized quote. Explanation for special handling can be
+     * found <a href="https://docs.corp.stripe.com/quotes/overview#quote_pdf">here</a>.
+     *
+     * @param string $id
+     * @param callable $readBodyChunkCallable
+     * @param null|array $params
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return mixed
+     */
+    public function pdf($id, $readBodyChunkCallable, $params = null, $opts = null)
+    {
+        $opts = \Stripe\Util\RequestOptions::parse($opts);
+        if (!isset($opts->apiBase)) {
+            $opts->apiBase = $this->getClient()->getFilesBase();
+        }
+
+        return $this->requestStream('get', $this->buildPath('/v1/quotes/%s/pdf', $id), $readBodyChunkCallable, $params, $opts);
+    }
+
+    /**
      * Retrieves the quote with the given ID.
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -145,7 +172,7 @@ class QuoteService extends \Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -154,24 +181,5 @@ class QuoteService extends \Stripe\Service\AbstractService
     public function update($id, $params = null, $opts = null)
     {
         return $this->request('post', $this->buildPath('/v1/quotes/%s', $id), $params, $opts);
-    }
-
-    /**
-     * Download the PDF for a finalized quote.
-     *
-     * @param string $id
-     * @param callable $readBodyChunkCallable
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
-     */
-    public function pdf($id, $readBodyChunkCallable, $params = null, $opts = null)
-    {
-        $opts = \Stripe\Util\RequestOptions::parse($opts);
-        if (!isset($opts->apiBase)) {
-            $opts->apiBase = $this->getClient()->getFilesBase();
-        }
-        $this->requestStream('get', $this->buildPath('/v1/quotes/%s/pdf', $id), $readBodyChunkCallable, $params, $opts);
     }
 }

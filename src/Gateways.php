@@ -6,23 +6,59 @@ use Kirby\Exception\Exception;
 use Kirby\Data\Data;
 use OrderPage;
 
+/**
+ * Captures stripe payment intent
+ *
+ * @param OrderPage $virtualOrderPage Virtual order page which may contain `stripePaymentIntentId` field (Credit Card Payment)
+ * @param array $data Additional data from get request which may contain `payment_intent` (Klarna Payment)
+ * @throws \Kirby\Exception\Exception|\Stripe\Exception\ApiErrorException Kirby exception, when user canceled the payment or Stripe API Exception
+ *
+ * @return OrderPage Virtual order page with updated payment details
+ */
 function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderPage
 {
-    // check if user canceled payment
-    if (isset($data['source']) && StripePayment::getStatusOfSource($data['source']) === 'failed') {
+    // Check if user canceled payment
+    if (isset($data['redirect_status']) ? $data['redirect_status'] === 'failed' : false) {
         throw new Exception([
             'key' => 'merx.paymentCanceled',
             'httpCode' => 400,
         ]);
     }
-    // charge payment
-    $sourceString = $data['source'] ?? $virtualOrderPage->stripeToken()->toString();
-    $stripeCharge = StripePayment::createStripeCharge($virtualOrderPage->cart()->getSum(), $sourceString);
+
+    // Retrieve Payment Intent
+    $paymentIntentId = (string)($data['payment_intent'] ?? $virtualOrderPage->stripePaymentIntentId()->toString());
+    $paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
+
+    // Update content of VirtualOrderPage
     $virtualOrderPage->content()->update([
-        'paymentDetails' => (array)$stripeCharge,
-        'paymentComplete' => true,
-        'paidDate' => date('c'),
+        'paymentDetails' => (array)$paymentIntent->toArray(),
     ]);
+
+    // Prepare meta data
+    $metadata = [
+        'order_uid' => (string)$virtualOrderPage->uid(),
+    ];
+
+    if ($paymentIntent->status === 'requires_capture') {
+        // Capture Payment Intent
+        $paymentIntent = $paymentIntent->capture([
+            'metadata' => $metadata,
+        ]);
+    } else {
+        // Update Payment Intent
+        $paymentIntent = $paymentIntent->update($paymentIntentId, [
+            'metadata' => $metadata,
+        ]);
+    }
+
+    // Update content of VirtualOrderPage
+    if ($paymentIntent->status === 'succeeded') {
+        $virtualOrderPage->content()->update([
+            'paymentComplete' => true,
+            'paidDate' => date('c'),
+        ]);
+    }
+
     return $virtualOrderPage;
 }
 
@@ -79,30 +115,11 @@ Gateways::$gateways['paypal'] = [
 ];
 
 /**
- * Credit Card payment gateway
- *
- * @deprecated 1.7.3
- *
- */
-Gateways::$gateways['credit-card'] = [
-    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-        return completeStripePayment($virtualOrderPage, $data);
-    },
-];
-
-/**
  *  Credit Card payment gateway using Stripe
  */
 Gateways::$gateways['credit-card-sca'] = [
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-        $stripePaymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
-        $paymentIntent = StripePayment::getStripePaymentIntent($stripePaymentIntentId);
-        $paymentIntent->capture();
-        $virtualOrderPage->content()->update([
-            'paymentComplete' => true,
-            'paidDate' => date('c'),
-        ]);
-        return $virtualOrderPage;
+        return completeStripePayment($virtualOrderPage, $data);
     },
 ];
 
@@ -112,20 +129,88 @@ Gateways::$gateways['sepa-debit'] = [
     },
 ];
 
+/** @deprecated Use Klarna instead. More information: https://support.stripe.com/questions/sofort-is-being-deprecated-as-a-standalone-payment-method */
 Gateways::$gateways['sofort'] = [
     'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-        $data = [
-            "sofort" => [
-                "country" => "DE",
+        $country = $virtualOrderPage->country()->toString();
+
+        $cart = new Cart();
+        $paymentIntent = $cart->getStripePaymentIntent([
+            'payment_method_types' => ['sofort'],
+            'capture_method' => 'automatic',
+            'confirm' => true,
+            'payment_method_data' => [
+                'type' => 'sofort',
+                'sofort' => [
+                  'country' => $country,
+                ],
             ],
-        ];
-        $source = StripePayment::createStripeSource($virtualOrderPage->cart()->getSum(), 'sofort', $data);
+            'return_url' => url(option('ww.merx.successPage')),
+        ]);
+
         $virtualOrderPage->content()->update([
-            'redirect' => $source->redirect->url,
+            'redirect' => $paymentIntent->next_action->redirect_to_url->url,
         ]);
         return $virtualOrderPage;
     },
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-        return completeStripePayment($virtualOrderPage, $data);
+        $virtualOrderPage = completeStripePayment($virtualOrderPage, $data);
+        return $virtualOrderPage;
+    },
+];
+
+Gateways::$gateways['klarna'] = [
+    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
+        $email = $virtualOrderPage->email()->toString();
+        $country = $virtualOrderPage->country()->toString();
+
+        $cart = new Cart();
+        $paymentIntent = $cart->getStripePaymentIntent([
+            'payment_method_types' => ['klarna'],
+            'confirm' => true,
+            'payment_method_data' => [
+                'type' => 'klarna',
+                'billing_details' => [
+                  'email' => $email,
+                  'address' => [
+                      'country' => $country,
+                  ],
+                ],
+            ],
+            'return_url' => url(option('ww.merx.successPage')),
+        ]);
+
+        $virtualOrderPage->content()->update([
+            'redirect' => $paymentIntent->next_action->redirect_to_url->url,
+        ]);
+        return $virtualOrderPage;
+    },
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
+        $virtualOrderPage = completeStripePayment($virtualOrderPage, $data);
+        return $virtualOrderPage;
+    },
+];
+
+Gateways::$gateways['ideal'] = [
+    'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
+        $cart = new Cart();
+        $paymentIntent = $cart->getStripePaymentIntent([
+            'payment_method_types' => ['ideal'],
+            'capture_method' => 'automatic',
+            'confirm' => true,
+            'payment_method_data' => [
+                'type' => 'ideal',
+            ],
+            'return_url' => url(option('ww.merx.successPage')),
+        ]);
+
+        $virtualOrderPage->content()->update([
+            'redirect' => $paymentIntent->next_action->redirect_to_url->url,
+        ]);
+        return $virtualOrderPage;
+    },
+    'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
+        $virtualOrderPage = completeStripePayment($virtualOrderPage, $data);
+        return $virtualOrderPage;
     },
 ];
