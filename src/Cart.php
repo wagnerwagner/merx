@@ -188,8 +188,6 @@ class Cart extends ProductList
     /**
      * Could be used for ww.merx.paypal.purchaseUnits
      *
-     * @author  Tobias Wolf <tobias.wolf@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
      * @since 1.3.0
      *
      * @return array Returns an array in the format of PayPal’s purchase_unit_request
