@@ -22,7 +22,7 @@ class Cart extends ProductList
         if (count($data) === 0 && is_array($kirby->session()->get($this->sessionName))) {
             $data = $kirby->session()->get($this->sessionName);
         }
-        parent::__construct($data);
+        parent::__construct($data, true);
         kirby()->trigger('ww.merx.cart', ['cart' => $this]);
         $this->save();
     }
@@ -87,9 +87,6 @@ class Cart extends ProductList
      */
     public function remove($key)
     {
-        if ($this->caseSensitive !== true) {
-            $key = strtolower($key);
-        }
         parent::remove($key);
         $this->save();
         return $this;
