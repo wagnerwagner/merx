@@ -1,7 +1,7 @@
 {
     "name": "wagnerwagner/merx",
     "description": "A toolkit to create online shops with Kirby",
-    "version": "1.9.0",
+    "version": "1.9.1",
     "license": "proprietary",
     "homepage": "https://merx.wagnerwagner.de",
     "type": "kirby-plugin",
