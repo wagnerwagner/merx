@@ -86,6 +86,11 @@ class ProductList extends Collection
     public function __set(string $key, $value): void
     {
         $key = $value['key'] ?? $value['id'] ?? $key;
+
+        if ($this->caseSensitive !== true) {
+            $key = strtolower($key);
+        }
+
         if (!isset($value['id'])) {
             $value['id'] = $key;
         }

@@ -96,7 +96,7 @@ Gateways::$gateways['paypal'] = [
     },
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         // check if user canceled payment
-        if (!isset($data['paymentId']) && !isset($data['PayerID'])) {
+        if (!isset($data['PayerID'])) {
             throw new Exception([
                 'key' => 'merx.paymentCanceled',
                 'httpCode' => 400,
