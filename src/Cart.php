@@ -65,7 +65,7 @@ class Cart extends ProductList
             throw new Exception([
                 'key' => 'merx.cart.add',
                 'data' => [
-                    'id' => $cartItem['id'] ?? '',
+                    'id' => $cartItem['id'] ?? $args[0] ?? '',
                 ],
                 'details' => [
                     'message' => $ex->getMessage(),
