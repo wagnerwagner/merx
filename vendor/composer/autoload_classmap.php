@@ -349,8 +349,13 @@ return array(
     'Stripe\\WebhookSignature' => $vendorDir . '/stripe/stripe-php/lib/WebhookSignature.php',
     'Wagnerwagner\\Merx\\Cart' => $baseDir . '/src/Cart.php',
     'Wagnerwagner\\Merx\\Gateways' => $baseDir . '/src/Gateways.php',
+    'Wagnerwagner\\Merx\\License' => $baseDir . '/src/License.php',
+    'Wagnerwagner\\Merx\\ListItem' => $baseDir . '/src/ListItem.php',
+    'Wagnerwagner\\Merx\\ListItems' => $baseDir . '/src/ListItems.php',
     'Wagnerwagner\\Merx\\Merx' => $baseDir . '/src/Merx.php',
     'Wagnerwagner\\Merx\\PayPalPayment' => $baseDir . '/src/PayPalPayment.php',
+    'Wagnerwagner\\Merx\\Price' => $baseDir . '/src/Price.php',
     'Wagnerwagner\\Merx\\ProductList' => $baseDir . '/src/ProductList.php',
     'Wagnerwagner\\Merx\\StripePayment' => $baseDir . '/src/StripePayment.php',
+    'Wagnerwagner\\Merx\\Tax' => $baseDir . '/src/Tax.php',
 );

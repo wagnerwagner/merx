@@ -380,10 +380,15 @@ class ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d
         'Stripe\\WebhookSignature' => __DIR__ . '/..' . '/stripe/stripe-php/lib/WebhookSignature.php',
         'Wagnerwagner\\Merx\\Cart' => __DIR__ . '/../..' . '/src/Cart.php',
         'Wagnerwagner\\Merx\\Gateways' => __DIR__ . '/../..' . '/src/Gateways.php',
+        'Wagnerwagner\\Merx\\License' => __DIR__ . '/../..' . '/src/License.php',
+        'Wagnerwagner\\Merx\\ListItem' => __DIR__ . '/../..' . '/src/ListItem.php',
+        'Wagnerwagner\\Merx\\ListItems' => __DIR__ . '/../..' . '/src/ListItems.php',
         'Wagnerwagner\\Merx\\Merx' => __DIR__ . '/../..' . '/src/Merx.php',
         'Wagnerwagner\\Merx\\PayPalPayment' => __DIR__ . '/../..' . '/src/PayPalPayment.php',
+        'Wagnerwagner\\Merx\\Price' => __DIR__ . '/../..' . '/src/Price.php',
         'Wagnerwagner\\Merx\\ProductList' => __DIR__ . '/../..' . '/src/ProductList.php',
         'Wagnerwagner\\Merx\\StripePayment' => __DIR__ . '/../..' . '/src/StripePayment.php',
+        'Wagnerwagner\\Merx\\Tax' => __DIR__ . '/../..' . '/src/Tax.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
