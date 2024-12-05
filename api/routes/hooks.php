@@ -3,9 +3,11 @@
 use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\StripePayment;
 
+/** @var string $endpoint ww.merx.api.endpoint option */
+
 return [
 	[
-		'pattern' => 'merx/hooks/stripe',
+		'pattern' => $endpoint . '/hooks/stripe',
 		'auth' => false,
 		'method' => 'GET|POST',
 		'action'  => function () {

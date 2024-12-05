@@ -15,8 +15,6 @@ class ListItem extends Obj
 
 	public float $quantity = 1.0;
 
-	public ?string $id = null;
-
 	public ?string $title = null;
 
 	public Page|null $page = null;
@@ -28,24 +26,29 @@ class ListItem extends Obj
 	public array|null $data = null;
 
 	/**
+	 * @param null|float|Price $price Will be overwritten by $page’s price when $price is float or null
+	 * @param null|float $priceNet Will be overwritten by $page’s priceNet (if not empty)
+	 * @param null|string $title Will be overwritten by $page’s title
+	 * @param null|float|Tax $tax Will be overwritten by $page’s taxRate when $tax is float or null
+	 * @param bool $priceUpdate Will update prices and tax with recent prices and tax from page
+	 *
 	 * @throws InvalidArgumentException
 	 */
 	public function __construct(
 		string $key,
-		?string $id = null,
-		?string $title = null,
+		null|string $title = null,
 		null|string|Page $page = null,
 		null|float|Price $price = null,
-		?float $priceNet = null,
-		null|float|Tax $taxRate = null,
-		?string $currency = null,
+		null|float $priceNet = null,
+		null|float|Tax $tax = null,
+		null|string $currency = null,
 		float $quantity = 1.0,
-		?string $type = 'product',
+		null|string $type = 'product',
 		array|null $data = null,
+		bool $priceUpdate = true,
 	)
 	{
 		$this->key = $key;
-		$this->id = $id ?? $key;
 		$this->title = $title;
 
 		// Set page
@@ -54,76 +57,75 @@ class ListItem extends Obj
 		} elseif (is_string($page)) {
 			$this->page = page($page);
 		} else {
-			$this->page = page($this->id);
+			$this->page = page($this->key);
 		}
 
 		// Set price
 		if ($price instanceof Price) {
 			$this->price = $price;
-		} elseif (is_float($price) || is_float($priceNet) || $this->page instanceof Page) {
-			if (!is_float($price)) {
-				if ($this->page instanceof Page) {
-					if (
-						is_numeric($this->page->price())
-					) {
-						$price = (float)$this->page->price();
-					} else if (
-						$this->page->price() instanceof Field &&
-						$this->page->price()->isNotEmpty()
-					) {
-						$price = $this->page->price()->toFloat();
-					}
+		} else {
+			// Update price by page’s definition
+			if ($this->page instanceof Page && $priceUpdate === true) {
+				if (is_numeric($this->page->price())) {
+					$price = (float)$this->page->price();
+				} else if (
+					$this->page->price() instanceof Field &&
+					$this->page->price()->isNotEmpty()
+				) {
+					$price = $this->page->price()->toFloat();
 				}
-			}
-			if (!is_float($priceNet)) {
-				if ($this->page instanceof Page) {
-					if (
-						is_numeric($this->page->priceNet())
-					) {
-						$priceNet = (float)$this->page->priceNet();
-					} else if (
-						$this->page->priceNet() instanceof Field &&
-						$this->page->priceNet()->isNotEmpty()
-					) {
-						$priceNet = $this->page->priceNet()->toFloat();
-					}
+
+				if (is_numeric($this->page->priceNet())) {
+					$priceNet = (float)$this->page->priceNet();
+				} else if (
+					$this->page->priceNet() instanceof Field &&
+					$this->page->priceNet()->isNotEmpty()
+				) {
+					$priceNet = $this->page->priceNet()->toFloat();
 				}
-			}
-			if (!is_float($taxRate) && !($taxRate instanceof Tax)) {
-				if ($this->page instanceof Page) {
-					if (
-						is_numeric($this->page->taxRate())
-					) {
-						$taxRate = (float)$this->page->taxRate();
+
+				if (!($tax instanceof Tax)) {
+					if (is_numeric($this->page->taxRate())) {
+						$tax = (float)$this->page->taxRate();
 					} else if (
 						$this->page->taxRate() instanceof Field &&
 						$this->page->taxRate()->isNotEmpty()
 					) {
-						$taxRate = $this->page->taxRate()->toFloat();
+						$tax = $this->page->taxRate()->toFloat();
 					}
 				}
 			}
-			$this->price = new Price(
-				price: $price,
-				priceNet: $priceNet,
-				taxRate: $taxRate,
-				currency: $currency,
-			);
+
+			$currency = $currency ?? option('ww.merx.currency.default', null);
+
+			if (is_float($price) || is_float($priceNet)) {
+				$this->price = new Price(
+					price: $price,
+					priceNet: $priceNet,
+					tax: $tax,
+					currency: $currency,
+				);
+			}
 		}
 
 		// Set title from page
-		if (!is_string($title)) {
-			if ($this->page instanceof Page) {
-				if (
-					is_string($this->page->title())
-				) {
-					$this->title = $this->page->title();
-				} else if (
-					$this->page->title() instanceof Field &&
-					$this->page->title()->isNotEmpty()
-				) {
-					$this->title = (string)$this->page->title();
-				}
+		if ($this->page instanceof Page) {
+			if (is_string($this->page->title())) {
+				$this->title = $this->page->title();
+			} else if (
+				$this->page->title() instanceof Field &&
+				$this->page->title()->isNotEmpty()
+			) {
+				$this->title = (string)$this->page->title();
+			}
+		}
+
+		// Set max amount to data from page
+		if ($this->page instanceof Page) {
+			if (is_float($this->page->maxAmount())) {
+				$data = array_merge($data ?? [], [
+					'maxAmount' => $this->page->maxAmount(),
+				]);
 			}
 		}
 
@@ -141,33 +143,81 @@ class ListItem extends Obj
 		$this->data = $data;
 	}
 
-	public function priceTotal(): ?Price
+	/**
+	 * Convert mixed $data to ListItem
+	 */
+	static function dataToListItem(string|array|ListItem $data): ListItem
 	{
-		$priceSingle = $this->price?->toFloat();
+		if (is_string($data)) {
+			$listItem = new ListItem(
+				key: $data,
+			);
+		} else if (is_array($data)) {
+			$listItem = new ListItem(...$data);
+		} else if ($data instanceof ListItem) {
+			$listItem = $data;
+		}
+
+		return $listItem;
+	}
+
+
+
+	public function total(): ?Price
+	{
+		$priceSingle = $this->price?->price;
+		$priceSingleNet = $this->price?->priceNet;
 
 		if (!is_float($priceSingle)) {
 			return null;
 		}
 
+		$tax = $this->price?->tax ?? null;
+
 		return new Price(
-		  price: $priceSingle * $this->quantity,
-		  taxRate: $this->price?->tax?->toFloat(),
+			price: $priceSingle * $this->quantity,
+			priceNet: $priceSingleNet * $this->quantity,
+			tax: $tax?->toFloat(),
 			currency: $this->price?->currency,
 		);
 	}
 
-	public function priceTotalNet(): ?Price
+	public function toSessionArray(): array
 	{
-		$priceSingle = $this->price->priceNet;
+		$array = (array)$this;
 
-		if (!is_float($priceSingle)) {
-			return null;
+		// remove price definition, when page is present
+		if ($array['page'] instanceof Page) {
+			unset($array['price']);
+			$array['page'] = (string)$array['page']->uuid();
 		}
 
-		return new Price(
-		  price: $priceSingle * $this->quantity,
-		  taxRate: $this->price?->tax?->toFloat(),
-			currency: $this->price?->currency,
-		);
+		return $array;
+	}
+
+	/**
+	 * Used to store ListItem in OrderPage
+	 */
+	public function toOrderArray(): array
+	{
+		$array = (array)$this;
+
+		// remove price definition, when page is present
+		if ($array['page'] instanceof Page) {
+			/** @var Page $page */
+			$page = $array['page'];
+			$array['page'] = (string)$page->uuid() ?? $page->id();
+		}
+
+		if ($array['price'] instanceof Price) {
+			/** @var Price $price */
+			$price = $array['price'];
+			$array['price'] = (float)$price->price;
+			$array['pricenet'] = (float)$price->priceNet;
+			$array['taxrate'] = (float)$price->tax->rate;
+			$array['currency'] = (string)$price->currency;
+		}
+
+		return $array;
 	}
 }

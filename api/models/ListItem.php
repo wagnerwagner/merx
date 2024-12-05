@@ -7,6 +7,7 @@ use Wagnerwagner\Merx\Price;
 
 return [
 	'fields' => [
+		'key' => fn (ListItem $listItem): string => $listItem->key,
 		'title' => fn (ListItem $listItem): ?string => $listItem->title,
 		'type' => fn (ListItem $listItem): string => $listItem->type,
 		'thumb' => function (ListItem $listItem): ?array {
@@ -25,27 +26,31 @@ return [
 		},
 		'url' => fn (ListItem $listItem): ?string => $listItem->page?->url(),
 		'price' => fn (ListItem $listItem): ?Price => $listItem->price,
-		'priceTotal' => fn (ListItem $listItem): ?Price => $listItem->priceTotal(),
+		'total' => fn (ListItem $listItem): ?Price => $listItem->total(),
 		'quantity' => fn (ListItem $listItem): float => $listItem->quantity,
 		'page' => fn (ListItem $listItem): ?Page => $listItem->page,
+		'data' => fn (ListItem $listItem): ?array => $listItem->data,
 	],
 	'type' => ListItem::class,
 	'views' => [
 		'compact' => [
+			'key',
 			'title',
 			'type',
 			'price',
-			'priceTotal',
+			'total',
 			'quantity',
 		],
 		'default' => [
+			'key',
 			'title',
 			'type',
 			'thumb',
 			'url',
 			'price',
-			'priceTotal',
+			'total',
 			'quantity',
+			'data',
 			'page' => [
 				'url',
 				'template',

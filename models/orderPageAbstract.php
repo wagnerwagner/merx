@@ -2,6 +2,7 @@
 
 use Kirby\Cms\Page;
 use Kirby\Form\Form;
+use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\ProductList;
 
@@ -47,13 +48,39 @@ abstract class OrderPageAbstract extends Page
 	 */
 	public function cart(): ProductList
 	{
-		return new ProductList($this->items()->yaml());
+		$data = $this->items()->yaml();
+		$data = array_map(function (mixed $item) {
+			return new ListItem(
+				key: $item['key'],
+				title: $item['title'] ?? null,
+				page: $item['page'][0] ?? null,
+				price: $item['price'] ?? null,
+				priceNet: $item['pricenet'] ?? null,
+				tax: $item['taxrate'] ?? null,
+				currency: $item['currency'] ?? null,
+				quantity: $item['quantity'] ?? 1.0,
+				type: $item['type'] ?? null,
+				data: $item['data'] ?? null,
+				priceUpdate: false,
+			);
+		}, $data);
+
+		return new ProductList($data);
 	}
 
+	/**
+	 * Page uuids of products in this order
+	 *
+	 * @return string[]
+	 */
+	public function productUuids(): array
+	{
+		return array_map(fn (?Page $page) => (string)$page?->uuid(), $this->cart()->pluck('page'));
+	}
 
 	public function formattedSum(): string
 	{
-		return Merx::formatPrice($this->cart()->getSum());
+		return Merx::formatPrice($this->cart()->total()->price);
 	}
 
 
@@ -67,21 +94,5 @@ abstract class OrderPageAbstract extends Page
 		} else {
 			return '';
 		}
-	}
-
-
-	/**
-	* Helper method that returns paidDate or payedDate field of the OrderPage.
-	* Before Merx 1.7 a “payedDate” field was stored in the OrderPage for complete payments.
-	* Since Merx 1.7 a “paidDate” field is stored instead.
-	*
-	* @deprecated Rename “Payeddate” fields to “Paiddate” in every order page and use $orderPage->paidDate()
-	*/
-	public function payedDate(): Field
-	{
-		if ($this->content()->payedDate()->isNotEmpty()) {
-			return $this->content()->payedDate();
-		}
-		return $this->content()->paidDate();
 	}
 }

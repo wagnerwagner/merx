@@ -6,7 +6,7 @@ use Wagnerwagner\Merx\Tax;
 return [
 	'fields' => [
 		'currency' => fn (Price $price): ?string => $price->currency,
-		'price' => fn (Price $price): string => $price->__toString(),
+		'price' => fn (Price $price): string => $price->toString(),
 		'priceRaw' => fn (Price $price): float => $price->price,
 		'priceNet' => fn (Price $price): string => $price->toString('priceNet'),
 		'priceNetRaw' => fn (Price $price): ?float => $price->priceNet,

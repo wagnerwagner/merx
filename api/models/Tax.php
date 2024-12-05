@@ -10,7 +10,7 @@ return [
 			return $format->format($tax->rate);
 		},
 		'rateRaw' => fn (Tax $tax): ?float => $tax->rate,
-		'price' => fn (Tax $tax): string => $tax->price->toString(),
+		'price' => fn (Tax $tax): ?string => $tax->price->price !== null ? $tax->price->toString() : null,
 		'priceRaw' => fn (Tax $tax): ?float => $tax->price->price,
 	],
 	'type' => Tax::class,

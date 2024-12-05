@@ -13,17 +13,17 @@ class Price extends Obj
 	/** Floating point precision for price calculations */
 	const roundingPrecision = 2;
 
-	/** E.g. 100.0 */
-	public float|null $priceNet = null;
-
 	/** Gross price, including tax. E.g. 119.0 */
 	public float|null $price = null;
 
+	/** E.g. 100.0 */
+	public float|null $priceNet;
+
 	/** E.g. 19.0 */
-	public Tax|null $tax = null;
+	public Tax|null $tax;
 
 	/** Three-letter ISO currency code, in uppercase. E.g. EUR */
-	public string|null $currency = null;
+	public string|null $currency;
 
 	/**
 	 * Calculates prices given on net or gross price and tax.
@@ -34,7 +34,7 @@ class Price extends Obj
 	public function __construct(
 		null|float $price = null,
 		null|float $priceNet = null,
-		null|float $taxRate = null,
+		null|float|Tax $tax = null,
 		null|string $currency = null,
 	)
 	{
@@ -54,29 +54,31 @@ class Price extends Obj
 				: null;
 		}
 
-		$this->priceNet = is_float($priceNet)
-			? round((float)$priceNet, $roundingPrecision)
-			: null;
+		if (is_float($priceNet)) {
+			$this->priceNet = round((float)$priceNet, $roundingPrecision);
+		}
 
-		$this->currency = $currency ?? option('ww.merx.currency.default', null);
+		$this->currency = $currency;
 		if (is_string($this->currency)) {
 			$this->currency = Str::upper($this->currency);
 		}
 
-		if ($this->priceNet === null && is_float($this->price) && is_float($taxRate)) {
-			$this->priceNet = round($this->price / (1 + $taxRate ?? 0), $roundingPrecision);
+		if ($priceNet === null && is_float($this->price) && is_float($tax)) {
+			$this->priceNet = round($this->price / (1 + $tax), $roundingPrecision);
 		}
 
-		if ($this->price === null && is_float($this->priceNet)) {
-			$this->price = round($this->priceNet * (1 + $taxRate ?? 0), $roundingPrecision);
+		if ($this->price === null && is_float($this->priceNet) && is_float($tax)) {
+			$this->price = round($this->priceNet * (1 + $tax), $roundingPrecision);
 		}
 
-		if ($taxRate !== null) {
+		if (is_float($tax)) {
 			$this->tax = new Tax(
 				priceNet: $this->priceNet,
-				rate: $taxRate,
-				currency: $currency,
+				rate: $tax,
+				currency: $this->currency,
 			);
+		} else if ($tax instanceof Tax) {
+			$this->tax = $tax;
 		}
 	}
 
@@ -103,17 +105,13 @@ class Price extends Obj
 		return $this->price;
 	}
 
-	public function toString(?string $key = null): string
+	public function toString(string $key = 'price'): string
 	{
-		if ($key === null) {
-			return $this->__toString();
-		}
-
 		return $this->numberFormat()->formatCurrency($this->$key, $this->currency ?? null);
 	}
 
 	public function __toString(): string
 	{
-		return $this->numberFormat()->formatCurrency($this->price, $this->currency ?? null);
+		return $this->price;
 	}
 }

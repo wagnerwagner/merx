@@ -7,12 +7,12 @@ options:
 
 fields:
   price:
-	extends: fields/price
+    extends: fields/price
   tax:
-	label: field.tax
-	type: number
-	required: true
-	step: 1
-	min: 0
-	max: 100
-	after: %
+    label: field.tax
+    type: number
+    required: true
+    step: 1
+    min: 0
+    max: 100
+    after: %

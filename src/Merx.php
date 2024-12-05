@@ -165,7 +165,8 @@ class Merx
 	public function initializePayment(array $data): string
 	{
 		try {
-			$redirect = option('ww.merx.successPage');
+			$kirby = kirby();
+			$redirect = (string)$kirby->url('api') . '/' . $kirby->option('ww.merx.api.endpoint', 'shop') . '/success';
 
 			// set language for single language installations
 			if (!option('languages', false) && option('locale', false)) {
@@ -209,7 +210,7 @@ class Merx
 			}
 
 			// add cart to content
-			$data['items'] = yaml::encode($cart->values());
+			$data['items'] = $cart->toYaml();
 
 			// create virtual order page
 			$virtualOrderPage = new OrderPage([

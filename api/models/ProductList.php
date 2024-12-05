@@ -1,15 +1,30 @@
 <?php
 
 use Kirby\Cms\Api;
-use Wagnerwagner\Merx\ListItems;
 use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
 use Wagnerwagner\Merx\Tax;
 
 return [
 	'fields' => [
-		'products' => fn (ProductList $productList): ListItems => $productList->filterByType('product'),
-		'shipping' => fn (ProductList $productList): ListItems => $productList->filterByType('shipping'),
+		'products' => function (ProductList $productList): ?array
+		{
+			/** @var Api $this */
+			$listItems = $productList->filterByType('product');
+			return $listItems->count() === 0 ? null : [
+				'items' => $this->collection('listitems', $listItems)->toArray(),
+				'total' => $this->model('price', $listItems->total())->toArray(),
+			];
+		},
+		'shippings' => function (ProductList $productList): ?array
+		{
+			/** @var Api $this */
+			$listItems = $productList->filterByType('shipping');
+			return $listItems->count() === 0 ? null : [
+				'items' => $this->collection('listitems', $listItems)->toArray(),
+				'total' => $this->model('price', $listItems->total())->toArray(),
+			];
+		},
 		'quantity' => fn (ProductList $productList): int => $productList->quantity(),
 		'taxRates' => fn (ProductList $productList): array => array_values(array_map(function (Tax $tax) {
 			/** @var Api $this */
@@ -33,7 +48,7 @@ return [
 			],
 			'taxRates',
 			'quantity',
-			'shipping',
+			'shippings',
 		],
 	],
 ];

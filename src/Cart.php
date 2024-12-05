@@ -31,7 +31,6 @@ class Cart extends ProductList
 	/**
 	 * Adds item to cart.
 	 *
-	 * @param mixed $args `($id)`, `($cartItem)` or `($key, $cartItem)`. $id must be a valid product page, $cartItem must contain a valid product page id.
 	 * @throws Exception error.merx.cart.add
 	 */
 	public function add(
@@ -45,6 +44,9 @@ class Cart extends ProductList
 		} catch (\Exception $ex) {
 			throw new Exception([
 				'key' => 'merx.cart.add',
+				'data' => [
+					'key' => $data['key'] ?? $data->key ?? (string)$data ?? '',
+				],
 				'previous' => $ex,
 			]);
 		}
@@ -67,16 +69,12 @@ class Cart extends ProductList
 
 
 	/**
-	 * Updates existing items.
-	 *
-	 * @param array $cartItems List of cart items.
+	 * Updates existing item.
 	 */
-	public function update(array $cartItems): parent
+	public function updateItem(string $key, array $data): parent
 	{
 		try {
-			foreach ($cartItems as $cartItem) {
-				parent::updateItem($cartItem);
-			}
+			parent::updateItem($key, $data);
 			$this->save();
 			return $this;
 		} catch (\Exception $ex) {
@@ -91,19 +89,6 @@ class Cart extends ProductList
 				'previous' => $ex,
 			]);
 		}
-	}
-
-
-	/**
-	 * Updates existing item.
-	 *
-	 * @param array $item Must contain a valid product page id.
-	 */
-	public function updateItem(array $item): parent
-	{
-		parent::updateItem($item);
-		$this->save();
-		return $this;
 	}
 
 	/**
@@ -149,7 +134,8 @@ class Cart extends ProductList
 		if ($this->count() === 0) {
 			kirby()->session()->remove($this->sessionName);
 		} else {
-			kirby()->session()->set($this->sessionName, $this->toArray());
+			$sessionData = $this->toArray(fn (ListItem $item) => $item->toSessionArray());
+			kirby()->session()->set($this->sessionName, $sessionData);
 		}
 		return $this;
 	}

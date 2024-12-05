@@ -1,0 +1,45 @@
+label: field.items
+type: structure
+width: 2/3
+fields:
+  key:
+    label: field.key
+    type: text
+    required: true
+    width: 1/3
+  page:
+    label: field.page
+    type: pages
+    multiple: false
+    width: 1/3
+  quantity:
+    label: field.quantity
+    type: number
+    required: true
+    width: 1/3
+  currency:
+    label: field.currency
+    type: text
+    width: 1/3
+  price:
+    extends: fields/price
+    before: null
+    required: true
+    min: null
+    width: 1/3
+  priceNet:
+    extends: fields/price
+    label: field.priceNet
+    before: null
+    min: null
+    required: false
+    width: 1/3
+  taxRate:
+    label: field.taxRate
+    type: number
+    width: 1/3
+    translate: false
+  type:
+    label: field.type
+    type: text
+    width: 1/3

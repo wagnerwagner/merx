@@ -10,12 +10,12 @@ class Tax extends Obj
 	public Price $price;
 
 	/** Tax value. E.g. 0.19 */
-	public float $rate;
+	public ?float $rate = null;
 
-	public function __construct(float $priceNet, float $rate, null|string $currency = null)
+	public function __construct(float $priceNet, ?float $rate = null, null|string $currency = null)
 	{
 		$this->price = new Price(
-			price: $priceNet * $rate,
+			price: $priceNet * ($rate ?? 1),
 			currency: $currency,
 		);
 		$this->rate = $rate;
@@ -24,5 +24,10 @@ class Tax extends Obj
 	public function toFloat(): float
 	{
 		return $this->rate ?? 0.0;
+	}
+
+	public function __toString(): string
+	{
+		return $this->price;
 	}
 }

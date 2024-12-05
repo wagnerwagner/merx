@@ -9,7 +9,7 @@ final class ApiTest extends TestCase
 	public function testCartAdd1(): void
 	{
 		$kirby = kirby();
-		$kirby->api()->call('merx/cart/add', 'POST', [
+		$kirby->api()->call('shop/cart/add', 'POST', [
 			''
 		]);
 	}

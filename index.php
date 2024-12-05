@@ -8,7 +8,6 @@ use Kirby\Cms\Page;
 use Kirby\Exception\Exception;
 use Kirby\Plugin\Plugin;
 use Wagnerwagner\Merx\License;
-use Wagnerwagner\Merx\ListItems;
 
 @include_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/models/orderPageAbstract.php';
@@ -62,21 +61,21 @@ App::plugin(
 	name: 'ww/merx',
 	extends: [
 		'api' => [
-			'collections' => [
-				'listItems' => [
-					'model' => 'listitem',
-					'type'  => ListItems::class,
-				],
-			],
-			'data' => [
-				'cart' => cart(),
-			],
-			'routes' => array_merge(
-				include __DIR__ . '/api/routes/hooks.php',
-				include __DIR__ . '/api/routes/cart.php',
+			'collections' => array_merge(
+				include __DIR__ . '/api/collections/listItems.php',
 			),
+			'routes' => function (App $kirby) {
+				$endpoint = $kirby->option('ww.merx.api.endpoint', 'shop');
+				return array_merge(
+					include __DIR__ . '/api/routes/cart.php',
+					include __DIR__ . '/api/routes/checkout.php',
+					include __DIR__ . '/api/routes/client-secret.php',
+					include __DIR__ . '/api/routes/hooks.php',
+					include __DIR__ . '/api/routes/success.php',
+				);
+			},
 			'models' => [
-				// 'Cart' => include __DIR__ . '/api/models/Cart.php',
+				'Cart' => include __DIR__ . '/api/models/Cart.php',
 				'ListItem' => include __DIR__ . '/api/models/ListItem.php',
 				'Price' => include __DIR__ . '/api/models/Price.php',
 				'ProductList' => include __DIR__ . '/api/models/ProductList.php',
@@ -84,16 +83,18 @@ App::plugin(
 			],
 		],
 		'options' => [
-			'successPage' => 'success',
 			'ordersPage' => 'orders',
 			'currency.default' => 'EUR',
 			'production' => false,
+			'api.endpoint' => 'shop',
 		],
 		'templates' => [
 			'success' => __DIR__ . '/templates/success.php',
 			'orders' => __DIR__ . '/templates/orders.php',
 		],
 		'blueprints' => [
+			'fields/list-items' => __DIR__ . '/blueprints/fields/list-items.yml',
+			'ww.merx.fields/list-items' => __DIR__ . '/blueprints/fields/list-items.yml',
 			'fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'ww.merx.fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
@@ -120,7 +121,7 @@ App::plugin(
 				'error.merx.completePayment' => 'The payment could not be completed.',
 				'error.merx.paymentCanceled' => 'You canceled the payment.',
 				'error.merx.paypalError' => 'PayPal error',
-				'error.merx.cart.add' => 'Item "{id}" could not be added to cart.',
+				'error.merx.cart.add' => 'Item "{key}" could not be added to cart.',
 				'error.merx.cart.update' => 'Cart items could not be updated.',
 				'error.merx.order.changeNum' => 'Sorting number of a complete order cannot be changed.',
 				'error.merx.order.changeStatus' => 'Status of a complete order cannot be changed.',
@@ -150,7 +151,7 @@ App::plugin(
 				'error.merx.completePayment' => 'Die Bezahlung konnte nicht abgeschlossen werden.',
 				'error.merx.paymentCanceled' => 'Die Bezahlung wurde abgebrochen.',
 				'error.merx.paypalError' => 'PayPal Fehler',
-				'error.merx.cart.add' => 'Produkt "{id}" konnte nicht zum Warenkorb hinzugefügt werden.',
+				'error.merx.cart.add' => 'Produkt "{key}" konnte nicht zum Warenkorb hinzugefügt werden.',
 				'error.merx.cart.update' => 'Produkte konnten nicht aktualisiert werden.',
 				'error.merx.order.changeNum' => 'Die Position einer vollständigen Bestellung kann nicht geändert werden.',
 				'error.merx.order.changeStatus' => 'Der Status einer vollständigen Bestellung kann nicht geändert werden.',
@@ -184,13 +185,6 @@ App::plugin(
 					throw new Exception(['key' => 'merx.order.changeStatus']);
 				}
 			},
-			'route:before' => function ($route, $path, $method) {
-				$successPage = new Page([
-					'slug' => option('ww.merx.successPage'),
-					'template' => 'success',
-				]);
-				site()->children()->add($successPage);
-			},
 			'ww.merx.stripe-hooks' => function (\Stripe\Event $stripeEvent) {
 				switch ($stripeEvent->type) {
 					case 'payment_intent.succeeded':
@@ -222,6 +216,11 @@ App::plugin(
 				return Merx::formatPrice($field->toFloat(), $currencyPositionPrecedes, $currencySeparateBySpace);
 			},
 		],
+		'siteMethods' => [
+		  'cart' => fn (): Cart => cart(),
+			'ordersPage' => fn (): ?Page => page(option('ww.merx.ordersPage')),
+			'checkoutPage' => fn (): ?Page => $this->children()->template('checkout')->first(),
+	  ]
 	],
 	license: function (Plugin $plugin) {
 		return new License($plugin);

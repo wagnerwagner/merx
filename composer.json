@@ -16,9 +16,10 @@
 		"source": "https://github.com/wagnerwagner/merx"
 	},
 	"require": {
-		"php": "~8.1.0 || ~8.2.0 || ~8.3.0",
+		"php": "~8.2.0 || ~8.3.0",
 		"getkirby/composer-installer": "^1.2",
-		"stripe/stripe-php": "^14"
+		"stripe/stripe-php": "^16",
+		"ext-intl": "*"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^11",

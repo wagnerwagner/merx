@@ -9,7 +9,7 @@ class PriceTest extends TestCase
 {
 	public function testConstructorInitializesCorrectlyWithGrossPrice()
 	{
-		$price = new Price(price: 119.0, taxRate: 0.19, currency: 'eur');
+		$price = new Price(price: 119.0, tax: 0.19, currency: 'eur');
 
 		$this->assertEquals(119.0, $price->price);
 		$this->assertEquals(100.0, $price->priceNet);
@@ -19,7 +19,7 @@ class PriceTest extends TestCase
 
 	public function testConstructorInitializesCorrectlyWithNetPrice()
 	{
-		$price = new Price(priceNet: 100.0, taxRate: 0.19, currency: 'eur');
+		$price = new Price(priceNet: 100.0, tax: 0.19, currency: 'eur');
 
 		$this->assertEquals(100.0, $price->priceNet);
 		$this->assertEquals(119.0, $price->price);
@@ -37,7 +37,7 @@ class PriceTest extends TestCase
 
 	public function testCurrencyIsUppercase()
 	{
-		$price = new Price(price: 119.0, taxRate: 0.19, currency: 'usd');
+		$price = new Price(price: 119.0, tax: 0.19, currency: 'usd');
 
 		$this->assertEquals('USD', $price->currency);
 	}
@@ -60,7 +60,7 @@ class PriceTest extends TestCase
 
 	public function testToArrayExcludesNullValues()
 	{
-		$price = new Price(priceNet: 100.0, taxRate: 0.19);
+		$price = new Price(priceNet: 100.0, tax: 0.19);
 
 		$array = $price->toArray();
 
