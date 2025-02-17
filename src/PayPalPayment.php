@@ -85,6 +85,7 @@ class PayPalPayment
 	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_create PayPal REST API Documentation
 	 *
 	 * @param \OrderPage $orderPage
+	 * @param string $currency ISO currency code
 	 *
 	 * @return array PayPal order details.
 	 *	 - 'id': (string) The ID of the order.
@@ -92,7 +93,7 @@ class PayPalPayment
 	 *	 - 'payment_source': (array) The payment source used to fund the payment.
 	 *	 - 'links': (array) An array of request-related HATEOAS links. To complete payer approval, use the approve link to redirect the payer.
 	 */
-	public static function createPayPalPayment(OrderPage $orderPage): array
+	public static function createPayPalPayment(OrderPage $orderPage, string $currency): array
 	{
 		$siteTitle = (string)site()->title();
 		$access = self::getAccessToken();
@@ -104,16 +105,16 @@ class PayPalPayment
 				[
 					'description' => $siteTitle,
 					'amount' => [
-						'value' => number_format($orderPage->cart()->getSum(), 2, '.', ''),
-						'currency_code' => option('ww.merx.currency'),
+						'value' => number_format($orderPage->cart()->total()->toFloat()(), 2, '.', ''),
+						'currency_code' => $currency,
 					],
 				],
 			];
 		}
 
 		$applicationContext = array_merge([
-			'cancel_url' => url(option('ww.merx.successPage')),
-			'return_url' => url(option('ww.merx.successPage')),
+			'cancel_url' => Merx::successUrl(),
+			'return_url' => Merx::successUrl(),
 			'user_action' => 'PAY_NOW',
 			'shipping_preference' => 'NO_SHIPPING',
 			'brand_name' => $siteTitle,

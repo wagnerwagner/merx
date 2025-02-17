@@ -419,9 +419,11 @@ class ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d
         'Wagnerwagner\\Merx\\ListItem' => __DIR__ . '/../..' . '/src/ListItem.php',
         'Wagnerwagner\\Merx\\ListItems' => __DIR__ . '/../..' . '/src/ListItems.php',
         'Wagnerwagner\\Merx\\Merx' => __DIR__ . '/../..' . '/src/Merx.php',
+        'Wagnerwagner\\Merx\\OrderPage' => __DIR__ . '/../..' . '/src/OrderPage.php',
         'Wagnerwagner\\Merx\\PayPalPayment' => __DIR__ . '/../..' . '/src/PayPalPayment.php',
         'Wagnerwagner\\Merx\\Price' => __DIR__ . '/../..' . '/src/Price.php',
         'Wagnerwagner\\Merx\\ProductList' => __DIR__ . '/../..' . '/src/ProductList.php',
+        'Wagnerwagner\\Merx\\ProductPage' => __DIR__ . '/../..' . '/src/ProductPage.php',
         'Wagnerwagner\\Merx\\StripePayment' => __DIR__ . '/../..' . '/src/StripePayment.php',
         'Wagnerwagner\\Merx\\Tax' => __DIR__ . '/../..' . '/src/Tax.php',
     );

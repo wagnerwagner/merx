@@ -2,19 +2,36 @@
 
 namespace Wagnerwagner\Merx;
 
+use I18n;
+use NumberFormatter;
 use Wagnerwagner\Merx\Gateways;
 use Wagnerwagner\Merx\Cart;
 use Kirby\Toolkit\Str;
 use Kirby\Toolkit\Escape;
 use Kirby\Toolkit\V;
 use Kirby\Exception\Exception;
-use Kirby\Data\Yaml;
+use Kirby\Toolkit\Config;
 use OrderPage;
 
 class Merx
 {
 	protected Cart $cart;
+
+	/**
+	 * Custom and default gateways
+	 */
 	protected array $gateways = [];
+
+	/**
+	 * Cache of `NumberFormatter` objects by locale
+	 */
+	protected static array $currencyFormatters = [];
+
+	/**
+	 * Cache of `NumberFormatter` objects by locale
+	 */
+	protected static array $percentFormatters = [];
+
 
 	public function __construct()
 	{
@@ -24,50 +41,47 @@ class Merx
 
 
 	/**
-	 * Localizes the price. Currency symbol is shown before or after price based on arguments, options or `localeconv`.
+	 * Url to be used to complete the payment
 	 *
-	 * @param float $price
-	 * @param bool $currencyPositionPrecedes `true` if currency symbol precedes, `false` if it succeeds one
-	 * @param bool $currencySeparateBySpace `true` if a space separates currency_symbol, `false` otherwise
-	 *
-	 * @return string
+	 * @return string  e.g. https://example.com/api/shop/success
 	 */
-	public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null): string
+	static function successUrl(): string
 	{
-		// set locale for single language installations
-		if (!option('languages', false) && option('locale', false)) {
-			\Kirby\Toolkit\Locale::set(option('locale'));
-		}
+		$kirby = kirby();
+		return (string)$kirby->url('api') . '/' . $kirby->option('ww.merx.api.endpoint', 'shop') . '/success';
+	}
 
-		$localeFormatting = localeconv();
-		if ($currencyPositionPrecedes === null) {
-			$currencyPositionPrecedes = option('ww.merx.currencyPositionPrecedes', $localeFormatting['p_cs_precedes']);
-		}
-		if ($currencySeparateBySpace === null) {
-			$currencySeparateBySpace = option('ww.merx.currencySeparateBySpace', $localeFormatting['p_sep_by_space']);
-		}
 
-		$string = '';
-		if ($currencyPositionPrecedes) {
-			$string .= option('ww.merx.currencySymbol', '€');
-			if ($currencySeparateBySpace) {
-				$string .= ' '; // non breaking space
-			}
-		}
-		if (option('ww.merx.currencyDecimalPoint', false)) {
-			$localeFormatting['decimal_point'] = option('ww.merx.currencyDecimalPoint');
-		}
-		if (option('ww.merx.currencyThousandsSeparator', false)) {
-			$localeFormatting['thousands_sep'] = option('ww.merx.currencyThousandsSeparator');
-		}
-		$string .= number_format($price, 2, $localeFormatting['decimal_point'] ?? '.', $localeFormatting['thousands_sep'] ?? ',');
-		if (!$currencyPositionPrecedes) {
-			if ($currencySeparateBySpace) {
-				$string .= ' '; // non breaking space
-			}
-			$string .= option('ww.merx.currencySymbol', '€');
-		}
-		return $string;
+	/**
+	 * Formats a currency number
+	 * E.g. 1045.12 => $ 1,045.12
+	 * Similar to I18n::formatNumber()
+	 */
+	public static function formatCurrency(
+		int|float $number,
+		string|null $currency,
+		string|null $locale = null
+	): string {
+		$locale  ??= I18n::locale();
+		$formatter = static::currencyNumberFormatter($locale);
+		$number    = $formatter?->formatCurrency($number, $currency) ?? $number;
+		return (string)$number;
+	}
+
+
+	/**
+	 * Formats a float to percent
+	 * E.g. 0.19 => 19 %
+	 * Similar to I18n::formatNumber()
+	 */
+	public static function formatPercent(
+		int|float $number,
+		string|null $locale = null
+	): string {
+		$locale  ??= I18n::locale();
+		$formatter = static::percentNumberFormatter($locale);
+		$number    = $formatter?->format($number) ?? $number;
+		return (string)$number;
 	}
 
 
@@ -84,6 +98,48 @@ class Merx
 		return implode(' ', $ibanArray);
 	}
 
+
+	/**
+	 * Returns (and creates) a currency number formatter for a given locale
+	 * Similar to I18n::decimalNumberFormatter()
+	 */
+	protected static function currencyNumberFormatter(
+		string $locale
+	): NumberFormatter|null {
+		if ($formatter = static::$currencyFormatters[$locale] ?? null) {
+			return $formatter;
+		}
+
+		if (
+			extension_loaded('intl') !== true ||
+			class_exists('NumberFormatter') !== true
+		) {
+			return null; // @codeCoverageIgnore
+		}
+
+		return static::$currencyFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::CURRENCY);
+	}
+
+	/**
+	 * Returns (and creates) a percent number formatter for a given locale
+	 * Similar to I18n::decimalNumberFormatter()
+	 */
+	protected static function percentNumberFormatter(
+		string $locale
+	): NumberFormatter|null {
+		if ($formatter = static::$percentFormatters[$locale] ?? null) {
+			return $formatter;
+		}
+
+		if (
+			extension_loaded('intl') !== true ||
+			class_exists('NumberFormatter') !== true
+		) {
+			return null; // @codeCoverageIgnore
+		}
+
+		return static::$currencyFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::PERCENT);
+	}
 
 	/**
 	 * Helper method to calculate tax
@@ -137,6 +193,7 @@ class Merx
 		return new OrderPage($session);
 	}
 
+
 	private function getGateway(string $paymentMethod): array
 	{
 		if (!array_key_exists($paymentMethod, $this->gateways)) {
@@ -160,13 +217,12 @@ class Merx
 	 * Creates virtual OrderPage and validates it. Runs payment gateway’s initializePayment function. Saves virtual OrderPage in user session.
 	 *
 	 * @param array $data Content of `OrderPage`. Must contain `paymentMethod`.
-	 * @return string `option('ww.merx.successPage')` or result of `initializePayment()` of `paymentMethod` gateway.
+	 * @return string `api/shop/success` or result of `initializePayment()` of `paymentMethod` gateway.
 	 */
 	public function initializePayment(array $data): string
 	{
 		try {
-			$kirby = kirby();
-			$redirect = (string)$kirby->url('api') . '/' . $kirby->option('ww.merx.api.endpoint', 'shop') . '/success';
+			$redirect = $this->successUrl();
 
 			// set language for single language installations
 			if (!option('languages', false) && option('locale', false)) {
@@ -368,5 +424,16 @@ class Merx
 		} else {
 			return [];
 		}
+	}
+
+	public static function setCurrency(?string $currency): string
+	{
+		Config::set('ww.merx.currency.current', $currency);
+		return self::currentCurrency();
+	}
+
+	public static function currentCurrency(): string
+	{
+		return Config::get('ww.merx.currency.current', option('ww.merx.currency.default'));
 	}
 }

@@ -11,5 +11,6 @@ options:
   changeTitle: false
   delete: false
   duplicate: false
+  move: false
 
 extends: layouts/order

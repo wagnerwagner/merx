@@ -17,7 +17,7 @@ class ListItem extends Obj
 
 	public ?string $title = null;
 
-	public Page|null $page = null;
+	public ProductPage|null $page = null;
 
 	public Price|null $price = null;
 
@@ -65,24 +65,8 @@ class ListItem extends Obj
 			$this->price = $price;
 		} else {
 			// Update price by page’s definition
-			if ($this->page instanceof Page && $priceUpdate === true) {
-				if (is_numeric($this->page->price())) {
-					$price = (float)$this->page->price();
-				} else if (
-					$this->page->price() instanceof Field &&
-					$this->page->price()->isNotEmpty()
-				) {
-					$price = $this->page->price()->toFloat();
-				}
-
-				if (is_numeric($this->page->priceNet())) {
-					$priceNet = (float)$this->page->priceNet();
-				} else if (
-					$this->page->priceNet() instanceof Field &&
-					$this->page->priceNet()->isNotEmpty()
-				) {
-					$priceNet = $this->page->priceNet()->toFloat();
-				}
+			if ($this->page instanceof ProductPage && $priceUpdate === true) {
+				$this->price = $this->page->price($currency);
 
 				if (!($tax instanceof Tax)) {
 					if (is_numeric($this->page->taxRate())) {
@@ -96,7 +80,7 @@ class ListItem extends Obj
 				}
 			}
 
-			$currency = $currency ?? option('ww.merx.currency.default', null);
+			$currency = $currency ?? Merx::currentCurrency();
 
 			if (is_float($price) || is_float($priceNet)) {
 				$this->price = new Price(

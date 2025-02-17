@@ -1,12 +1,16 @@
 <?php
 
+namespace Wagnerwagner\Merx;
+
 use Kirby\Cms\Page;
+use Kirby\Content\Field;
 use Kirby\Form\Form;
+use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\ListItem;
-use Wagnerwagner\Merx\Merx;
+use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
 
-abstract class OrderPageAbstract extends Page
+abstract class OrderPage extends Page
 {
 	/**
 	 * Returns all content validation errors
@@ -18,7 +22,7 @@ abstract class OrderPageAbstract extends Page
 	{
 		$kirby = $this->kirby();
 		if ($kirby->multilang() === true) {
-			Kirby\Toolkit\I18n::$locale = $kirby->language()->code();
+			I18n::$locale = $kirby->language()->code();
 		}
 
 		$fields = array_change_key_case($this->blueprint()->fields());
@@ -78,9 +82,9 @@ abstract class OrderPageAbstract extends Page
 		return array_map(fn (?Page $page) => (string)$page?->uuid(), $this->cart()->pluck('page'));
 	}
 
-	public function formattedSum(): string
+	public function total(): Price
 	{
-		return Merx::formatPrice($this->cart()->total()->price);
+		return $this->cart()->total();
 	}
 
 

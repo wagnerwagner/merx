@@ -2,10 +2,24 @@
 
 use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\Cart;
+use Wagnerwagner\Merx\Merx;
 
 /** @var string $endpoint ww.merx.api.endpoint option */
 
 return [
+	[
+		'pattern' => $endpoint . '/cart',
+		'auth' => false,
+		'method' => 'GET',
+		'action' => function (): Cart {
+			/** @var \Kirby\Cms\Api $this */
+			I18n::$locale = $this->language();
+
+			Merx::setCurrency($this->requestQuery('currency') ?? $this->requestHeaders('x-currency'));
+
+			return cart();
+		},
+	],
 	[
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
@@ -14,11 +28,15 @@ return [
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 
-			$allowedKeys = ['key', 'page', 'quantity', 'data'];
+			Merx::setCurrency($this->requestQuery('currency') ?? $this->requestHeaders('x-currency'));
+
+			$allowedKeys = ['key', 'page', 'quantity', 'data', 'currency'];
 
 			$cartData = array_filter($this->requestBody(), function($key) use ($allowedKeys) {
 				return in_array($key, $allowedKeys);
 			}, ARRAY_FILTER_USE_KEY);
+
+			$cartData['currency'] ??= $this->requestHeaders('x-currency');
 
 			$cart = cart();
 			$cart->add($cartData);
@@ -34,8 +52,10 @@ return [
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 
+			Merx::setCurrency($this->requestQuery('currency') ?? $this->requestHeaders('x-currency'));
+
 			$key = $this->requestBody('key');
-			$allowedKeys = ['key', 'page', 'quantity', 'data'];
+			$allowedKeys = ['key', 'page', 'quantity', 'data', 'currency'];
 
 			$patchData = array_filter($this->requestBody(), function($key) use ($allowedKeys) {
 				return in_array($key, $allowedKeys);
@@ -55,23 +75,14 @@ return [
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 
+			Merx::setCurrency($this->requestQuery('currency') ?? $this->requestHeaders('x-currency'));
+
 			$key = $this->requestBody('key');
 
 			$cart = cart();
 			$cart->remove($key);
 
 			return $cart;
-		},
-	],
-	[
-		'pattern' => $endpoint . '/cart',
-		'auth' => false,
-		'method' => 'GET',
-		'action' => function (): Cart {
-			/** @var \Kirby\Cms\Api $this */
-			I18n::$locale = $this->language();
-
-			return cart();
 		},
 	],
 ];

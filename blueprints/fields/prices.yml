@@ -1,0 +1,15 @@
+label: field.prices
+type: structure
+fields:
+  price:
+    extends: fields/price
+    before: null
+    width: 1/2
+  currency:
+    label: field.currency
+    type: select
+    options:
+      type: query
+      query: kirby.option('ww.merx.currencies')
+    width: 1/2
+    required: true

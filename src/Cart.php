@@ -101,7 +101,8 @@ class Cart extends ProductList
 	 */
 	public function getStripePaymentIntent(?array $params = [], $options = []): object
 	{
-		if ($this->getSum() === 0.0) {
+		$amount = $this->total()->toFloat();
+		if ($amount === 0.0) {
 			// set language for single language installations
 			if (!option('languages', false) && option('locale', false)) {
 				$locale = \Kirby\Toolkit\Locale::normalize(option('locale'));
@@ -115,7 +116,12 @@ class Cart extends ProductList
 				'httpCode' => 400,
 			]);
 		}
-		return StripePayment::createStripePaymentIntent($this->getSum(), $params, $options);
+
+		$params = array_merge([
+			'currency' => $this->currency(),
+		], $params);
+
+		return StripePayment::createStripePaymentIntent($amount, $params, $options);
 	}
 
 
@@ -150,7 +156,8 @@ class Cart extends ProductList
 	public function payPalPurchaseUnits(): array
 	{
 		$siteTitle = site()->title();
-		$total = $this->getSum();
+		$total = $this->total()->toFloat();
+		$currencyCode = $this->currency();
 		$discount = 0;
 		foreach ($this->values() as $cartItem) {
 			if ($cartItem['price'] <= 0) {
@@ -167,22 +174,22 @@ class Cart extends ProductList
 				"description" => (string)$siteTitle,
 				"amount" => [
 					"value" => number_format($total, 2, '.', ''),
-					"currency_code" => option('ww.merx.currency'),
+					"currency_code" => $currencyCode,
 					"breakdown" => [
 						"item_total" => [
 							"value" => number_format($itemTotal, 2, '.', ''),
-							"currency_code" => option('ww.merx.currency'),
+							"currency_code" => $currencyCode,
 						],
 						"discount" => [
 							"value" => number_format($discount, 2, '.', ''),
-							"currency_code" => option('ww.merx.currency'),
+							"currency_code" => $currencyCode,
 						],
 					],
 				],
-				"items" => array_map(function ($cartItem) {
+				"items" => array_map(function ($cartItem) use ($currencyCode) {
 					$cartUnitAmount = new stdClass;
 					$cartUnitAmount->value = number_format($cartItem['price'], 2, '.', '');
-					$cartUnitAmount->currency_code =  option('ww.merx.currency');
+					$cartUnitAmount->currency_code =  $currencyCode;
 
 					return [
 						'name' => $cartItem['title'] ?? $cartItem['id'],
@@ -192,5 +199,33 @@ class Cart extends ProductList
 				}, $items),
 			],
 		];
+	}
+
+	/**
+	 * @param string $key
+	 * @param ListItem $value
+	 * @return void
+	 * @throws Exception When currency of new item does not match existing currency
+	 */
+	public function __set(string $key, $value): void
+	{
+		$listItem = ListItem::dataToListItem($value);
+		$currency = $this->currency();
+
+		// Check currencies
+		if (is_string($currency) && $listItem->price?->currency !== $currency) {
+			$listItem->price = null;
+			parent::__set($key, $listItem);
+			// throw new Exception([
+			// 	'key' => 'merx.mixedCurrencies.add',
+			// 	'data' => [
+			// 		'key' => $listItem->key,
+			// 		'currency' => $currency,
+			// 		'newCurrency' => $listItem->price?->currency,
+			// 	],
+			// ]);
+		} else {
+			parent::__set($key, $listItem);
+		}
 	}
 }

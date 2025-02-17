@@ -9,11 +9,11 @@ fields:
     text:
       en: >
         Invoice Number: {{ page.invoiceNumber }}<br>
-        Sum: {{ page.formattedSum }}<br>
+        Total: {{ page.total.toString }}<br>
         Invoice Date: {{ page.invoiceDate }}<br>
         Paid Date: {{ page.paidDate }}<br>
       de: >
         Rechnungsnummer: {{ page.invoiceNumber }}<br>
-        Summe: {{ page.formattedSum }}<br>
+        Summe: {{ page.total.toString }}<br>
         Rechnungsdatum: {{ page.invoiceDate }}<br>
         Bezahldatum: {{ page.paidDate }}<br>

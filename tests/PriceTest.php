@@ -75,4 +75,50 @@ class PriceTest extends TestCase
 		$formatter = $price->numberFormat();
 		$this->assertInstanceOf(NumberFormatter::class, $formatter);
 	}
+
+	public function testToStringMethodFormatsPrice()
+	{
+		$price = new Price(price: 119.0, priceNet: 100.0, tax: 0.19, currency: 'EUR');
+		
+		// Test gross price formatting
+		$this->assertStringContainsString('119', $price->toString('price'));
+		
+		// Test net price formatting
+		$this->assertStringContainsString('100', $price->toString('priceNet'));
+	}
+
+	public function testConstructorWithTaxObject()
+	{
+		$tax = new Tax(priceNet: 100.0, rate: 0.19, currency: 'EUR');
+		$price = new Price(priceNet: 100.0, tax: $tax, currency: 'EUR');
+
+		$this->assertSame($tax, $price->tax);
+		$this->assertEquals(119.0, $price->price);
+	}
+
+	public function testRoundingPrecision()
+	{
+		$price = new Price(price: 119.999, tax: 0.19);
+		$this->assertEquals(120.00, $price->price);
+		
+		$price = new Price(priceNet: 100.666, tax: 0.19);
+		$this->assertEquals(100.67, $price->priceNet);
+		$this->assertEquals(119.80, $price->price);
+	}
+
+	public function testNullHandling()
+	{
+		// Test with only price
+		$price = new Price(price: 119.0);
+		$this->assertNull($price->priceNet);
+		$this->assertNull($price->tax);
+		$this->assertNull($price->currency);
+		
+		// Test with only net price and tax
+		$price = new Price(priceNet: 100.0, tax: 0.19);
+		$this->assertNotNull($price->price);
+		$this->assertNotNull($price->priceNet);
+		$this->assertNotNull($price->tax);
+		$this->assertNull($price->currency);
+	}
 }

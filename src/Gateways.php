@@ -87,7 +87,8 @@ Gateways::$gateways['paypal'] = [
 				throw new Exception('Missing PayPal sandbox keys');
 			}
 		}
-		$response = PayPalPayment::createPayPalPayment($virtualOrderPage);
+		$currency = $virtualOrderPage->cart()->currency();
+		$response = PayPalPayment::createPayPalPayment($virtualOrderPage, $currency);
 		$virtualOrderPage->content()->update([
 			'payPalOrderId' => $response['id'],
 			'redirect' => $response['links'][1]['href'],
@@ -129,36 +130,6 @@ Gateways::$gateways['sepa-debit'] = [
 	},
 ];
 
-/** @deprecated Use Klarna instead. More information: https://support.stripe.com/questions/sofort-is-being-deprecated-as-a-standalone-payment-method */
-Gateways::$gateways['sofort'] = [
-	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-		$country = $virtualOrderPage->country()->toString();
-
-		$cart = new Cart();
-		$paymentIntent = $cart->getStripePaymentIntent([
-			'payment_method_types' => ['sofort'],
-			'capture_method' => 'automatic',
-			'confirm' => true,
-			'payment_method_data' => [
-				'type' => 'sofort',
-				'sofort' => [
-				  'country' => $country,
-				],
-			],
-			'return_url' => url(option('ww.merx.successPage')),
-		]);
-
-		$virtualOrderPage->content()->update([
-			'redirect' => $paymentIntent->next_action->redirect_to_url->url,
-		]);
-		return $virtualOrderPage;
-	},
-	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		$virtualOrderPage = completeStripePayment($virtualOrderPage, $data);
-		return $virtualOrderPage;
-	},
-];
-
 Gateways::$gateways['klarna'] = [
 	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
 		$email = $virtualOrderPage->email()->toString();
@@ -177,7 +148,7 @@ Gateways::$gateways['klarna'] = [
 				  ],
 				],
 			],
-			'return_url' => url(option('ww.merx.successPage')),
+			'return_url' => Merx::successUrl(),
 		]);
 
 		$virtualOrderPage->content()->update([
@@ -201,7 +172,7 @@ Gateways::$gateways['ideal'] = [
 			'payment_method_data' => [
 				'type' => 'ideal',
 			],
-			'return_url' => url(option('ww.merx.successPage')),
+			'return_url' => Merx::successUrl(),
 		]);
 
 		$virtualOrderPage->content()->update([

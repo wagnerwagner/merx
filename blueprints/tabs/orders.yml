@@ -1,0 +1,20 @@
+sections:
+  orders:
+    type: pages
+    query: page.orders.flip
+    layout: table
+    create: false
+    image: false
+    search: true
+    help: |
+      {{ page.orderInfo }}
+    columns:
+      quantity: true
+      price: true
+      producttotal: true
+      paymentmethod: true
+      email: true
+      city: true
+      date:
+        label: Date
+        value: "{{ page.invoiceDate.toDate('c') }}"

@@ -388,9 +388,11 @@ return array(
     'Wagnerwagner\\Merx\\ListItem' => $baseDir . '/src/ListItem.php',
     'Wagnerwagner\\Merx\\ListItems' => $baseDir . '/src/ListItems.php',
     'Wagnerwagner\\Merx\\Merx' => $baseDir . '/src/Merx.php',
+    'Wagnerwagner\\Merx\\OrderPage' => $baseDir . '/src/OrderPage.php',
     'Wagnerwagner\\Merx\\PayPalPayment' => $baseDir . '/src/PayPalPayment.php',
     'Wagnerwagner\\Merx\\Price' => $baseDir . '/src/Price.php',
     'Wagnerwagner\\Merx\\ProductList' => $baseDir . '/src/ProductList.php',
+    'Wagnerwagner\\Merx\\ProductPage' => $baseDir . '/src/ProductPage.php',
     'Wagnerwagner\\Merx\\StripePayment' => $baseDir . '/src/StripePayment.php',
     'Wagnerwagner\\Merx\\Tax' => $baseDir . '/src/Tax.php',
 );

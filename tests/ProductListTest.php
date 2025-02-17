@@ -22,13 +22,13 @@ final class ProductListTest extends TestCase
 		);
 		$this->assertEquals(
 			99.99,
-			$productList->getSum()
+			$productList->total()->toFloat()()
 		);
 
 		$productList = $productList->append(['id' => 'nice-socks', 'price' => 10]);
 		$this->assertEquals(
 			109.99,
-			$productList->getSum()
+			$productList->total()->toFloat()()
 		);
 	}
 
@@ -40,7 +40,7 @@ final class ProductListTest extends TestCase
 		$productList->updateItem(['id' => 'nice-shoes', 'price' => 89.99, 'tax' => 10]);
 		$this->assertEquals(
 			89.99,
-			$productList->getSum()
+			$productList->total()->toFloat()()
 		);
 		$this->assertEquals(
 			10,
@@ -50,7 +50,7 @@ final class ProductListTest extends TestCase
 		$productList->updateItem(['id' => 'nice-shoes', 'quantity' => 2]);
 		$this->assertEquals(
 			179.98,
-			$productList->getSum()
+			$productList->total()->toFloat()()
 		);
 		$this->assertEquals(
 			20,

@@ -58,6 +58,15 @@ class License extends PluginLicense
 
 	public function isValid(): bool
 	{
+		function crossfoot(int $int): string
+		{
+			$r = 0;
+			foreach (str_split($int) as $v) {
+				$r += $v;
+			}
+			return $r;
+		}
+
 		$licenseArr = Str::split(Str::after($this->licenseKey(), 'MERX-'), '-');
 		return crossfoot(hexdec($licenseArr[0])) + crossfoot(hexdec($licenseArr[1])) === 90;
 	}

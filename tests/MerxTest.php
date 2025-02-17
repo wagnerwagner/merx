@@ -6,34 +6,27 @@ use PHPUnit\Framework\TestCase;
 
 final class MerxTest extends TestCase
 {
-	public function testFormatPrice(): void
+	public function testFormatCurrency(): void
 	{
 		$this->assertEquals(
 			'€ 10.20',
-			Merx::formatPrice(10.20)
+			Merx::formatCurrency(10.20, 'EUR')
 		);
 	}
-	public function testFormatPriceDE(): void
+	public function testFormatCurrencyDE(): void
 	{
 		setlocale(LC_ALL, 'de_DE');
 		$this->assertEquals(
 			'10,20 €',
-			Merx::formatPrice(10.20, false, true)
+			Merx::formatCurrency(10.20, 'EUR')
 		);
 	}
-	public function testFormatPrice1(): void
+	public function testFormatCurrency1(): void
 	{
-		setlocale(LC_ALL, 'C');
+		setlocale(LC_ALL, 'en_US');
 		$this->assertEquals(
 			'€ 11.99',
-			Merx::formatPrice(11.99, true)
-		);
-	}
-	public function testFormatPrice2(): void
-	{
-		$this->assertEquals(
-			'1984.12 €',
-			Merx::formatPrice(1984.12, false)
+			Merx::formatCurrency(11.99, 'USD')
 		);
 	}
 

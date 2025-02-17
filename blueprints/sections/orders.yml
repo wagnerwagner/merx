@@ -4,4 +4,4 @@ parent: site.find(kirby.option('ww.merx.ordersPage'))
 template: order
 sortBy: num desc
 text: "#{{ page.invoiceNumber }}"
-info: "{{ page.formattedSum }} {{ page.paidDate }}"
+info: "{{ page.total.toString }} {{ page.paidDate }}"

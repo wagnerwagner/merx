@@ -81,7 +81,6 @@ class StripePayment
 
 		$intent = \Stripe\PaymentIntent::create(array_merge([
 			'amount' => round($amount * 100),
-			'currency' => option('ww.merx.currency'),
 			'capture_method' => 'manual',
 			'payment_method_types' => ['card'],
 		], $params), $options);

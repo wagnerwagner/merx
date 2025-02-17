@@ -3,10 +3,8 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\InvalidArgumentException;
-use Kirby\Toolkit\I18n;
 use Kirby\Toolkit\Obj;
 use Kirby\Toolkit\Str;
-use NumberFormatter;
 
 class Price extends Obj
 {
@@ -17,18 +15,17 @@ class Price extends Obj
 	public float|null $price = null;
 
 	/** E.g. 100.0 */
-	public float|null $priceNet;
+	public float|null $priceNet = null;
 
 	/** E.g. 19.0 */
-	public Tax|null $tax;
+	public Tax|null $tax = null;
 
 	/** Three-letter ISO currency code, in uppercase. E.g. EUR */
-	public string|null $currency;
+	public string|null $currency = null;
 
 	/**
-	 * Calculates prices given on net or gross price and tax.
+	 * Calculates prices given on net or gross price and tax (rate).
 	 *
-	 * @param array|float $data Possible keys: price, priceNet, tax, currency
 	 * @throws \Kirby\Exception\InvalidArgumentException $data
 	 */
 	public function __construct(
@@ -45,7 +42,7 @@ class Price extends Obj
 		} else {
 			if (!is_float($price) && !is_float($priceNet)) {
 				throw new InvalidArgumentException(
-					message: '$price or $priceNet must be give'
+					message: '$price or $priceNet must be given'
 				);
 			}
 
@@ -54,13 +51,13 @@ class Price extends Obj
 				: null;
 		}
 
-		if (is_float($priceNet)) {
-			$this->priceNet = round((float)$priceNet, $roundingPrecision);
-		}
-
 		$this->currency = $currency;
 		if (is_string($this->currency)) {
 			$this->currency = Str::upper($this->currency);
+		}
+
+		if (is_float($priceNet)) {
+			$this->priceNet = round((float)$priceNet, $roundingPrecision);
 		}
 
 		if ($priceNet === null && is_float($this->price) && is_float($tax)) {
@@ -82,13 +79,6 @@ class Price extends Obj
 		}
 	}
 
-	public function numberFormat(): NumberFormatter
-	{
-		$style = is_string($this->currency) ?
-			NumberFormatter::CURRENCY : NumberFormatter::DECIMAL;
-		return new NumberFormatter(I18n::locale(), $style);
-	}
-
 	/**
 	 * Converts the object to an array
 	 */
@@ -105,9 +95,14 @@ class Price extends Obj
 		return $this->price;
 	}
 
+	/**
+	 * @property string $key Use `priceNet` to get net price as formatted currency
+	 *
+	 * @return string  Formatted currency
+	 */
 	public function toString(string $key = 'price'): string
 	{
-		return $this->numberFormat()->formatCurrency($this->$key, $this->currency ?? null);
+		return Merx::formatCurrency($this->$key ?? 0, $this->currency);
 	}
 
 	public function __toString(): string
