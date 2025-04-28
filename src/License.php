@@ -56,18 +56,18 @@ class License extends PluginLicense
 		return option('ww.merx.license');
 	}
 
+	private function crossfoot(int $int): string
+	{
+		$r = 0;
+		foreach (str_split($int) as $v) {
+			$r += $v;
+		}
+		return $r;
+	}
+
 	public function isValid(): bool
 	{
-		function crossfoot(int $int): string
-		{
-			$r = 0;
-			foreach (str_split($int) as $v) {
-				$r += $v;
-			}
-			return $r;
-		}
-
 		$licenseArr = Str::split(Str::after($this->licenseKey(), 'MERX-'), '-');
-		return crossfoot(hexdec($licenseArr[0])) + crossfoot(hexdec($licenseArr[1])) === 90;
+		return self::crossfoot(hexdec($licenseArr[0])) + self::crossfoot(hexdec($licenseArr[1])) === 90;
 	}
 }

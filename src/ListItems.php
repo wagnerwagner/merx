@@ -37,25 +37,26 @@ class ListItems extends Collection
 		$currency = null;
 		foreach ($this as $listItem) {
 			/** @var ListItem $listItem */
+			$listItemTotal = $listItem->total();
 
-			if ($currency !== null && $currency !== $listItem->total()?->currency) {
+			if ($currency !== null && $listItemTotal !== null && $currency !== $listItemTotal?->currency) {
 				return null;
 				// throw new Exception(
 				// 	key: 'merx.mixedCurrencies.total',
 				// 	data: [
 				// 		'key' => $listItem->key,
 				// 		'currency' => $currency,
-				// 		'newCurrency' => $listItem->total()?->currency,
+				// 		'newCurrency' => $listItemTotal?->currency,
 				// 	],
 				// );
 			}
 
-			$tax = $listItem->total()?->tax ?? null;
+			$tax = $listItemTotal?->tax ?? null;
 
-			$price += (float)$listItem->total()?->price;
-			$priceNet += (float)$listItem->total()?->priceNet;
+			$price += (float)$listItemTotal?->price;
+			$priceNet += (float)$listItemTotal?->priceNet;
 			$taxPrice += (float)$tax?->price->toFloat();
-			$currency = $listItem->total()?->currency;
+			$currency = $listItemTotal?->currency;
 		}
 
 		$tax = new Tax(priceNet: $taxPrice, currency: $currency);
@@ -103,22 +104,14 @@ class ListItems extends Collection
 	 * @return string|null Three-letter ISO currency code, in uppercase
 	 * @throws Exception When items do have different currencies
 	 */
-	public function currency(): ?string
+	public function currency(): null|false|string
 	{
 		$currency = null;
 		foreach ($this as $listItem) {
 			/** @var ListItem $listItem */
 			$price = $listItem->price;
 			if (is_string($currency) && $currency !== $price?->currency) {
-				return null;
-				// throw new Exception(
-				// 	key: 'merx.mixedCurrencies.currency',
-				// 	data: [
-				// 		'key' => $listItem->key,
-				// 		'currency' => $currency,
-				// 		'newCurrency' => $price?->currency,
-				// 	],
-				// );
+				return false;
 			}
 			$currency = $price?->currency;
 		}
@@ -137,7 +130,7 @@ class ListItems extends Collection
 	}
 
 	/**
-	 * Used to store Cart etc. in OrderPage
+	 * Used to store Cart in OrderPage
 	 */
 	public function toYaml(): string
 	{

@@ -17,7 +17,7 @@ class Price extends Obj
 	/** E.g. 100.0 */
 	public float|null $priceNet = null;
 
-	/** E.g. 19.0 */
+	/** E.g. 0.19 (19 %) */
 	public Tax|null $tax = null;
 
 	/** Three-letter ISO currency code, in uppercase. E.g. EUR */

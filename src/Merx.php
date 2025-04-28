@@ -409,23 +409,6 @@ class Merx
 		}
 	}
 
-
-	public static function getFieldError(\Field $field, array $rules): array
-	{
-		$errors = V::errors($field->value(), $rules);
-		$fields = array_change_key_case($field->parent()->blueprint()->fields(), CASE_LOWER);
-		if (sizeof($errors) > 0) {
-			return [
-				$field->key() => [
-					'label' => $fields[$field->key()]['label'],
-					'message' => $errors,
-				],
-			];
-		} else {
-			return [];
-		}
-	}
-
 	public static function setCurrency(?string $currency): string
 	{
 		Config::set('ww.merx.currency.current', $currency);

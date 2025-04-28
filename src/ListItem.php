@@ -93,7 +93,7 @@ class ListItem extends Obj
 		}
 
 		// Set title from page
-		if ($this->page instanceof Page) {
+		if ($this->title === null && $this->page instanceof Page) {
 			if (is_string($this->page->title())) {
 				$this->title = $this->page->title();
 			} else if (
@@ -144,8 +144,6 @@ class ListItem extends Obj
 
 		return $listItem;
 	}
-
-
 
 	public function total(): ?Price
 	{

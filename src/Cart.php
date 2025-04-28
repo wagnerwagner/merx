@@ -10,7 +10,6 @@ class Cart extends ProductList
 {
 	protected string $sessionName = 'ww.merx.cartItems';
 
-
 	/**
 	 * Constructor
 	 *
@@ -23,13 +22,20 @@ class Cart extends ProductList
 			$data = $kirby->session()->get($this->sessionName);
 		}
 		parent::__construct($data, true);
-		kirby()->trigger('ww.merx.cart', ['cart' => $this]);
+		kirby()->trigger('ww.merx.cart.create:before', ['cart' => $this, 'data' => $data]);
 		$this->save();
+		kirby()->trigger('ww.merx.cart.create:after', ['cart' => $this]);
 	}
-
 
 	/**
 	 * Adds item to cart.
+	 *
+	 * ```php
+	 * $cart->add('products/nice-shoes'); // ID of a ProductPage
+	 * $cart->add('page://L1cJEiOOQI3VzljV'); // UUID of a ProductPage
+	 * $cart->add(['key' => 'individual-shoes', 'page' => 'products/nice-shoes']); // Array including key
+	 * $cart->add(new ListItem(key: 'nice-socks', price: 10])); // Custom LitItem
+	 * ```
 	 *
 	 * @throws Exception error.merx.cart.add
 	 */
@@ -38,8 +44,20 @@ class Cart extends ProductList
 	): static
 	{
 		try {
+			kirby()->trigger('ww.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
 			parent::add($data);
+
+			if ($this->currency() === false) {
+				throw new Exception(
+					key: 'merx.mixedCurrencies.currency',
+					data: [
+						'key' => $this->key,
+					],
+				);
+			}
+
 			$this->save();
+			kirby()->trigger('ww.merx.cart.add:after', ['cart' => $this]);
 			return $this;
 		} catch (\Exception $ex) {
 			throw new Exception([
@@ -56,16 +74,17 @@ class Cart extends ProductList
 	/**
 	 * Removes item from Cart by key
 	 *
-	 * @param mixed $key the name of the key
+	 * @param string $key the name of the key
 	 * @return $this
 	 */
-	public function remove($key): static
+	public function remove(string $key): static
 	{
+		kirby()->trigger('ww.merx.cart.remove:before', ['cart' => $this, 'key' => $key]);
 		parent::remove($key);
 		$this->save();
+		kirby()->trigger('ww.merx.cart.remove:after', ['cart' => $this, 'key' => $key]);
 		return $this;
 	}
-
 
 
 	/**
@@ -74,8 +93,10 @@ class Cart extends ProductList
 	public function updateItem(string $key, array $data): parent
 	{
 		try {
+			kirby()->trigger('ww.merx.cart.updateItem:before', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			parent::updateItem($key, $data);
 			$this->save();
+			kirby()->trigger('ww.merx.cart.updateItem:after', ['cart' => $this]);
 			return $this;
 		} catch (\Exception $ex) {
 			throw new Exception([
@@ -130,7 +151,9 @@ class Cart extends ProductList
 	 */
 	public function delete(): void
 	{
+		kirby()->trigger('ww.merx.cart.delete:before', ['cart' => $this]);
 		kirby()->session()->remove($this->sessionName);
+		kirby()->trigger('ww.merx.cart.delete:after', ['cart' => $this]);
 		$this->data = [];
 	}
 

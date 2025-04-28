@@ -6,10 +6,10 @@ use Kirby\Toolkit\Obj;
 
 class Tax extends Obj
 {
-	/** Tax price. E.g. 19.0 */
+	/** Tax price. E.g. 19.0 EUR */
 	public Price $price;
 
-	/** Tax value. E.g. 0.19 */
+	/** Tax value. E.g. 0.19 (19 %) */
 	public ?float $rate = null;
 
 	public function __construct(float $priceNet, ?float $rate = null, null|string $currency = null)

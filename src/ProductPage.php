@@ -34,7 +34,7 @@ class ProductPage extends Page
 
 	/**
 	 * Converts prices content field to a Structure of Price objects
-	 * 
+	 *
 	 * @return \Kirby\Cms\Structure<Price> A Structure collection containing Price objects
 	 */
 	public function prices(): Structure
@@ -76,5 +76,16 @@ class ProductPage extends Page
 			}
 			$amountPerOrder = round($amount / $count, 1);
 			return tt('section.orders.info', null, compact('amount', 'count', 'amountPerOrder'));
+	}
+
+
+	/**
+	 * Max amount that could be added to ListItems
+	 *
+	 * @return null|float
+	 */
+	public function maxAmount(): ?float
+	{
+		return null;
 	}
 }
