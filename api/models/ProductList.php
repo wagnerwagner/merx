@@ -31,7 +31,7 @@ return [
 			$apiModel = $this->model('tax', $tax);
 			return $apiModel->toArray();
 		}, $productList->taxRates())),
-		'total' => fn (ProductList $productList): Price => $productList->total(),
+		'total' => fn (ProductList $productList): ?Price => $productList->total(),
 	],
 	'type' => ProductList::class,
 	'views' => [
