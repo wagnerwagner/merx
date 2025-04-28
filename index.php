@@ -11,7 +11,6 @@ use Wagnerwagner\Merx\License;
 
 @include_once __DIR__ . '/vendor/autoload.php';
 
-
 function merx(): Merx
 {
 	return new Merx();
