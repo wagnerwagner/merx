@@ -1,7 +1,7 @@
 {
 	"name": "wagnerwagner/merx",
 	"description": "A toolkit to create online shops with Kirby",
-	"version": "2.0.0-alpha.1",
+	"version": "2.0.0-alpha.2",
 	"license": "proprietary",
 	"homepage": "https://merx.wagnerwagner.de",
 	"type": "kirby-plugin",
@@ -23,7 +23,7 @@
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^11",
-		"getkirby/cms": "5.0.0-alpha.4"
+		"getkirby/cms": "5.0.0-beta.6"
 	},
 	"autoload": {
 		"psr-4": {
