@@ -230,7 +230,7 @@ class Cart extends ProductList
 	 * @return void
 	 * @throws Exception When currency of new item does not match existing currency
 	 */
-	public function __set(string $key, $value): void
+	private function __set(string $key, $value): void
 	{
 		$listItem = ListItem::dataToListItem($value);
 		$currency = $this->currency();
