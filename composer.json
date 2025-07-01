@@ -34,7 +34,7 @@
       "kirby-cms-path": false
     },
     "scripts": {
-        "analyze:psalm": "psalm --show-info=true",
+        "analyze:psalm": "psalm",
         "test": "./vendor/bin/phpunit --bootstrap tests/bootstrap.php tests"
     },
     "config": {
