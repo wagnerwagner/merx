@@ -20,6 +20,9 @@ use Kirby\Toolkit\A;
  */
 
 
+/**
+ * @extends Collection<array>
+ */
 class ProductList extends Collection
 {
     /**
