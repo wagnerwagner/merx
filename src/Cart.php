@@ -85,7 +85,7 @@ class Cart extends ProductList
      * @param mixed $key the name of the key
      * @return $this
      */
-    public function remove($key)
+    public function remove($key): static
     {
         parent::remove($key);
         $this->save();

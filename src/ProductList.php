@@ -20,6 +20,9 @@ use Kirby\Toolkit\A;
  */
 
 
+/**
+ * @extends Collection<array>
+ */
 class ProductList extends Collection
 {
     /**
@@ -28,7 +31,7 @@ class ProductList extends Collection
      * @param mixed $args `($data)` or `($id, $data)`.
      * @return $this
      */
-    public function append(...$args)
+    public function append(...$args): static
     {
         if (count($args) === 1) {
             if (!is_array($args[0])) {

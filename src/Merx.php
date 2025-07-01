@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Cms\App;
 use Wagnerwagner\Merx\Gateways;
 use Wagnerwagner\Merx\Cart;
 use Kirby\Toolkit\Str;
@@ -32,7 +33,7 @@ class Merx
      *
      * @return string
      */
-    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null): string
+    public static function formatPrice(float $price, ?bool $currencyPositionPrecedes = null, ?bool $currencySeparateBySpace = null): string
     {
         // set locale for single language installations
         if (!option('languages', false) && option('locale', false)) {
@@ -285,9 +286,15 @@ class Merx
                 $gateway['completePayment']($virtualOrderPage, $data);
             }
 
-            $virtualOrderPage->content()->update([
-                'invoiceDate' => date('c'),
-            ]);
+            if (version_compare(App::version(), '5.0.0', '>=')) {
+                $virtualOrderPage->version('latest')->update([
+                    'invoiceDate' => date('c'),
+                ]);
+            } else {
+                $virtualOrderPage->content()->update([
+                    'invoiceDate' => date('c'),
+                ]);
+            }
 
             $kirby = kirby();
 
