@@ -25,7 +25,7 @@ function productList(array $data = []): ProductList
     return new ProductList($data);
 }
 
-function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null, string $currencySymbol = null): string
+function formatPrice(float $price, null|bool $currencyPositionPrecedes = null, null|bool $currencySeparateBySpace = null, null|string $currencySymbol = null): string
 {
     return Merx::formatPrice($price, $currencyPositionPrecedes, $currencySeparateBySpace, $currencySymbol);
 }
@@ -201,7 +201,7 @@ Kirby::plugin('ww/merx', [
         }
     ],
     'fieldMethods' => [
-        'toFormattedPrice' => function ($field, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null, string $currencySymbol = null) {
+        'toFormattedPrice' => function ($field, null|bool $currencyPositionPrecedes = null, null|bool $currencySeparateBySpace = null, null|string $currencySymbol = null) {
             return Merx::formatPrice($field->toFloat(), $currencyPositionPrecedes, $currencySeparateBySpace, $currencySymbol);
         },
     ],

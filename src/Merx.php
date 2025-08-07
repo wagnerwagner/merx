@@ -33,7 +33,7 @@ class Merx
      *
      * @return string
      */
-    public static function formatPrice(float $price, bool $currencyPositionPrecedes = null, bool $currencySeparateBySpace = null, string $currencySymbol = null): string
+    public static function formatPrice(float $price, null|bool $currencyPositionPrecedes = null, null|bool $currencySeparateBySpace = null, string $currencySymbol = null): string
     {
         // set locale for single language installations
         if (!option('languages', false) && option('locale', false)) {
