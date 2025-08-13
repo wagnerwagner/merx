@@ -15,7 +15,7 @@ return [
 				return null;
 			}
 
-			/** @var File $thumb */
+			/** @var \Kirby\Cms\File $thumb */
 			$thumb = $listItem->page->thumb() instanceof File ? $listItem->page->thumb() : $listItem->page->thumb()->toFile();
 
 			return $thumb ? [

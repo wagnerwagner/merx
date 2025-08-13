@@ -9,3 +9,10 @@ tabs:
     icon: credit-card
     sections:
       payment: sections/payment
+  personalData:
+    label:
+      en: Personal Data
+      de: Persönliche Daten
+    icon: user
+    sections:
+      personalData: sections/personal-data

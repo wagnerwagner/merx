@@ -10,6 +10,10 @@ use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
 
+/**
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ */
 abstract class OrderPage extends Page
 {
 	/**
@@ -54,15 +58,16 @@ abstract class OrderPage extends Page
 	{
 		$data = $this->items()->yaml();
 		$data = array_map(function (mixed $item) {
+			$page = is_string($item['page']) ? $item['page'] : $item['page'][0] ?? null;
 			return new ListItem(
 				key: $item['key'],
 				title: $item['title'] ?? null,
-				page: $item['page'][0] ?? null,
+				page: $page,
 				price: $item['price'] ?? null,
-				priceNet: $item['pricenet'] ?? null,
 				tax: $item['taxrate'] ?? null,
 				currency: $item['currency'] ?? null,
 				quantity: $item['quantity'] ?? 1.0,
+				quantifier: $item['quantifier'] ?? null,
 				type: $item['type'] ?? null,
 				data: $item['data'] ?? null,
 				priceUpdate: false,
@@ -82,21 +87,8 @@ abstract class OrderPage extends Page
 		return array_map(fn (?Page $page) => (string)$page?->uuid(), $this->cart()->pluck('page'));
 	}
 
-	public function total(): Price
+	public function total(): ?Price
 	{
 		return $this->cart()->total();
-	}
-
-
-	/**
-	 * 5 character long string based on sorting number.
-	 */
-	public function invoiceNumber(): string
-	{
-		if ($this->num()) {
-			return str_pad($this->num(), 5, 0, STR_PAD_LEFT);
-		} else {
-			return '';
-		}
 	}
 }

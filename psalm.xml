@@ -1,18 +1,34 @@
 <?xml version="1.0"?>
 <psalm
-	errorLevel="5"
+	errorLevel="7"
 	resolveFromConfigFile="true"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="https://getpsalm.org/schema/config"
 	xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
 	<projectFiles>
+		<file name="index.php" />
+		<directory name="api" />
 		<directory name="src" />
+		<directory name="translations" />
 		<ignoreFiles>
 			<directory name="vendor" />
 		</ignoreFiles>
 	</projectFiles>
+
 	<issueHandlers>
+		<!-- Don't warn about "$this in a non-class context" in the api dir -->
+		<InvalidScope>
+			<errorLevel type="suppress">
+				<directory name="api" />
+				<file name="index.php" />
+			</errorLevel>
+		</InvalidScope>
+
+    <MissingOverrideAttribute errorLevel="info" />
+    <MissingTemplateParam errorLevel="info" />
+    <PossiblyUnusedProperty errorLevel="info" />
+    <PossiblyUnusedMethod errorLevel="info" />
 		<UndefinedClass>
 			<errorLevel type="suppress">
 				<referencedClass name="OrderPage" />

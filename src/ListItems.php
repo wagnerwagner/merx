@@ -7,7 +7,7 @@ use Kirby\Exception\Exception;
 use Kirby\Toolkit\Collection;
 
 /**
- * Collection of ListItem
+ * @extends \Kirby\Cms\Collection<ListItem>
  */
 class ListItems extends Collection
 {
@@ -33,7 +33,7 @@ class ListItems extends Collection
 	{
 		$price = 0.0;
 		$priceNet = 0.0;
-		$taxPrice = 0.0;
+		$taxRate = 0.0;
 		$currency = null;
 		foreach ($this as $listItem) {
 			/** @var ListItem $listItem */
@@ -55,18 +55,34 @@ class ListItems extends Collection
 
 			$price += (float)$listItemTotal?->price;
 			$priceNet += (float)$listItemTotal?->priceNet;
-			$taxPrice += (float)$tax?->price->toFloat();
-			$currency = $listItemTotal?->currency;
+			$taxRate += (float)$tax?->rate;
+			$currency = $currency ?? $listItemTotal?->currency;
 		}
 
-		$tax = new Tax(priceNet: $taxPrice, currency: $currency);
+		$tax = new Tax(priceNet: $priceNet, rate: $taxRate, currency: $currency);
 
 		return new Price(
 			price: $price,
-			priceNet: $priceNet,
-			currency: $currency,
 			tax: $tax,
+			currency: $currency,
 		);
+	}
+
+	public function isFromPrice(): bool
+	{
+		$isFromPrice = false;
+		foreach ($this as $listItem) {
+			/** @var ListItem $listItem */
+			if ($listItem->total() === null) {
+				$isFromPrice = true;
+			}
+		}
+		return $isFromPrice;
+	}
+
+	public function isOrderable(): bool
+	{
+		return $this->isFromPrice() === false && $this->total()->price > 0;
 	}
 
 	/**
@@ -77,16 +93,15 @@ class ListItems extends Collection
 	{
 		/** @var Tax[] $taxRates */
 		$taxRates = [];
-		/** @var Prices[] $prices */
+		/** @var Price[] $prices */
 		$prices = array_unique($this->pluck('total'));
 
 		foreach ($prices as $price) {
-			/** @var ?Price $price */
 			$tax = $price?->tax ?? null;
 			if ($tax !== null) {
 				$rate = (string)$tax->rate;
 				if (isset($taxRates[$rate])) {
-					$taxRates[$rate]->price->price += $price->price;
+					$taxRates[$rate]->price += $price->price;
 				} else {
 					$taxRates[$rate] = $tax;
 				}
@@ -101,10 +116,9 @@ class ListItems extends Collection
 	/**
 	 * Get the currency of this List
 	 *
-	 * @return string|null Three-letter ISO currency code, in uppercase
-	 * @throws Exception When items do have different currencies
+	 * @return string|false|null Three-letter ISO currency code, in uppercase
 	 */
-	public function currency(): null|false|string
+	public function currency(): string|false|null
 	{
 		$currency = null;
 		foreach ($this as $listItem) {

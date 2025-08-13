@@ -2,15 +2,15 @@
 
 namespace Wagnerwagner\Merx;
 
-use I18n;
+use Kirby\Cms\App;
 use NumberFormatter;
 use Wagnerwagner\Merx\Gateways;
 use Wagnerwagner\Merx\Cart;
 use Kirby\Toolkit\Str;
 use Kirby\Toolkit\Escape;
-use Kirby\Toolkit\V;
 use Kirby\Exception\Exception;
-use Kirby\Toolkit\Config;
+use Kirby\Session\Session;
+use Kirby\Toolkit\I18n;
 use OrderPage;
 
 class Merx
@@ -32,6 +32,10 @@ class Merx
 	 */
 	protected static array $percentFormatters = [];
 
+	protected PricingRules $pricingRules;
+
+	public static string $sessionTokenParameterName = 'sessionToken';
+
 
 	public function __construct()
 	{
@@ -43,12 +47,14 @@ class Merx
 	/**
 	 * Url to be used to complete the payment
 	 *
-	 * @return string  e.g. https://example.com/api/shop/success
+	 * @return string  e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6
 	 */
-	static function successUrl(): string
+	static function returnUrl(): string
 	{
 		$kirby = kirby();
-		return (string)$kirby->url('api') . '/' . $kirby->option('ww.merx.api.endpoint', 'shop') . '/success';
+		$tokenQuery = Merx::$sessionTokenParameterName . '=' . $kirby->session()->token();
+		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('ww.merx.api.endpoint', 'shop') . '/success';
+		return $apiEndpint . '?' . $tokenQuery;
 	}
 
 
@@ -60,10 +66,14 @@ class Merx
 	public static function formatCurrency(
 		int|float $number,
 		string|null $currency,
-		string|null $locale = null
+		string|null $locale = null,
+		int|null $maxFractionDigits = null,
 	): string {
 		$locale  ??= I18n::locale();
 		$formatter = static::currencyNumberFormatter($locale);
+		if (is_int($maxFractionDigits)) {
+			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
+		}
 		$number    = $formatter?->formatCurrency($number, $currency) ?? $number;
 		return (string)$number;
 	}
@@ -76,12 +86,25 @@ class Merx
 	 */
 	public static function formatPercent(
 		int|float $number,
-		string|null $locale = null
+		string|null $locale = null,
+		int|null $maxFractionDigits = null,
 	): string {
 		$locale  ??= I18n::locale();
 		$formatter = static::percentNumberFormatter($locale);
+		if (is_int($maxFractionDigits)) {
+			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
+		}
 		$number    = $formatter?->format($number) ?? $number;
 		return (string)$number;
+	}
+
+	/**
+	 * Calculate tax amount from gross price and tax rate
+	 * E.g. calculateTax(200, 19) => 31.932773109243698
+	 */
+	public static function calculateTax(float $grossPrice, float $taxRate): float
+	{
+		return $grossPrice - ($grossPrice / (1 + $taxRate / 100));
 	}
 
 
@@ -138,36 +161,8 @@ class Merx
 			return null; // @codeCoverageIgnore
 		}
 
-		return static::$currencyFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::PERCENT);
+		return static::$percentFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::PERCENT);
 	}
-
-	/**
-	 * Helper method to calculate tax
-	 *
-	 * @param float $grossPrice Price including tax. E.g. 99.99
-	 * @param float $tax In percent. E.g. 19
-	 *
-	 * @return float
-	 */
-	public static function calculateTax(float $grossPrice, float $tax): float
-	{
-		return $grossPrice / ($tax + 100) * $tax;
-	}
-
-
-	/**
-	 * Helper method to calculate net price
-	 *
-	 * @param float $grossPrice Price including tax. E.g. 99.99
-	 * @param float $tax In percent. E.g. 19
-	 *
-	 * @return float
-	 */
-	public static function calculateNet(float $grossPrice, float $tax): float
-	{
-		return $grossPrice - self::calculateTax($grossPrice, $tax);
-	}
-
 
 	/**
 	 * Returns visitors cart.
@@ -182,15 +177,19 @@ class Merx
 		return $this->cart;
 	}
 
-
 	private function getVirtualOrderPageFromSession(): OrderPage
 	{
-		$session = (array)kirby()->session()->get('ww.merx.virtualOrderPage');
-		if (!$session) {
-			throw new \Exception('Session "ww.merx.virtualOrderPage" does not exist.');
+		$kirby = App::instance();
+		$orderPageFromSession = $kirby->session()->get('ww.merx.virtualOrderPage');
+		if (!$orderPageFromSession) {
+			$orderPageFromSession = $kirby->sessionHandler()->getManually($_GET[static::$sessionTokenParameterName])->get('ww.merx.virtualOrderPage');
+
+			if (!$orderPageFromSession) {
+				throw new \Exception('Session "ww.merx.virtualOrderPage" does not exist.');
+			}
 		}
 
-		return new OrderPage($session);
+		return new OrderPage((array)$orderPageFromSession);
 	}
 
 
@@ -222,7 +221,7 @@ class Merx
 	public function initializePayment(array $data): string
 	{
 		try {
-			$redirect = $this->successUrl();
+			$redirect = $this->returnUrl();
 
 			// set language for single language installations
 			if (!option('languages', false) && option('locale', false)) {
@@ -326,7 +325,7 @@ class Merx
 	 *
 	 * @param array $data Data required for payment gateway’s `completePayment()`
 	 */
-	public function completePayment(array $data = []): OrderPage
+	public function createOrder(array $data = []): OrderPage
 	{
 		try {
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
@@ -337,10 +336,6 @@ class Merx
 			if (is_callable($gateway['completePayment'])) {
 				$gateway['completePayment']($virtualOrderPage, $data);
 			}
-
-			$virtualOrderPage->content()->update([
-				'invoiceDate' => date('c'),
-			]);
 
 			$kirby = kirby();
 
@@ -355,17 +350,26 @@ class Merx
 			$ordersPage = page(option('ww.merx.ordersPage', 'orders'));
 			$virtualOrderPageArray = $virtualOrderPage->toArray();
 			$virtualOrderPageArray['template'] = $virtualOrderPageArray['template']->name();
+			$virtualOrderPageArray['content']['created'] = date('c');
+			$virtualOrderPageArray['draft'] = false;
 
 			/** @var OrderPage $orderPage */
-			$orderPage = $ordersPage->createChild($virtualOrderPageArray)->publish()->changeStatus('listed');
+			$orderPage = $ordersPage->createChild($virtualOrderPageArray);
 
 			// Reset language
 			$kirby->setCurrentLanguage($currentLanguageCode);
 
 			$this->cart->delete();
-			kirby()->session()->remove('ww.merx.virtualOrderPage');
+			$kirby->session()->remove('ww.merx.virtualOrderPage');
 
 			kirby()->trigger('ww.merx.completePayment:after', compact('orderPage'));
+
+			/** @todo make customizable */
+			// $latestOrder = $ordersPage->children()->listed()->last();
+			// $orderPage->version()->update([
+			// 	'invoiceNumber' => $latestOrder?->invoiceNumber()->toInt() + 1 ?? 1,
+			// ]);
+			// $orderPage->changeStatus('listed');
 
 			return $orderPage;
 		} catch (\Exception $ex) {
@@ -386,37 +390,30 @@ class Merx
 		}
 	}
 
-
-	public static function setMessage(mixed $message): void
+	public static function taxRules(array $options = []): TaxRules
 	{
-		kirby()->session()->set('ww.merx.message', $message);
+		return new TaxRules(option('ww.merx.taxRules', $options));
 	}
 
-
-	/**
-	 * Returns and removes message stored by `Merx::setMessage()`.
-	 *
-	 * @return null|mixed
-	 */
-	public static function getMessage(): mixed
+	public static function taxRule(null|string $key): ?TaxRule
 	{
-		$messageSession = kirby()->session()->get('ww.merx.message');
-		if ($messageSession) {
-			kirby()->session()->remove('ww.merx.message');
-			return $messageSession;
-		} else {
-			return null;
-		}
+		$taxRules = self::taxRules();
+		return $taxRules->getRuleByKey($key);
 	}
 
-	public static function setCurrency(?string $currency): string
+	public static function pricingRules(array $options = []): PricingRules
 	{
-		Config::set('ww.merx.currency.current', $currency);
-		return self::currentCurrency();
+		return new PricingRules(option('ww.merx.pricingRules', $options));
 	}
 
-	public static function currentCurrency(): string
+	public static function pricingRule(): ?PricingRule
 	{
-		return Config::get('ww.merx.currency.current', option('ww.merx.currency.default'));
+		$pricingRules = static::pricingRules();
+		return $pricingRules->findRule();
+	}
+
+	public static function currency(): ?string
+	{
+		return self::pricingRule()->currency;
 	}
 }

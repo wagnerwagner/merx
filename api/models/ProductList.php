@@ -32,6 +32,8 @@ return [
 			return $apiModel->toArray();
 		}, $productList->taxRates())),
 		'total' => fn (ProductList $productList): ?Price => $productList->total(),
+		'isFromPrice' => fn (ProductList $productList): bool => $productList->isFromPrice(),
+		'isOrderable' => fn (ProductList $productList): bool => $productList->isOrderable(),
 	],
 	'type' => ProductList::class,
 	'views' => [
@@ -49,6 +51,8 @@ return [
 			'taxRates',
 			'quantity',
 			'shippings',
+			'isFromPrice',
+			'isOrderable',
 		],
 	],
 ];

@@ -2,6 +2,9 @@
 
 namespace Wagnerwagner\Merx;
 
+/**
+ * @extends \Wagnerwagner\Merx\ListItems<Wagnerwagner\Merx\ListItem>
+ */
 class ProductList extends ListItems
 {
 	public function add(

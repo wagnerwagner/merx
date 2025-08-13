@@ -44,7 +44,7 @@ class PayPalPayment
 				],
 			]);
 		}
-		return (array)$response->json();
+		return $response->json(true);
 	}
 
 	/**
@@ -84,7 +84,7 @@ class PayPalPayment
 	 *
 	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_create PayPal REST API Documentation
 	 *
-	 * @param \OrderPage $orderPage
+	 * @param \Wagnerwagner\Merx\OrderPage $virtualOrderPage
 	 * @param string $currency ISO currency code
 	 *
 	 * @return array PayPal order details.
@@ -93,7 +93,7 @@ class PayPalPayment
 	 *	 - 'payment_source': (array) The payment source used to fund the payment.
 	 *	 - 'links': (array) An array of request-related HATEOAS links. To complete payer approval, use the approve link to redirect the payer.
 	 */
-	public static function createPayPalPayment(OrderPage $orderPage, string $currency): array
+	public static function createPayPalPayment(OrderPage $virtualOrderPage, string $currency): array
 	{
 		$siteTitle = (string)site()->title();
 		$access = self::getAccessToken();
@@ -105,16 +105,18 @@ class PayPalPayment
 				[
 					'description' => $siteTitle,
 					'amount' => [
-						'value' => number_format($orderPage->cart()->total()->toFloat()(), 2, '.', ''),
+						'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
 						'currency_code' => $currency,
 					],
 				],
 			];
 		}
 
+		$returnUrl = Merx::returnUrl();
+
 		$applicationContext = array_merge([
-			'cancel_url' => Merx::successUrl(),
-			'return_url' => Merx::successUrl(),
+			'cancel_url' => $returnUrl,
+			'return_url' => $returnUrl,
 			'user_action' => 'PAY_NOW',
 			'shipping_preference' => 'NO_SHIPPING',
 			'brand_name' => $siteTitle,

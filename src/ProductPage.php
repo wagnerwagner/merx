@@ -6,6 +6,11 @@ use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Cms\Structure;
 
+/**
+ * @method static \Kirby\Content\Field prices()
+ * @method static \Kirby\Content\Field taxRule()
+ * @method static \Kirby\Content\Field stock()
+ */
 class ProductPage extends Page
 {
 	/** Orders including this product */
@@ -17,34 +22,52 @@ class ProductPage extends Page
 	/**
 	 * Converts price content field to Price class
 	 */
-	public function price(?string $currency = null): ?Price
+	public function price(null|string|PricingRule $pricingRule = null): ?Price
 	{
-		$currency ??= Merx::currentCurrency();
+		if (is_string($pricingRule)) {
+			$pricingRule = Merx::pricingRules()->getRuleByKey($pricingRule);
+		} else if ($pricingRule instanceof PricingRule) {
+			$pricingRule = $pricingRule;
+		}
+		$pricingRule = $pricingRule ?? Merx::pricingRule();
 
-		if ($this->prices()->count() > 0) {
-			return $this->prices()->findBy('currency', $currency);
+		if ($pricingRule === null) {
+			return $this->prices()->first();
 		}
 
-		if ($currency === option('ww.merx.currency.default')) {
-			return new Price(price: $this->content()->price()->toFloat(), currency: $currency);
+		if ($this->prices()->count() > 0) {
+			return $this->prices()->findBy('pricingRule', $pricingRule);
 		}
 
 		return null;
 	}
 
+	public function tax(): ?Tax
+	{
+		return $this->price()?->tax();
+	}
+
 	/**
 	 * Converts prices content field to a Structure of Price objects
 	 *
-	 * @return \Kirby\Cms\Structure<Price> A Structure collection containing Price objects
+	 * @return \Kirby\Cms\Structure<\Wagnerwagner\Merx\Price> A Structure collection containing Price objects
 	 */
 	public function prices(): Structure
 	{
+		$pricingRules = Merx::pricingRules();
+		$taxRule = Merx::taxRule($this->taxRule()->value());
 		/** @var \Kirby\Cms\Structure $prices */
 		$prices = $this->content()->prices()->toStructure();
-		return $this->prices ?? $prices->map(fn ($item) => new Price(
-			price: $item->price()->toFloat(),
-			currency: $item->currency()->value(),
-		));
+		return $this->prices ?? $prices
+			->filter(fn ($item) => $item->price()->isNotEmpty())
+			->map(function ($item) use ($pricingRules, $taxRule) {
+				$pricingRule = $pricingRules->getRuleByKey($item->pricingKey()->value());
+				return new Price(
+					price: $item->price()->toFloat(),
+					pricingRule: $pricingRule,
+					tax: $taxRule?->taxRate(),
+				);
+			});
 	}
 
 	public function orders(): Pages

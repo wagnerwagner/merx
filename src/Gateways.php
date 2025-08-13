@@ -30,7 +30,7 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
 	$paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
 
 	// Update content of VirtualOrderPage
-	$virtualOrderPage->content()->update([
+	$virtualOrderPage->version()->update([
 		'paymentDetails' => (array)$paymentIntent->toArray(),
 	]);
 
@@ -53,7 +53,7 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
 
 	// Update content of VirtualOrderPage
 	if ($paymentIntent->status === 'succeeded') {
-		$virtualOrderPage->content()->update([
+		$virtualOrderPage->version()->update([
 			'paymentComplete' => true,
 			'paidDate' => date('c'),
 		]);
@@ -89,7 +89,7 @@ Gateways::$gateways['paypal'] = [
 		}
 		$currency = $virtualOrderPage->cart()->currency();
 		$response = PayPalPayment::createPayPalPayment($virtualOrderPage, $currency);
-		$virtualOrderPage->content()->update([
+		$virtualOrderPage->version()->update([
 			'payPalOrderId' => $response['id'],
 			'redirect' => $response['links'][1]['href'],
 		]);
@@ -106,7 +106,7 @@ Gateways::$gateways['paypal'] = [
 
 		// execute payment
 		$paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
-		$virtualOrderPage->content()->update([
+		$virtualOrderPage->version()->update([
 			'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
 			'paymentComplete' => true,
 			'paidDate' => date('c'),
@@ -118,7 +118,7 @@ Gateways::$gateways['paypal'] = [
 /**
  *  Credit Card payment gateway using Stripe
  */
-Gateways::$gateways['credit-card-sca'] = [
+Gateways::$gateways['credit-card'] = [
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
 		return completeStripePayment($virtualOrderPage, $data);
 	},
@@ -148,10 +148,10 @@ Gateways::$gateways['klarna'] = [
 				  ],
 				],
 			],
-			'return_url' => Merx::successUrl(),
+			'return_url' => Merx::returnUrl(),
 		]);
 
-		$virtualOrderPage->content()->update([
+		$virtualOrderPage->version()->update([
 			'redirect' => $paymentIntent->next_action->redirect_to_url->url,
 		]);
 		return $virtualOrderPage;
@@ -172,10 +172,10 @@ Gateways::$gateways['ideal'] = [
 			'payment_method_data' => [
 				'type' => 'ideal',
 			],
-			'return_url' => Merx::successUrl(),
+			'return_url' => Merx::returnUrl(),
 		]);
 
-		$virtualOrderPage->content()->update([
+		$virtualOrderPage->version()->update([
 			'redirect' => $paymentIntent->next_action->redirect_to_url->url,
 		]);
 		return $virtualOrderPage;

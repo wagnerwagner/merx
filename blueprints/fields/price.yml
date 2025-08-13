@@ -1,7 +1,5 @@
 label: field.price
 type: number
 step: .01
-min: 0
-before: "{{ kirby.option('ww.merx.currency.default') }}"
 required: true
 translate: false

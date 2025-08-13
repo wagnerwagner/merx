@@ -1,6 +1,7 @@
 label: field.items
 type: structure
 width: 2/3
+translate: false
 fields:
   key:
     label: field.key
@@ -37,6 +38,7 @@ fields:
   taxRate:
     label: field.taxRate
     type: number
+    step: 0.001
     width: 1/3
     translate: false
   type:

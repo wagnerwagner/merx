@@ -2,7 +2,6 @@
 
 use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\Cart;
-use Wagnerwagner\Merx\Merx;
 
 /** @var string $endpoint ww.merx.api.endpoint option */
 
@@ -11,34 +10,33 @@ return [
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
 		'method' => 'GET',
-		'action' => function (): Cart {
+		'action' => function (): Cart
+		{
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 
-			Merx::setCurrency($this->requestQuery('currency') ?? $this->requestHeaders('x-currency'));
-
-			return cart();
+			/** @var \Wagnerwagner\Merx\Cart $cart */
+			$cart = $this->cart();
+			return $cart;
 		},
 	],
 	[
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
 		'method' => 'POST',
-		'action' => function (): Cart {
+		'action' => function (): Cart
+		{
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 
-			Merx::setCurrency($this->requestQuery('currency') ?? $this->requestHeaders('x-currency'));
-
-			$allowedKeys = ['key', 'page', 'quantity', 'data', 'currency'];
+			$allowedKeys = ['key', 'page', 'quantity', 'data'];
 
 			$cartData = array_filter($this->requestBody(), function($key) use ($allowedKeys) {
 				return in_array($key, $allowedKeys);
 			}, ARRAY_FILTER_USE_KEY);
 
-			$cartData['currency'] ??= $this->requestHeaders('x-currency');
-
-			$cart = cart();
+			/** @var \Wagnerwagner\Merx\Cart $cart */
+			$cart = $this->cart();
 			$cart->add($cartData);
 
 			return $cart;
@@ -48,20 +46,20 @@ return [
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
 		'method' => 'PATCH',
-		'action' => function (): Cart {
+		'action' => function (): Cart
+		{
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 
-			Merx::setCurrency($this->requestQuery('currency') ?? $this->requestHeaders('x-currency'));
-
 			$key = $this->requestBody('key');
-			$allowedKeys = ['key', 'page', 'quantity', 'data', 'currency'];
+			$allowedKeys = ['key', 'page', 'quantity', 'data'];
 
 			$patchData = array_filter($this->requestBody(), function($key) use ($allowedKeys) {
 				return in_array($key, $allowedKeys);
 			}, ARRAY_FILTER_USE_KEY);
 
-			$cart = cart();
+			/** @var Cart */
+			$cart = $this->cart();
 			$cart->updateItem($key, $patchData);
 
 			return $cart;
@@ -71,15 +69,15 @@ return [
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
 		'method' => 'DELETE',
-		'action' => function (): Cart {
-			/** @var \Kirby\Cms\Api $this */
+		'action' => function (): Cart
+		{
+			/** @var \Kirby\Cms\Api*/
 			I18n::$locale = $this->language();
-
-			Merx::setCurrency($this->requestQuery('currency') ?? $this->requestHeaders('x-currency'));
 
 			$key = $this->requestBody('key');
 
-			$cart = cart();
+			/** @var \Wagnerwagner\Merx\Cart $cart */
+			$cart = $this->cart();
 			$cart->remove($key);
 
 			return $cart;

@@ -9,7 +9,8 @@ return [
 		'pattern' => $endpoint . '/checkout',
 		'auth' => false,
 		'method' => 'POST',
-		'action' => function () {
+		'action' => function (): array
+		{
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 
@@ -18,7 +19,11 @@ return [
 			$data = array_merge($data, [
 				'stripePaymentIntentId' => $paymentIntentId,
 			]);
-			$redirect = merx()->initializePayment($data);
+
+			$merx = merx();
+
+			$redirect = $merx->initializePayment($data);
+
 			return [
 				'status' => 201,
 				'redirect' => $redirect,

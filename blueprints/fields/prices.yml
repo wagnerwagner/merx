@@ -1,15 +1,24 @@
 label: field.prices
 type: structure
+translate: false
+columns:
+  price:
+    mobile: true
+  pricingKey:
+    mobile: true
 fields:
   price:
     extends: fields/price
     before: null
+    required: false
     width: 1/2
-  currency:
-    label: field.currency
+  pricingKey:
+    label: field.pricing
     type: select
     options:
       type: query
-      query: kirby.option('ww.merx.currencies')
+      query: site.pricingRules
+      text: "{{ item.name }}"
+      value: "{{ item.key }}"
     width: 1/2
     required: true

@@ -32,6 +32,7 @@ namespace Stripe\Checkout;
  * @property null|string $cancel_url If set, Checkout displays a back button and customers will be directed to this URL if they decide to cancel payment and return to your website.
  * @property null|string $client_reference_id A unique string to reference the Checkout Session. This can be a customer ID, a cart ID, or similar, and can be used to reconcile the Session with your internal systems.
  * @property null|string $client_secret Client secret to be used when initializing Stripe.js embedded checkout.
+ * @property null|\Stripe\StripeObject $collected_information Information about the customer collected within the Checkout Session.
  * @property null|\Stripe\StripeObject $consent Results of <code>consent_collection</code> for this session.
  * @property null|\Stripe\StripeObject $consent_collection When set, provides configuration for the Checkout Session to gather active consent from customers.
  * @property int $created Time at which the object was created. Measured in seconds since the Unix epoch.
@@ -43,6 +44,7 @@ namespace Stripe\Checkout;
  * @property null|string $customer_creation Configure whether a Checkout Session creates a Customer when the Checkout Session completes.
  * @property null|\Stripe\StripeObject $customer_details The customer details including the customer's tax exempt status and the customer's tax IDs. Customer's address details are not present on Sessions in <code>setup</code> mode.
  * @property null|string $customer_email If provided, this value will be used when the Customer object is created. If not provided, customers will be asked to enter their email address. Use this parameter to prefill customer data if you already have an email on file. To access information about the customer once the payment flow is complete, use the <code>customer</code> attribute.
+ * @property null|\Stripe\StripeObject[] $discounts List of coupons and promotion codes attached to the Checkout Session.
  * @property int $expires_at The timestamp at which the Checkout Session will expire.
  * @property null|string|\Stripe\Invoice $invoice ID of the invoice created by the Checkout Session, if it exists.
  * @property null|\Stripe\StripeObject $invoice_creation Details on the state of invoice creation for the Checkout Session.

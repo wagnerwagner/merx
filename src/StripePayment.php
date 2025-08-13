@@ -6,16 +6,15 @@ use Exception;
 use Stripe\Event;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
+use Stripe\Webhook;
 
 /**
  * Payment class for Stripe Payment.
- *
  */
 class StripePayment
 {
 	/**
 	 * Configure Stripe Payment connection settings
-	 *
 	 *
 	 * @return void
 	 */
@@ -29,8 +28,6 @@ class StripePayment
 	}
 
 	/**
-	 * summary
-	 *
 	 * @see https://docs.stripe.com/webhooks#verify-official-libraries
 	 * @param string $payload Payload from stripe webhook
 	 *
@@ -46,10 +43,9 @@ class StripePayment
 		}
 
 		$sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
-		$event = null;
 
 		try {
-			$event = \Stripe\Webhook::constructEvent(
+			$event = Webhook::constructEvent(
 				$payload, $sig_header, $endpoint_secret
 			);
 			return $event;
@@ -69,17 +65,17 @@ class StripePayment
 	/**
 	 * Create Stripe Payment
 	 *
-	 * @param  float $amount
-	 * @param  array $params
-	 * @param  array $options
-	 *
+	 * @see https://docs.stripe.com/api/payment_intents/create
+	 * @param float $amount
+	 * @param array $params
+	 * @param array $options
 	 * @return \Stripe\PaymentIntent
 	 */
 	public static function createStripePaymentIntent(float $amount, array $params = [], $options = []): PaymentIntent
 	{
 		self::setStripeApiKey();
 
-		$intent = \Stripe\PaymentIntent::create(array_merge([
+		$intent = PaymentIntent::create(array_merge([
 			'amount' => round($amount * 100),
 			'capture_method' => 'manual',
 			'payment_method_types' => ['card'],
@@ -91,7 +87,7 @@ class StripePayment
 	/**
 	 * Get the Stripe Payment informations
 	 *
-	 * @param  string $paymentIntentId
+	 * @param string $paymentIntentId
 	 *
 	 * @return \Stripe\PaymentIntent
 	 */
@@ -99,7 +95,7 @@ class StripePayment
 	{
 		self::setStripeApiKey();
 
-		$intent = \Stripe\PaymentIntent::retrieve($paymentIntentId);
+		$intent = PaymentIntent::retrieve($paymentIntentId);
 		return $intent;
 	}
 }

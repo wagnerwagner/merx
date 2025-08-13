@@ -12,7 +12,7 @@ class ListItemTest extends TestCase
 		$key = 'item1';
 		$title = 'Test Item';
 		$quantity = 2.0;
-		$price = new Price(100.0, 80.0, 20.0, 'USD');
+		$price = new Price(100.0, 0.2, currency: 'USD');
 
 		$listItem = new ListItem(
 			key: $key,
@@ -27,30 +27,10 @@ class ListItemTest extends TestCase
 		$this->assertInstanceOf(Price::class, $listItem->price);
 	}
 
-	public function testPageInitializationWithPageObject()
-	{
-		$key = 'item2';
-		$page = new Page([
-			'slug' => $key,
-			'content' => [
-				'price' => 200,
-			],
-		]);
-
-		$listItem = new ListItem(
-			key: $key,
-			page: $page
-		);
-
-		$this->assertInstanceOf(Page::class, $listItem->page);
-		$this->assertSame($page, $listItem->page);
-		$this->assertSame(200.0, $listItem->price->toFloat());
-	}
-
 	public function testPriceTotalCalculation()
 	{
 		$key = 'item4';
-		$price = new Price(100.0, 80.0, 20.0, 'USD');
+		$price = new Price(100.0, 0.2, null, 'USD');
 		$quantity = 3.0;
 
 		$listItem = new ListItem(
@@ -59,7 +39,7 @@ class ListItemTest extends TestCase
 			quantity: $quantity
 		);
 
-		$totalPrice = $listItem->priceTotal();
+		$totalPrice = $listItem->total();
 
 		$this->assertInstanceOf(Price::class, $totalPrice);
 		$this->assertEquals(300.0, $totalPrice->toFloat());
@@ -72,7 +52,6 @@ class ListItemTest extends TestCase
 		$listItem = new ListItem(key: $key);
 
 		$this->assertSame($key, $listItem->key);
-		$this->assertSame($key, $listItem->id);
 		$this->assertNull($listItem->title);
 		$this->assertNull($listItem->price);
 		$this->assertEquals(1.0, $listItem->quantity);

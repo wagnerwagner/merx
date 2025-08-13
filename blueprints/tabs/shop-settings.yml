@@ -1,0 +1,28 @@
+label: tab.shop-settings.label
+icon: settings
+sections:
+  checkoutPage:
+    headline:
+      en: Checkout Page
+      de: Kassen-Seite
+    type: pages
+    template: checkout
+    max: 1
+  shippingPage:
+    headline:
+      en: Shipping Page
+      de: Versand-Seite
+    type: pages
+    template: shipping
+    max: 1
+  shopSettings:
+    type: fields
+    fields:
+      maxAmount:
+        label:
+          en: Max Amount per Product
+          de: Maximale Anzahl pro Produkt
+        type: number
+        translate: false
+        required: true
+        width: 1/2

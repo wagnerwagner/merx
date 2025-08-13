@@ -3,11 +3,13 @@
 use Kirby\Cms\App;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\Cart;
-use Wagnerwagner\Merx\ProductList;
 use Kirby\Cms\Page;
+use Kirby\Content\Field;
 use Kirby\Exception\Exception;
 use Kirby\Plugin\Plugin;
 use Wagnerwagner\Merx\License;
+use Wagnerwagner\Merx\PricingRules;
+use Wagnerwagner\Merx\TaxRules;
 
 @include_once __DIR__ . '/vendor/autoload.php';
 
@@ -21,29 +23,9 @@ function cart(array $data = []): Cart
 	return new Cart($data);
 }
 
-function productList(array $data = []): ProductList
-{
-	return new ProductList($data);
-}
-
-function formatCurrency(int|float $number, string $currency): string
-{
-	return Merx::formatCurrency($number, $currency);
-}
-
 function formatIBAN(string $iban): string
 {
 	return Merx::formatIBAN($iban);
-}
-
-function calculateTax(float $grossPrice, float $tax): float
-{
-	return Merx::calculateTax($grossPrice, $tax);
-}
-
-function calculateNet(float $grossPrice, float $tax): float
-{
-	return Merx::calculateNet($grossPrice, $tax);
 }
 
 App::plugin(
@@ -53,8 +35,11 @@ App::plugin(
 			'collections' => array_merge(
 				include __DIR__ . '/api/collections/listItems.php',
 			),
+			'data' => array_merge(
+				include __DIR__ . '/api/data/cart.php',
+			),
 			'routes' => function (App $kirby) {
-				$endpoint = $kirby->option('ww.merx.api.endpoint', 'shop');
+				$endpoint = (string)$kirby->option('ww.merx.api.endpoint', 'shop');
 				return array_merge(
 					include __DIR__ . '/api/routes/cart.php',
 					include __DIR__ . '/api/routes/checkout.php',
@@ -71,14 +56,7 @@ App::plugin(
 				'Tax' => include __DIR__ . '/api/models/Tax.php',
 			],
 		],
-		'options' => [
-			'ordersPage' => 'orders',
-			'currency' => fn () => 'EUR',
-			'currency.default' => 'EUR',
-			'currencies' => [],
-			'production' => false,
-			'api.endpoint' => 'shop',
-		],
+		'options' => include __DIR__ . '/config/config.php',
 		'templates' => [
 			'orders' => __DIR__ . '/templates/orders.php',
 		],
@@ -105,32 +83,24 @@ App::plugin(
 			'ww.merx.sections/payment' => __DIR__ . '/blueprints/sections/payment.yml',
 			'tabs/orders' => __DIR__ . '/blueprints/tabs/orders.yml',
 			'ww.merx.tabs/orders' => __DIR__ . '/blueprints/tabs/orders.yml',
+			'tabs/shop-settings' => __DIR__ . '/blueprints/tabs/shop-settings.yml',
+			'ww.merx.tabs/shop-settings' => __DIR__ . '/blueprints/tabs/shop-settings.yml',
 		],
 		'translations' => [
-			'en' => include __DIR__ . '/translations/en.php',
 			'de' => include __DIR__ . '/translations/de.php',
+			'en' => include __DIR__ . '/translations/en.php',
 		],
 		'hooks' => [
-			'page.changeNum:before' => function (Page $page, ?int $num) {
-				if ((string)$page->intendedTemplate() === 'order' && $page->isListed() && $num !== $page->num()) {
-					throw new Exception(['key' => 'merx.order.changeNum']);
-				}
-			},
-			'page.changeStatus:before' => function (Page $page) {
-				if ((string)$page->intendedTemplate() === 'order' && $page->isListed()) {
-					throw new Exception(['key' => 'merx.order.changeStatus']);
-				}
-			},
 			'ww.merx.stripe-hooks' => function (\Stripe\Event $stripeEvent) {
 				switch ($stripeEvent->type) {
 					case 'payment_intent.succeeded':
 						/** @var \Stripe\PaymentIntent $paymentIntent */
 						$paymentIntent = $stripeEvent->data->object;
-						$orderId = $paymentIntent->metadata->order_uid;
-						if ($orderId) {
+						$orderUid = $paymentIntent->metadata->order_uid;
+						if ($orderUid) {
 							try {
 								/** @var ?OrderPage $orderPage */
-								$orderPage = page(option('ww.merx.ordersPage'). '/' . $orderId);
+								$orderPage = page(option('ww.merx.ordersPage'). '/' . $orderUid);
 								if ($orderPage) {
 									$kirby = $orderPage->kirby();
 									$kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent) {
@@ -148,14 +118,18 @@ App::plugin(
 			}
 		],
 		'fieldMethods' => [
-			'toFormattedPrice' => function ($field, string|null $currency = null) {
-				return Merx::formatCurrency($field->toFloat(), $currency ?? option('ww.merx.currency.default'));
+			'toFormattedPrice' => function (Field $field, string|null $currency = null): string
+			{
+				return Merx::formatCurrency($field->toFloat(), $currency ?? Merx::pricingRule()?->currency);
 			},
 		],
 		'siteMethods' => [
-		  'cart' => fn (): Cart => cart(),
-			'ordersPage' => fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('ww.merx.ordersPage')),
+		  'cart' => fn (): Cart => /** @var \Kirby\Cms\Site $this */ cart(),
 			'checkoutPage' => fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
+			'merx' => fn (): Merx => /** @var \Kirby\Cms\Site $this */ merx(),
+			'ordersPage' => fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('ww.merx.ordersPage')),
+			'pricingRules' => fn (): PricingRules => Merx::pricingRules(),
+			'taxRules' => fn (): TaxRules => Merx::taxRules(),
 	  ]
 	],
 	license: function (Plugin $plugin) {

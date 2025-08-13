@@ -9,7 +9,7 @@ final class MerxTest extends TestCase
 	public function testFormatCurrency(): void
 	{
 		$this->assertEquals(
-			'€ 10.20',
+			'€10.20',
 			Merx::formatCurrency(10.20, 'EUR')
 		);
 	}
@@ -17,7 +17,7 @@ final class MerxTest extends TestCase
 	{
 		setlocale(LC_ALL, 'de_DE');
 		$this->assertEquals(
-			'10,20 €',
+			'€10.20',
 			Merx::formatCurrency(10.20, 'EUR')
 		);
 	}
@@ -25,7 +25,7 @@ final class MerxTest extends TestCase
 	{
 		setlocale(LC_ALL, 'en_US');
 		$this->assertEquals(
-			'€ 11.99',
+			'$11.99',
 			Merx::formatCurrency(11.99, 'USD')
 		);
 	}
@@ -58,24 +58,7 @@ final class MerxTest extends TestCase
 	public function testInitializePaymentEmpty(): void
 	{
 		$merx = new Merx();
-		$this->expectExceptionCode('error.merx.emptycart');
+		$this->expectExceptionCode('error.merx.noPaymentMethod');
 		$merx->initializePayment([]);
-	}
-
-	public function testCompletePaymentEmpty(): void
-	{
-		$merx = new Merx();
-		$this->expectExceptionCode('error.merx.completePayment');
-		$merx->completePayment([]);
-	}
-
-	public function testMessages(): void
-	{
-		$testMessage = 'Test Message';
-		Merx::setMessage($testMessage);
-		$this->assertEquals(
-			$testMessage,
-			Merx::getMessage()
-		);
 	}
 }

@@ -2,12 +2,11 @@
 
 namespace Wagnerwagner\Merx;
 
-use Kirby\Plugin\License as PluginLicense;
 use Kirby\Plugin\LicenseStatus;
 use Kirby\Plugin\Plugin;
-use Str;
+use Kirby\Toolkit\Str;
 
-class License extends PluginLicense
+class License extends \Kirby\Plugin\License
 {
 	public function __construct(
 		protected Plugin $plugin

@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Cms\App;
 use Wagnerwagner\Merx\ProductList;
 use Kirby\Exception\Exception;
 use stdClass;
@@ -39,22 +40,20 @@ class Cart extends ProductList
 	 *
 	 * @throws Exception error.merx.cart.add
 	 */
-	public function add(
-		string|array|ListItem $data
-	): static
+	public function add(string|array|ListItem $data): static
 	{
 		try {
 			kirby()->trigger('ww.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
 			parent::add($data);
 
-			if ($this->currency() === false) {
-				throw new Exception(
-					key: 'merx.mixedCurrencies.currency',
-					data: [
-						'key' => $this->key,
-					],
-				);
-			}
+			// if ($this->currency() === false) {
+			// 	throw new Exception(
+			// 		key: 'merx.mixedCurrencies.currency',
+			// 		data: [
+			// 			'key' => $this->key,
+			// 		],
+			// 	);
+			// }
 
 			$this->save();
 			kirby()->trigger('ww.merx.cart.add:after', ['cart' => $this]);
@@ -64,6 +63,9 @@ class Cart extends ProductList
 				'key' => 'merx.cart.add',
 				'data' => [
 					'key' => $data['key'] ?? $data->key ?? (string)$data ?? '',
+				],
+				'details' => [
+					'previous' => $ex->getMessage(),
 				],
 				'previous' => $ex,
 			]);
@@ -90,13 +92,13 @@ class Cart extends ProductList
 	/**
 	 * Updates existing item.
 	 */
-	public function updateItem(string $key, array $data): parent
+	public function updateItem(string $key, array $data): static
 	{
 		try {
 			kirby()->trigger('ww.merx.cart.updateItem:before', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			parent::updateItem($key, $data);
 			$this->save();
-			kirby()->trigger('ww.merx.cart.updateItem:after', ['cart' => $this]);
+			kirby()->trigger('ww.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			return $this;
 		} catch (\Exception $ex) {
 			throw new Exception([
@@ -151,14 +153,15 @@ class Cart extends ProductList
 	 */
 	public function delete(): void
 	{
-		kirby()->trigger('ww.merx.cart.delete:before', ['cart' => $this]);
-		kirby()->session()->remove($this->sessionName);
-		kirby()->trigger('ww.merx.cart.delete:after', ['cart' => $this]);
+		$kirby = App::instance();
+		$kirby->trigger('ww.merx.cart.delete:before', ['cart' => $this]);
+		$kirby->session()->remove($this->sessionName);
+		$kirby->trigger('ww.merx.cart.delete:after', ['cart' => $this]);
 		$this->data = [];
 	}
 
 
-	private function save(): self
+	private function save(): static
 	{
 		if ($this->count() === 0) {
 			kirby()->session()->remove($this->sessionName);
@@ -194,22 +197,22 @@ class Cart extends ProductList
 		});
 		return [
 			[
-				"description" => (string)$siteTitle,
-				"amount" => [
-					"value" => number_format($total, 2, '.', ''),
-					"currency_code" => $currencyCode,
-					"breakdown" => [
-						"item_total" => [
-							"value" => number_format($itemTotal, 2, '.', ''),
-							"currency_code" => $currencyCode,
+				'description' => (string)$siteTitle,
+				'amount' => [
+					'value' => number_format($total, 2, '.', ''),
+					'currency_code' => $currencyCode,
+					'breakdown' => [
+						'item_total' => [
+							'value' => number_format($itemTotal, 2, '.', ''),
+							'currency_code' => $currencyCode,
 						],
-						"discount" => [
-							"value" => number_format($discount, 2, '.', ''),
-							"currency_code" => $currencyCode,
+						'discount' => [
+							'value' => number_format($discount, 2, '.', ''),
+							'currency_code' => $currencyCode,
 						],
 					],
 				],
-				"items" => array_map(function ($cartItem) use ($currencyCode) {
+				'items' => array_map(function ($cartItem) use ($currencyCode) {
 					$cartUnitAmount = new stdClass;
 					$cartUnitAmount->value = number_format($cartItem['price'], 2, '.', '');
 					$cartUnitAmount->currency_code =  $currencyCode;
@@ -228,9 +231,10 @@ class Cart extends ProductList
 	 * @param string $key
 	 * @param ListItem $value
 	 * @return void
+	 * @internal
 	 * @throws Exception When currency of new item does not match existing currency
 	 */
-	private function __set(string $key, $value): void
+	public function __set(string $key, $value): void
 	{
 		$listItem = ListItem::dataToListItem($value);
 		$currency = $this->currency();

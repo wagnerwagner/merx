@@ -9,15 +9,24 @@ use Kirby\Toolkit\Obj;
 
 class ListItem extends Obj
 {
-	static $allowedTypes = ['product', 'credit', 'custom', 'promotion', 'discount', 'shipping'];
+	static $allowedTypes = [
+		'credit',
+		'custom',
+		'discount',
+		'product',
+		'promotion',
+		'shipping',
+	];
 
 	public string $key;
 
 	public float $quantity = 1.0;
 
+	public ?float $quantifier = null;
+
 	public ?string $title = null;
 
-	public ProductPage|null $page = null;
+	public Page|null $page = null;
 
 	public Price|null $price = null;
 
@@ -39,10 +48,10 @@ class ListItem extends Obj
 		null|string $title = null,
 		null|string|Page $page = null,
 		null|float|Price $price = null,
-		null|float $priceNet = null,
 		null|float|Tax $tax = null,
 		null|string $currency = null,
 		float $quantity = 1.0,
+		float $quantifier = null,
 		null|string $type = 'product',
 		array|null $data = null,
 		bool $priceUpdate = true,
@@ -66,30 +75,25 @@ class ListItem extends Obj
 		} else {
 			// Update price by page’s definition
 			if ($this->page instanceof ProductPage && $priceUpdate === true) {
-				$this->price = $this->page->price($currency);
+				$this->price = $this->page->price();
 
 				if (!($tax instanceof Tax)) {
-					if (is_numeric($this->page->taxRate())) {
-						$tax = (float)$this->page->taxRate();
-					} else if (
-						$this->page->taxRate() instanceof Field &&
-						$this->page->taxRate()->isNotEmpty()
-					) {
-						$tax = $this->page->taxRate()->toFloat();
-					}
+					$tax = $this->page?->tax();
 				}
 			}
 
-			$currency = $currency ?? Merx::currentCurrency();
-
-			if (is_float($price) || is_float($priceNet)) {
+			if (is_float($price)) {
 				$this->price = new Price(
 					price: $price,
-					priceNet: $priceNet,
 					tax: $tax,
 					currency: $currency,
 				);
 			}
+		}
+
+		if (is_float($quantifier)) {
+			$price = $this->price;
+			$this->price = $price->quantify($quantifier);
 		}
 
 		// Set title from page
@@ -114,6 +118,7 @@ class ListItem extends Obj
 		}
 
 		// Set type
+		$type = $type ?? (string)($this->page?->type());
 		if (is_string($type)) {
 			if (!in_array($type, static::$allowedTypes)) {
 				throw new InvalidArgumentException(
@@ -124,6 +129,7 @@ class ListItem extends Obj
 		}
 
 		$this->quantity = $quantity;
+		$this->quantifier = $quantifier;
 		$this->data = $data;
 	}
 
@@ -148,7 +154,6 @@ class ListItem extends Obj
 	public function total(): ?Price
 	{
 		$priceSingle = $this->price?->price;
-		$priceSingleNet = $this->price?->priceNet;
 
 		if (!is_float($priceSingle)) {
 			return null;
@@ -158,7 +163,6 @@ class ListItem extends Obj
 
 		return new Price(
 			price: $priceSingle * $this->quantity,
-			priceNet: $priceSingleNet * $this->quantity,
 			tax: $tax?->toFloat(),
 			currency: $this->price?->currency,
 		);
@@ -196,7 +200,7 @@ class ListItem extends Obj
 			$price = $array['price'];
 			$array['price'] = (float)$price->price;
 			$array['pricenet'] = (float)$price->priceNet;
-			$array['taxrate'] = (float)$price->tax->rate;
+			$array['taxrate'] = (float)$price->tax?->rate;
 			$array['currency'] = (string)$price->currency;
 		}
 

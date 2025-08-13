@@ -10,7 +10,8 @@ return [
 		'pattern' => $endpoint . '/hooks/stripe',
 		'auth' => false,
 		'method' => 'GET|POST',
-		'action'  => function () {
+		'action'  => function (): array
+		{
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 

@@ -3,5 +3,20 @@ type: pages
 parent: site.find(kirby.option('ww.merx.ordersPage'))
 template: order
 sortBy: num desc
-text: "#{{ page.invoiceNumber }}"
-info: "{{ page.total.toString }} {{ page.paidDate }}"
+layout: table
+create: false
+search: true
+image: false
+text: "Order {{ page.invoiceNumber }}"
+batch: true
+sortBy: created
+flip: true
+columns:
+  name:
+    value: "{{ page.name }}"
+  created:
+    value: "{{ page.created.toDate('c') }}"
+  total:
+    value: "{{ page.total.toString }}"
+  payment:
+    value: "{{ page.paymentMethod }}"
