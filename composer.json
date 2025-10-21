@@ -1,7 +1,7 @@
 {
     "name": "wagnerwagner/merx",
     "description": "A toolkit to create online shops with Kirby",
-    "version": "1.10.0",
+    "version": "1.10.1",
     "keywords": ["kirby", "e-commerce", "kirby3", "kirby4", "kirby5"],
     "license": "proprietary",
     "homepage": "https://merx.wagnerwagner.de",

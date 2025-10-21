@@ -22,7 +22,7 @@ abstract class OrderPageAbstract extends Page
 
         $fields = array_change_key_case($this->blueprint()->fields());
         // add model to each field
-        $this->kirby()->setCurrentLanguage($this->kirby()->defaultLanguage()->code());
+        $this->kirby()->setCurrentLanguage($this->kirby()->defaultLanguage()?->code());
         $fields = array_map(function ($field) {
             $field['model'] = $this;
             return $field;
