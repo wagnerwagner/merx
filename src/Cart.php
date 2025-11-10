@@ -119,7 +119,7 @@ class Cart extends ProductList
 	 *
 	 * @param null|array $params Additional parameters used by \Stripe\PaymentIntent::create().
 	 * @param null|array|\Stripe\Util\RequestOptions $options Additional options used by \Stripe\PaymentIntent::create().
-	 *
+	 * @throws \Kirby\Exception\Exception merx.emptycart
 	 * @return \Stripe\PaymentIntent
 	 */
 	public function getStripePaymentIntent(?array $params = [], $options = []): object

@@ -87,7 +87,7 @@ class ListItems extends Collection
 
 	/**
 	 *
-	 * @return Tax[]  Array of Tax items
+	 * @return \Wagnerwagner\Merx\Tax[]  Array of `Tax` items
 	 */
 	public function taxRates(): array
 	{

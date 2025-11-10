@@ -18,6 +18,7 @@ abstract class OrderPage extends Page
 {
 	/**
 	 * Returns all content validation errors
+	 *
 	 * This is required since otherwise errors won’t show for virtual pages.
 	 *
 	 * @return array

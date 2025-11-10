@@ -19,7 +19,7 @@ class PricingRule extends Obj {
 	public string|null $currency = null;
 
 	/**
-	 * @var callable|null A function that returns true if the rule applies, or false otherwise.
+	 * @param callable|null $rule A function that returns true if the rule applies, or false otherwise.
 	 */
 	public function __construct(
 		string $key,
