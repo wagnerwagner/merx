@@ -42,15 +42,18 @@ class ProductPage extends Page
 		return null;
 	}
 
+  /**
+   * Tax object for the product.
+   */
 	public function tax(): ?Tax
 	{
 		return $this->price()?->tax();
 	}
 
 	/**
-	 * Converts prices content field to a Structure of Price objects
+	 * List of Price objects from the prices content field
 	 *
-	 * @return \Kirby\Cms\Structure<\Wagnerwagner\Merx\Price> A Structure collection containing Price objects
+	 * @return \Kirby\Cms\Structure<\Wagnerwagner\Merx\Price>
 	 */
 	public function prices(): Structure
 	{
@@ -70,9 +73,13 @@ class ProductPage extends Page
 			});
 	}
 
+	/**
+	 * Orders including this product with enriched cart information
+	 *
+	 * @return \Kirby\Cms\Pages<\Wagnerwagner\Merx\OrderPage>
+	 */
 	public function orders(): Pages
 	{
-			/** @var Page $ordersPage */
 			$ordersPage = $this->site()->ordersPage();
 			return $this->orders ?? $this->orders = $ordersPage->children()->filter(function (OrderPage $page) {
 					return in_array((string)$this->uuid(), $page->productUuids());
@@ -90,6 +97,13 @@ class ProductPage extends Page
 			});
 	}
 
+	/**
+	 * Summary info string about the orders including this product
+   * Used for the orders tab in the product page
+	 *
+   * @see /blueprints/tabs/orders.yml
+	 * @return string Localized info text
+	 */
 	public function orderInfo(): string
 	{
 			$amount = 0;

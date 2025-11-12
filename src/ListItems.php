@@ -11,11 +11,21 @@ use Kirby\Toolkit\Collection;
  */
 class ListItems extends Collection
 {
+	/**
+	 * Filters the items by the given type.
+   * 
+   * See ListItem::$allowedTypes for allowed types.
+	 */
 	public function filterByType(string $type): ListItems
 	{
 		return new ListItems(array_filter($this->data, fn (ListItem $listItem) => $listItem->type === $type));
 	}
 
+	/**
+	 * Calculates the quantity of items for the given type.
+   * 
+   * See ListItem::$allowedTypes for allowed types.
+	 */
 	public function quantity(string $type = 'product'): float
 	{
 		$quantity = 0.0;
@@ -27,6 +37,8 @@ class ListItems extends Collection
 	}
 
 	/**
+   * Total price of the ListItems
+   * 
 	 * @throws Exception When items do have different currencies
 	 */
 	public function total(): ?Price
@@ -68,6 +80,11 @@ class ListItems extends Collection
 		);
 	}
 
+	/**
+	 * Determines if the list contains a ListItem with a null total price.
+   * 
+   * A list is from price if it contains a ListItem with a null total price.
+	 */
 	public function isFromPrice(): bool
 	{
 		$isFromPrice = false;
@@ -80,6 +97,11 @@ class ListItems extends Collection
 		return $isFromPrice;
 	}
 
+	/**
+	 * Checks whether the list can be ordered.
+   * 
+   * A list is orderable if it contains no ListItem with a null total price and the total price is greater than 0.
+	 */
 	public function isOrderable(): bool
 	{
 		return $this->isFromPrice() === false && $this->total()->price > 0;
@@ -116,7 +138,10 @@ class ListItems extends Collection
 	/**
 	 * Get the currency of this List
 	 *
-	 * @return string|false|null Three-letter ISO currency code, in uppercase
+	 * @return string|false|null 
+   * Three-letter ISO currency code, in uppercase. E.g. EUR or USD. 
+   * Returns false if the currencies are mixed. 
+   * Returns null if none of the ListItems have a price with a currency.
 	 */
 	public function currency(): string|false|null
 	{
@@ -133,6 +158,8 @@ class ListItems extends Collection
 	}
 
 	/**
+	 * Set a ListItem in the list
+   * 
 	 * @param string $key
 	 * @param ListItem $value
 	 * @return void

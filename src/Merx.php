@@ -100,7 +100,11 @@ class Merx
 
 	/**
 	 * Calculate tax amount from gross price and tax rate
-	 * E.g. calculateTax(200, 19) => 31.932773109243698
+	 *
+	 * E.g. calculateTax(200, 19) → 31.932773109243698
+	 *
+	 * @param float $grossPrice E.g. 200
+	 * @param float $taxRate Tax rate in percent. E.g. 19
 	 */
 	public static function calculateTax(float $grossPrice, float $taxRate): float
 	{
@@ -109,11 +113,12 @@ class Merx
 
 
 	/**
-	 * Helper method to format IBAN (DE00 0000 0000 0000 00)
-	 *
+	 * Helper method to format IBAN
+   *
 	 * @param string $iban E.g. DE0000000000000000
-	 *
 	 * @return string
+   * Space separated string with 4 characters per group.
+   * E.g. DE00 0000 0000 0000 00
 	 */
 	public static function formatIBAN(string $iban): string
 	{
