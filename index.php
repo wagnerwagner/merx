@@ -124,9 +124,9 @@ App::plugin(
 			},
 		],
 		'siteMethods' => [
-		  'cart' => fn (): Cart => /** @var \Kirby\Cms\Site $this */ cart(),
+		  'cart' => fn (): Cart => cart(),
 			'checkoutPage' => fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
-			'merx' => fn (): Merx => /** @var \Kirby\Cms\Site $this */ merx(),
+			'merx' => fn (): Merx => merx(),
 			'ordersPage' => fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('ww.merx.ordersPage')),
 			'pricingRules' => fn (): PricingRules => Merx::pricingRules(),
 			'taxRules' => fn (): TaxRules => Merx::taxRules(),
