@@ -26,7 +26,7 @@ class ListItem extends Obj
 
 	public ?string $title = null;
 
-	public Page|null $page = null;
+	public Page|ProductPage|null $page = null;
 
 	public Price|null $price = null;
 
@@ -35,28 +35,29 @@ class ListItem extends Obj
 	public array|null $data = null;
 
 	/**
-	 * @param null|float|Price $price Will be overwritten by $page’s price when $price is float or null
-	 * @param null|float $priceNet Will be overwritten by $page’s priceNet (if not empty)
-	 * @param null|string $title Will be overwritten by $page’s title
-	 * @param null|float|Tax $tax Will be overwritten by $page’s taxRate when $tax is float or null
-	 * @param bool $priceUpdate Will update prices and tax with recent prices and tax from page
+	 * Create a new ListItem
 	 *
-	 * @throws InvalidArgumentException
+	 * @param null|string $title Will be overwritten by $page’s title
+	 * @param null|string|Page $page Page object or page slug
+	 * @param null|float|Price $price Will be overwritten by $page’s price when $price is float or null
+	 * @param float $quantity Quantity of the ListItem. E.g. 3.0 for 3 items.
+	 * @param null|float $quantifier Multiplier for the price. Could be used when the item has a price per meter.
+	 * @param null|string $type Type of ListItem. See ListItem::$allowedTypes for allowed types.
+	 * @param null|array $data Additional data for the ListItem. Could be used to store additional information about the ListItem, e.g. a color variant.
+	 * @param bool $priceUpdate Will update prices and tax with recent prices and tax from page when $priceUpdate is true.
+	 * @throws InvalidArgumentException when $type is not in ListItem::$allowedTypes.
 	 */
 	public function __construct(
 		string $key,
 		null|string $title = null,
 		null|string|Page $page = null,
 		null|float|Price $price = null,
-		null|float|Tax $tax = null,
-		null|string $currency = null,
 		float $quantity = 1.0,
-		float $quantifier = null,
+		null|float $quantifier = null,
 		null|string $type = 'product',
 		array|null $data = null,
 		bool $priceUpdate = true,
-	)
-	{
+	) {
 		$this->key = $key;
 		$this->title = $title;
 
@@ -72,22 +73,12 @@ class ListItem extends Obj
 		// Set price
 		if ($price instanceof Price) {
 			$this->price = $price;
+		} elseif (is_float($price)) {
+			$this->price = new Price(price: $price);
 		} else {
 			// Update price by page’s definition
 			if ($this->page instanceof ProductPage && $priceUpdate === true) {
 				$this->price = $this->page->price();
-
-				if (!($tax instanceof Tax)) {
-					$tax = $this->page?->tax();
-				}
-			}
-
-			if (is_float($price)) {
-				$this->price = new Price(
-					price: $price,
-					tax: $tax,
-					currency: $currency,
-				);
 			}
 		}
 
@@ -100,11 +91,11 @@ class ListItem extends Obj
 		if ($this->title === null && $this->page instanceof Page) {
 			if (is_string($this->page->title())) {
 				$this->title = $this->page->title();
-			} else if (
+			} elseif (
 				$this->page->title() instanceof Field &&
 				$this->page->title()->isNotEmpty()
 			) {
-				$this->title = (string)$this->page->title();
+				$this->title = (string) $this->page->title();
 			}
 		}
 
@@ -118,7 +109,7 @@ class ListItem extends Obj
 		}
 
 		// Set type
-		$type = $type ?? (string)($this->page?->type());
+		$type = $type ?? (string) $this->page?->type();
 		if (is_string($type)) {
 			if (!in_array($type, static::$allowedTypes)) {
 				throw new InvalidArgumentException(
@@ -139,18 +130,19 @@ class ListItem extends Obj
 	static function factory(string|array|ListItem $data): ListItem
 	{
 		if (is_string($data)) {
-			$listItem = new ListItem(
-				key: $data,
-			);
-		} else if (is_array($data)) {
+			$listItem = new ListItem(key: $data);
+		} elseif (is_array($data)) {
 			$listItem = new ListItem(...$data);
-		} else if ($data instanceof ListItem) {
+		} elseif ($data instanceof ListItem) {
 			$listItem = $data;
 		}
 
 		return $listItem;
 	}
 
+	/**
+	 * Total price of the ListItem
+	 */
 	public function total(): ?Price
 	{
 		$priceSingle = $this->price?->price;
@@ -168,9 +160,12 @@ class ListItem extends Obj
 		);
 	}
 
+	/**
+	 * Convert ListItem to session array
+	 */
 	public function toSessionArray(): array
 	{
-		$array = (array)$this;
+		$array = (array) $this;
 
 		// remove price definition, when page is present
 		if ($array['page'] instanceof Page) {
