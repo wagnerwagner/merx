@@ -9,7 +9,7 @@ return [
 	[
 		'pattern' => $endpoint . '/hooks/stripe',
 		'auth' => false,
-		'method' => 'GET|POST',
+		'method' => 'POST',
 		'action'  => function (): array
 		{
 			/** @var \Kirby\Cms\Api $this */

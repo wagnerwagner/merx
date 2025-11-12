@@ -8,7 +8,7 @@ return [
 	[
 		'pattern' => $endpoint . '/success',
 		'auth' => false,
-		'method' => 'GET|POST',
+		'method' => 'GET',
 		'action' => function ()
 		{
 			/** @var \Kirby\Cms\Api $this */
