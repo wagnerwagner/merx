@@ -10,6 +10,8 @@ use Stripe\Webhook;
 
 /**
  * Payment class for Stripe Payment.
+ *
+ * @internal
  */
 class StripePayment
 {

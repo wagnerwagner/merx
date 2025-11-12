@@ -6,6 +6,9 @@ use Kirby\Plugin\LicenseStatus;
 use Kirby\Plugin\Plugin;
 use Kirby\Toolkit\Str;
 
+/**
+ * @internal
+ */
 class License extends \Kirby\Plugin\License
 {
 	public function __construct(

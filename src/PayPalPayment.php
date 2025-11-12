@@ -9,6 +9,8 @@ use OrderPage;
 /**
  * Payment Class for PayPal Payments using PayPal REST API v2
  * For further information about the PayPal REST API, please visit https://developer.paypal.com/api/rest/
+ *
+ * @internal
  */
 class PayPalPayment
 {
