@@ -139,7 +139,7 @@ class ListItems extends Collection
 	 */
 	public function __set(string $key, $value): void
 	{
-		$listItem = ListItem::dataToListItem($value);
+		$listItem = ListItem::factory($value);
 		parent::__set($key, $listItem);
 	}
 

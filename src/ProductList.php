@@ -11,7 +11,7 @@ class ProductList extends ListItems
 		string|array|ListItem $data
 	): static
 	{
-		$listItem = ListItem::dataToListItem($data);
+		$listItem = ListItem::factory($data);
 
 		if ($existingItem = $this->get($listItem->key)) {
 			$listItem->quantity += $existingItem->quantity;

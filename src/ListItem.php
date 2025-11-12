@@ -136,7 +136,7 @@ class ListItem extends Obj
 	/**
 	 * Convert mixed $data to ListItem
 	 */
-	static function dataToListItem(string|array|ListItem $data): ListItem
+	static function factory(string|array|ListItem $data): ListItem
 	{
 		if (is_string($data)) {
 			$listItem = new ListItem(
