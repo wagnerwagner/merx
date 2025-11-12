@@ -7,9 +7,9 @@ use Kirby\Cms\Pages;
 use Kirby\Cms\Structure;
 
 /**
- * @method static \Kirby\Content\Field prices()
- * @method static \Kirby\Content\Field taxRule()
- * @method static \Kirby\Content\Field stock()
+ * @method public \Kirby\Content\Field prices()
+ * @method public \Kirby\Content\Field taxRule()
+ * @method public \Kirby\Content\Field stock()
  */
 class ProductPage extends Page
 {
