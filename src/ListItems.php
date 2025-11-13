@@ -12,7 +12,7 @@ use Kirby\Toolkit\Collection;
 class ListItems extends Collection
 {
 	/**
-	 * Filters the items by the given type.
+	 * Filters items by given type
    * 
    * See ListItem::$allowedTypes for allowed types.
 	 */
@@ -22,14 +22,15 @@ class ListItems extends Collection
 	}
 
 	/**
-	 * Calculates the quantity of items for the given type.
+	 * Quantity of items of given type
    * 
    * See ListItem::$allowedTypes for allowed types.
 	 */
-	public function quantity(string $type = 'product'): float
+	public function quantity(?string $type = 'product'): float
 	{
 		$quantity = 0.0;
-		foreach ($this->filterByType($type) as $listItem) {
+    $items = $type === null ? $this : $this->filterByType($type);
+		foreach ($items as $listItem) {
 			/** @var ListItem $listItem */
 			$quantity += $listItem->quantity;
 		}
@@ -108,8 +109,9 @@ class ListItems extends Collection
 	}
 
 	/**
-	 *
-	 * @return \Wagnerwagner\Merx\Tax[]  Array of `Tax` items
+	 * List of Tax items
+   * 
+	 * @return \Wagnerwagner\Merx\Tax[]  List of `Tax` items sorted by tax rate with the total price for each tax rate.
 	 */
 	public function taxRates(): array
 	{
