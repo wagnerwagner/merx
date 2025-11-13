@@ -40,7 +40,7 @@ class StripePayment
 		self::setStripeApiKey();
 
 		$endpoint_secret = option('ww.merx.stripe.webhook_signing_secret', false);
-		if ($endpoint_secret === false) {
+		if ($endpoint_secret === false || empty($endpoint_secret)) {
 			throw new Exception('No Stripe Webhook signing secret');
 		}
 
