@@ -43,6 +43,15 @@ class PricingRule extends Obj {
 		$this->taxIncluded = $taxIncluded;
 	}
 
+  /**
+   * Checks if the pricing rule applies to the current context
+   * 
+   * Kirby instance is passed to the rule function if it is a callable.
+   * If no rule is set, true is returned.
+   * 
+   * @param App|null $kirby The Kirby instance
+   * @return bool 
+   */
 	public function checkRule(?App $kirby = null): bool
 	{
 		if ($this->rule === null) {

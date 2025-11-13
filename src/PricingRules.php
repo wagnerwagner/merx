@@ -40,6 +40,14 @@ class PricingRules extends Collection
 		return $this->findByKey($key);
 	}
 
+  /**
+   * Finds the pricing rule that applies to the current context
+   * 
+   * Pricing rules are defined in the config and are checked in the order they are defined.
+   * The first rule that returns true for checkRule() is returned.
+   * 
+   * @return PricingRule|null 
+   */
 	public function findRule(): ?PricingRule
 	{
 		$kirby = App::instance();

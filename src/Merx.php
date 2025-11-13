@@ -411,12 +411,22 @@ class Merx
 		return new PricingRules(option('ww.merx.pricingRules', $options));
 	}
 
+  /**
+   * Finds the pricing rule that applies to the current context
+   * 
+   * @return PricingRule|null 
+   */
 	public static function pricingRule(): ?PricingRule
 	{
 		$pricingRules = static::pricingRules();
 		return $pricingRules->findRule();
 	}
 
+  /**
+   * Currency of the pricing rule
+   * 
+   * @return string|null Three-letter ISO currency code, in uppercase. E.g. EUR or USD
+   */
 	public static function currency(): ?string
 	{
 		return self::pricingRule()?->currency;

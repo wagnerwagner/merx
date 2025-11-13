@@ -51,7 +51,7 @@ class ProductPage extends Page
 	}
 
 	/**
-	 * List of Price objects from the prices content field
+	 * List of Price objects created from the prices field
 	 *
 	 * @return \Kirby\Cms\Structure<\Wagnerwagner\Merx\Price>
 	 */
