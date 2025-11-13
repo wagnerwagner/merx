@@ -419,6 +419,6 @@ class Merx
 
 	public static function currency(): ?string
 	{
-		return self::pricingRule()->currency;
+		return self::pricingRule()?->currency;
 	}
 }
