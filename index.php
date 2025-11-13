@@ -91,7 +91,8 @@ App::plugin(
 			'en' => include __DIR__ . '/translations/en.php',
 		],
 		'hooks' => [
-			'ww.merx.stripe-hooks' => function (\Stripe\Event $stripeEvent) {
+			'ww.merx.stripe-hooks' => function (\Stripe\Event $stripeEvent): void
+			{
 				switch ($stripeEvent->type) {
 					case 'payment_intent.succeeded':
 						/** @var \Stripe\PaymentIntent $paymentIntent */
