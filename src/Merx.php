@@ -3,6 +3,7 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\App;
+use Kirby\Cms\Page;
 use NumberFormatter;
 use Wagnerwagner\Merx\Gateways;
 use Wagnerwagner\Merx\Cart;
@@ -10,7 +11,6 @@ use Kirby\Toolkit\Str;
 use Kirby\Toolkit\Escape;
 use Kirby\Exception\Exception;
 use Kirby\Toolkit\I18n;
-use OrderPage;
 
 /**
  * Main class for Merx plugin
@@ -267,7 +267,8 @@ class Merx
 			}
 
 			// check if paymentMethod exists
-			if (!array_key_exists('paymentMethod', $data) || Str::length($data['paymentMethod']) === 0) {
+			$paymentMethod = $data['paymentMethod'] ?? $data['paymentmethod'] ?? $data['payment-method'] ?? null;
+			if (Str::length($paymentMethod) === 0) {
 				throw new Exception([
 					'key' => 'merx.noPaymentMethod',
 					'httpCode' => 400,
@@ -296,7 +297,7 @@ class Merx
 			}
 
 			// run gateway
-			$gateway = $this->getGateway($data['paymentMethod']);
+			$gateway = $this->getGateway($paymentMethod);
 			if (is_callable($gateway['initializePayment'])) {
 				$virtualOrderPage = $gateway['initializePayment']($virtualOrderPage);
 				if ($virtualOrderPage->redirect()->isNotEmpty()) {
@@ -335,7 +336,7 @@ class Merx
 	 *
 	 * @param array $data Data required for payment gateway’s `completePayment()`
 	 */
-	public function createOrder(array $data = []): OrderPage
+	public function createOrder(array $data = []): Page
 	{
 		try {
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
@@ -357,9 +358,21 @@ class Merx
 			}
 
 			$kirby->impersonate('kirby');
-			$ordersPage = page(option('ww.merx.ordersPage', 'orders'));
+			$ordersPage = $kirby->site()->ordersPage();
+			if ($ordersPage === null) {
+				// create orders page if it does not exist
+				$ordersPage = $kirby->site()->createChild([
+					'id' => option('ww.merx.ordersPage'),
+					'template' => 'orders',
+					'draft' => false,
+					'content' => [
+						'title' => t('field.orders'),
+					],
+				]);
+			}
 			$virtualOrderPageArray = $virtualOrderPage->toArray();
-			$virtualOrderPageArray['template'] = $virtualOrderPageArray['template']->name();
+			$virtualOrderPageArray['template'] = 'order';
+			$virtualOrderPageArray['model'] = 'order';
 			$virtualOrderPageArray['content']['created'] = date('c');
 			$virtualOrderPageArray['draft'] = false;
 
