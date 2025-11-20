@@ -19,7 +19,7 @@ use Wagnerwagner\Merx\ProductList;
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  */
-abstract class OrderPage extends Page
+class OrderPage extends Page
 {
 	/**
 	 * Returns all content validation errors
