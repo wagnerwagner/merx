@@ -6,6 +6,7 @@ use Kirby\Cms\App;
 use Wagnerwagner\Merx\ProductList;
 use Kirby\Exception\Exception;
 use stdClass;
+use Throwable;
 
 /**
  * Storage for cart items
@@ -65,10 +66,14 @@ class Cart extends ProductList
 			kirby()->trigger('ww.merx.cart.add:after', ['cart' => $this]);
 			return $this;
 		} catch (\Exception $ex) {
+			$key = null;
+			try {
+				$key = $data['key'] ?? $data->key ?? (string)$data ?? '';
+			} catch (Throwable) {}
 			throw new Exception([
 				'key' => 'merx.cart.add',
 				'data' => [
-					'key' => $data['key'] ?? $data->key ?? (string)$data ?? '',
+					'key' => $key,
 				],
 				'details' => [
 					'previous' => $ex->getMessage(),
