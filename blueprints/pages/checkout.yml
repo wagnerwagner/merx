@@ -1,0 +1,11 @@
+title: field.checkout
+
+create:
+  status: unlisted
+
+
+fields:
+  info:
+    label: false
+    text: field.checkout.info
+    theme: none

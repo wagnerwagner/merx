@@ -58,6 +58,7 @@ App::plugin(
 		],
 		'options' => include __DIR__ . '/config/config.php',
 		'templates' => [
+			'order' => __DIR__ . '/templates/order.php',
 			'orders' => __DIR__ . '/templates/orders.php',
 		],
 		'blueprints' => [
@@ -71,6 +72,8 @@ App::plugin(
 			'ww.merx.fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
 			'layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
 			'ww.merx.layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
+			'pages/checkout' => __DIR__ . '/blueprints/pages/checkout.yml',
+			'ww.merx.pages/checkout' => __DIR__ . '/blueprints/pages/checkout.yml',
 			'pages/order' => __DIR__ . '/blueprints/pages/order.yml',
 			'ww.merx.pages/order' => __DIR__ . '/blueprints/pages/order.yml',
 			'pages/orders' => __DIR__ . '/blueprints/pages/orders.yml',
@@ -101,7 +104,7 @@ App::plugin(
 		],
 		'siteMethods' => [
 		  'cart' => fn (): Cart => cart(),
-			'checkoutPage' => fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
+			'checkoutPage' => fn (): Page => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
 			'merx' => fn (): Merx => merx(),
 			'ordersPage' => fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('ww.merx.ordersPage')),
 			'pricingRules' => fn (): PricingRules => Merx::pricingRules(),
