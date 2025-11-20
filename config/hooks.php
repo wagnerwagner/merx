@@ -1,5 +1,8 @@
 <?php
 
+use Wagnerwagner\Merx\Cart;
+use Wagnerwagner\Merx\ListItem;
+
 return [
 	'ww.merx.stripe-hooks' => function (\Stripe\Event $stripeEvent): void
 	{
@@ -26,5 +29,6 @@ return [
 				}
 				break;
 		}
-	}
+	},
+	'ww.merx.cart.add:before' => function (Cart $cart, string|array|ListItem $data): void {},
 ];
