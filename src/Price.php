@@ -4,6 +4,14 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Toolkit\Obj;
 
+/**
+ * Represents a price with tax and currency
+ *
+ * Used in ListItem.
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ */
 class Price extends Obj
 {
 	/** Floating point precision for price calculations */
@@ -76,6 +84,11 @@ class Price extends Obj
 		}
 	}
 
+	/**
+	 * Multiplier for the price
+	 *
+	 * Could be used when it is a price per meter and the quantity is the length of the product.
+	 */
   public function quantify(float $quantifier = 1): self
   {
 		$basePrice = $this->price;
@@ -91,6 +104,10 @@ class Price extends Obj
 		);
   }
 
+	/**
+	 * Returns if the tax is included in the price
+	 * @return ?bool True if tax is included, false if tax is not included, null if `pricingRule` is not set.
+	 */
 	public function taxIncluded(): ?bool
 	{
 		return $this->pricingRule?->taxIncluded;
@@ -107,14 +124,21 @@ class Price extends Obj
 		return $result;
 	}
 
+	/**
+	 * Returns the price as float
+	 */
 	public function toFloat(): ?float
 	{
 		return $this->price;
 	}
 
 	/**
-	 * @param string $key Use `priceNet` to get net price as formatted currency. When not set, `price` or `priceNet` is used, depending on tax inclusion of pricing rule.
+	 * Returns the price as string
 	 *
+	 * Depending if tax is included or not, net or gross price is used.
+	 * Use $key to determine which price is used.
+	 *
+	 * @param string $key Use `priceNet` to get net price as formatted currency. When not set, `price` or `priceNet` is used, depending on tax inclusion of pricing rule.
 	 * @return string  Formatted price as string, e.g. "119,00 €"
 	 */
 	public function toString(?string $key = null): string
@@ -128,6 +152,11 @@ class Price extends Obj
 		return Merx::formatCurrency($this->$key ?? 0, $this->currency);
 	}
 
+	/**
+	 * Returns the gross price as unformatted string
+	 *
+	 * @return string
+	 */
 	public function __toString(): string
 	{
 		return (string)$this->price;

@@ -5,6 +5,12 @@ namespace Wagnerwagner\Merx;
 use Kirby\Cms\App;
 use Kirby\Toolkit\Obj;
 
+/**
+ * Rule defined in config to apply to a tax
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ */
 class TaxRule extends Obj {
 	public string $key = '';
 

@@ -8,6 +8,8 @@ use Kirby\Toolkit\Str;
 
 /**
  * @internal
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
  */
 class License extends \Kirby\Plugin\License
 {

@@ -7,13 +7,18 @@ use Kirby\Exception\Exception;
 use Kirby\Toolkit\Collection;
 
 /**
+ * Collection of ListItem objects
+ * Base for Cart and ProductList
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
  * @extends \Kirby\Cms\Collection<ListItem>
  */
 class ListItems extends Collection
 {
 	/**
 	 * Filters items by given type
-   * 
+   *
    * See ListItem::$allowedTypes for allowed types.
 	 */
 	public function filterByType(string $type): ListItems
@@ -23,7 +28,7 @@ class ListItems extends Collection
 
 	/**
 	 * Quantity of items of given type
-   * 
+   *
    * See ListItem::$allowedTypes for allowed types.
 	 */
 	public function quantity(?string $type = 'product'): float
@@ -39,7 +44,7 @@ class ListItems extends Collection
 
 	/**
    * Total price of the ListItems
-   * 
+   *
 	 * @throws Exception When items do have different currencies
 	 */
 	public function total(): ?Price
@@ -83,7 +88,7 @@ class ListItems extends Collection
 
 	/**
 	 * Determines if the list contains a ListItem with a null total price.
-   * 
+   *
    * A list is from price if it contains a ListItem with a null total price.
 	 */
 	public function isFromPrice(): bool
@@ -100,7 +105,7 @@ class ListItems extends Collection
 
 	/**
 	 * Checks whether the list can be ordered.
-   * 
+   *
    * A list is orderable if it contains no ListItem with a null total price and the total price is greater than 0.
 	 */
 	public function isOrderable(): bool
@@ -110,8 +115,8 @@ class ListItems extends Collection
 
 	/**
 	 * List of Tax items
-   * 
-	 * @return \Wagnerwagner\Merx\Tax[]  List of `Tax` items sorted by tax rate with the total price for each tax rate.
+   *
+	 * @return Wagnerwagner\Merx\Tax[]  List of `Tax` items sorted by tax rate with the total price for each tax rate.
 	 */
 	public function taxRates(): array
 	{
@@ -140,12 +145,12 @@ class ListItems extends Collection
 	/**
 	 * Get the currency of this List
 	 *
-	 * @return string|false|null 
-   * Three-letter ISO currency code, in uppercase. E.g. EUR or USD. 
-   * Returns false if the currencies are mixed. 
+	 * @return string|bool|null
+   * Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
+   * Returns false if the currencies are mixed.
    * Returns null if none of the ListItems have a price with a currency.
 	 */
-	public function currency(): string|false|null
+	public function currency(): string|bool|null
 	{
 		$currency = null;
 		foreach ($this as $listItem) {
@@ -161,7 +166,7 @@ class ListItems extends Collection
 
 	/**
 	 * Set a ListItem in the list
-   * 
+   *
 	 * @param string $key
 	 * @param ListItem $value
 	 * @return void

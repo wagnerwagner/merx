@@ -11,6 +11,11 @@ use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
 
 /**
+ * Abstract base class for order pages
+ *
+ * This class is used to create order pages.
+ * It is used to store the order data and to validate the order data.
+ *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  */
@@ -65,8 +70,6 @@ abstract class OrderPage extends Page
 				title: $item['title'] ?? null,
 				page: $page,
 				price: $item['price'] ?? null,
-				tax: $item['taxrate'] ?? null,
-				currency: $item['currency'] ?? null,
 				quantity: $item['quantity'] ?? 1.0,
 				quantifier: $item['quantifier'] ?? null,
 				type: $item['type'] ?? null,
@@ -81,6 +84,8 @@ abstract class OrderPage extends Page
 	/**
 	 * Page uuids of products in this order
 	 *
+	 * Used in `ProductPage::orders()` to get the order pages for a product.
+	 *
 	 * @return string[]
 	 */
 	public function productUuids(): array
@@ -88,6 +93,9 @@ abstract class OrderPage extends Page
 		return array_map(fn (?Page $page) => (string)$page?->uuid(), $this->cart()->pluck('page'));
 	}
 
+	/**
+	 * Total price of the order
+	 */
 	public function total(): ?Price
 	{
 		return $this->cart()->total();

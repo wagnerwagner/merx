@@ -7,6 +7,12 @@ use Kirby\Content\Field;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\Obj;
 
+/**
+ * Represents a single item in a Cart, ProductList or ListItems
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ */
 class ListItem extends Obj
 {
 	static $allowedTypes = [

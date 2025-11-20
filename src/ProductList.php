@@ -3,6 +3,12 @@
 namespace Wagnerwagner\Merx;
 
 /**
+ * Collection of ListItem objects for products
+ *
+ * Base for `Cart`.
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
  * @extends \Wagnerwagner\Merx\ListItems<Wagnerwagner\Merx\ListItem>
  */
 class ProductList extends ListItems

@@ -9,10 +9,15 @@ use Wagnerwagner\Merx\Cart;
 use Kirby\Toolkit\Str;
 use Kirby\Toolkit\Escape;
 use Kirby\Exception\Exception;
-use Kirby\Session\Session;
 use Kirby\Toolkit\I18n;
 use OrderPage;
 
+/**
+ * Main class for Merx plugin
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ */
 class Merx
 {
 	protected Cart $cart;
@@ -60,7 +65,7 @@ class Merx
 
 	/**
 	 * Formats a currency number
-	 * E.g. 1045.12 => $ 1,045.12
+	 * E.g. 1045.12 → € 1,045.12
 	 * Similar to I18n::formatNumber()
 	 */
 	public static function formatCurrency(
@@ -81,7 +86,7 @@ class Merx
 
 	/**
 	 * Formats a float to percent
-	 * E.g. 0.19 => 19 %
+	 * E.g. 0.19 → 19 %
 	 * Similar to I18n::formatNumber()
 	 */
 	public static function formatPercent(
@@ -413,8 +418,8 @@ class Merx
 
   /**
    * Finds the pricing rule that applies to the current context
-   * 
-   * @return PricingRule|null 
+   *
+   * @return PricingRule|null
    */
 	public static function pricingRule(): ?PricingRule
 	{
@@ -424,7 +429,7 @@ class Merx
 
   /**
    * Currency of the pricing rule
-   * 
+   *
    * @return string|null Three-letter ISO currency code, in uppercase. E.g. EUR or USD
    */
 	public static function currency(): ?string

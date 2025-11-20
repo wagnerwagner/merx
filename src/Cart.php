@@ -7,6 +7,12 @@ use Wagnerwagner\Merx\ProductList;
 use Kirby\Exception\Exception;
 use stdClass;
 
+/**
+ * Storage for cart items
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ */
 class Cart extends ProductList
 {
 	protected string $sessionName = 'ww.merx.cartItems';

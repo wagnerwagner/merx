@@ -4,6 +4,12 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Toolkit\Obj;
 
+/**
+ * Represents a tax with a price and a rate in percent
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ */
 class Tax extends Obj
 {
 	/** Tax price. E.g. 21.5 */

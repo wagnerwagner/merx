@@ -11,6 +11,8 @@ use OrderPage;
  * For further information about the PayPal REST API, please visit https://developer.paypal.com/api/rest/
  *
  * @internal
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
  */
 class PayPalPayment
 {

@@ -6,6 +6,10 @@ use Kirby\Cms\App;
 use Kirby\Cms\Collection;
 
 /**
+ * List of `PricingRule` objects
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
  * @extends \Kirby\Cms\Collection<PricingRule>
  */
 class PricingRules extends Collection
@@ -42,11 +46,9 @@ class PricingRules extends Collection
 
   /**
    * Finds the pricing rule that applies to the current context
-   * 
+   *
    * Pricing rules are defined in the config and are checked in the order they are defined.
-   * The first rule that returns true for checkRule() is returned.
-   * 
-   * @return PricingRule|null 
+   * The first rule that returns true for `$rule->checkRule()` is returned.
    */
 	public function findRule(): ?PricingRule
 	{

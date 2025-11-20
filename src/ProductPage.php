@@ -7,9 +7,15 @@ use Kirby\Cms\Pages;
 use Kirby\Cms\Structure;
 
 /**
- * @method public \Kirby\Content\Field prices()
- * @method public \Kirby\Content\Field taxRule()
- * @method public \Kirby\Content\Field stock()
+ * Base for own product pages
+ *
+ * Used in Cart, ProductList and ListItems.
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ * @method \Kirby\Content\Field prices()
+ * @method \Kirby\Content\Field taxRule()
+ * @method \Kirby\Content\Field stock()
  */
 class ProductPage extends Page
 {

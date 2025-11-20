@@ -67,6 +67,8 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
  *
  * This class only holds the static $gateways array.
  *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
  */
 class Gateways
 {

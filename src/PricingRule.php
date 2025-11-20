@@ -6,6 +6,12 @@ use Kirby\Cms\App;
 use Kirby\Toolkit\Obj;
 use Kirby\Toolkit\Str;
 
+/**
+ * Rule defined in config to apply to a price
+ *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ */
 class PricingRule extends Obj {
 	public string $key;
 
@@ -45,12 +51,12 @@ class PricingRule extends Obj {
 
   /**
    * Checks if the pricing rule applies to the current context
-   * 
+   *
    * Kirby instance is passed to the rule function if it is a callable.
    * If no rule is set, true is returned.
-   * 
+   *
    * @param App|null $kirby The Kirby instance
-   * @return bool 
+   * @return bool
    */
 	public function checkRule(?App $kirby = null): bool
 	{
