@@ -12,7 +12,7 @@ options:
   changeStatus: false
   changeTemplate: false
   changeTitle: false
-  # delete: false
+  delete: false
   duplicate: false
   move: false
 

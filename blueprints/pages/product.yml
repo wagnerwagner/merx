@@ -1,12 +1,5 @@
 title: page.title.product
 
-options:
-  changeSlug: false
-  changeTemplate: false
-  delete: false
-
 fields:
   price:
     extends: fields/price
-  taxRule:
-    extends: fields/tax-rule
