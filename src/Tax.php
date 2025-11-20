@@ -51,6 +51,6 @@ class Tax extends Obj
 
 	public function __toString(): string
 	{
-		return (string)$this->price;
+		return (string)$this->toString();
 	}
 }
