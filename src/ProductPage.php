@@ -37,6 +37,10 @@ class ProductPage extends Page
 		}
 		$pricingRule = $pricingRule ?? Merx::pricingRule();
 
+		if ($this->content()->get('price')->exists()) {
+			return new Price(price: $this->content()->get('price')->toFloat(), pricingRule: $pricingRule);
+		}
+
 		if ($pricingRule === null) {
 			return $this->prices()->first();
 		}
