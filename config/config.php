@@ -8,7 +8,7 @@ return [
 	'api.endpoint' => 'shop',
 	'taxRules' => [
 		'default' => [
-			'name' => fn (): string => t('taxRule.default'),
+			'name' => 'default',
 			'rule' => fn (?App $kirby): float => 19,
 		],
 	],
