@@ -1,0 +1,8 @@
+label: field.tax-rate
+type: select
+translate: false
+options: query
+query:
+  query: site.taxRules
+  text: "{{ item.name }}"
+  value: "{{ item.key }}"

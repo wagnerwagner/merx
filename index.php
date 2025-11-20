@@ -67,6 +67,8 @@ App::plugin(
 			'ww.merx.fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'fields/prices' => __DIR__ . '/blueprints/fields/prices.yml',
 			'ww.merx.fields/prices' => __DIR__ . '/blueprints/fields/prices.yml',
+			'fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
+			'ww.merx.fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
 			'layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
 			'ww.merx.layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
 			'pages/order' => __DIR__ . '/blueprints/pages/order.yml',
