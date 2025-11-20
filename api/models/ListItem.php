@@ -11,9 +11,7 @@ return [
 		'title' => fn (ListItem $listItem): ?string => $listItem->title,
 		'type' => fn (ListItem $listItem): string => $listItem->type,
 		'thumb' => function (ListItem $listItem): ?array {
-			if ($listItem->page === null) {
-				return null;
-			}
+			if (!$listItem->page) return null;
 
 			/** @var \Kirby\Cms\File $thumb */
 			$thumb = $listItem->page->thumb() instanceof File ? $listItem->page->thumb() : $listItem->page->thumb()->toFile();

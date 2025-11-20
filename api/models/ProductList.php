@@ -28,8 +28,7 @@ return [
 		'quantity' => fn (ProductList $productList): int => $productList->quantity(),
 		'taxRates' => fn (ProductList $productList): array => array_values(array_map(function (Tax $tax) {
 			/** @var Api $this */
-			$apiModel = $this->model('tax', $tax);
-			return $apiModel->toArray();
+			return $this->model('tax', $tax)->toArray();
 		}, $productList->taxRates())),
 		'total' => fn (ProductList $productList): ?Price => $productList->total(),
 		'isFromPrice' => fn (ProductList $productList): bool => $productList->isFromPrice(),
