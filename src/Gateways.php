@@ -4,63 +4,6 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
 use Kirby\Data\Data;
-use OrderPage;
-
-/**
- * Captures stripe payment intent
- *
- * @param OrderPage $virtualOrderPage Virtual order page which may contain `stripePaymentIntentId` field (Credit Card Payment)
- * @param array $data Additional data from get request which may contain `payment_intent` (Klarna Payment)
- * @throws \Kirby\Exception\Exception|\Stripe\Exception\ApiErrorException Kirby exception, when user canceled the payment or Stripe API Exception
- *
- * @return OrderPage Virtual order page with updated payment details
- */
-function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderPage
-{
-	// Check if user canceled payment
-	if (isset($data['redirect_status']) ? $data['redirect_status'] === 'failed' : false) {
-		throw new Exception([
-			'key' => 'merx.paymentCanceled',
-			'httpCode' => 400,
-		]);
-	}
-
-	// Retrieve Payment Intent
-	$paymentIntentId = (string)($data['payment_intent'] ?? $virtualOrderPage->stripePaymentIntentId()->toString());
-	$paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
-
-	// Update content of VirtualOrderPage
-	$virtualOrderPage->version()->update([
-		'paymentDetails' => (array)$paymentIntent->toArray(),
-	]);
-
-	// Prepare meta data
-	$metadata = [
-		'order_uid' => (string)$virtualOrderPage->uid(),
-	];
-
-	if ($paymentIntent->status === 'requires_capture') {
-		// Capture Payment Intent
-		$paymentIntent = $paymentIntent->capture([
-			'metadata' => $metadata,
-		]);
-	} else {
-		// Update Payment Intent
-		$paymentIntent = $paymentIntent->update($paymentIntentId, [
-			'metadata' => $metadata,
-		]);
-	}
-
-	// Update content of VirtualOrderPage
-	if ($paymentIntent->status === 'succeeded') {
-		$virtualOrderPage->version()->update([
-			'paymentComplete' => true,
-			'paidDate' => date('c'),
-		]);
-	}
-
-	return $virtualOrderPage;
-}
 
 /**
  * Gateway class dummy holder
@@ -73,7 +16,65 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
 class Gateways
 {
 	public static array $gateways = [];
+
+	/**
+	 * Captures stripe payment intent
+	 *
+	 * @param OrderPage $virtualOrderPage Virtual order page which may contain `stripePaymentIntentId` field (Credit Card Payment)
+	 * @param array $data Additional data from get request which may contain `payment_intent` (Klarna Payment)
+	 * @throws \Kirby\Exception\Exception|\Stripe\Exception\ApiErrorException Kirby exception, when user canceled the payment or Stripe API Exception
+	 *
+	 * @return OrderPage Virtual order page with updated payment details
+	 */
+	public static function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderPage
+	{
+		// Check if user canceled payment
+		if (isset($data['redirect_status']) ? $data['redirect_status'] === 'failed' : false) {
+			throw new Exception([
+				'key' => 'merx.paymentCanceled',
+				'httpCode' => 400,
+			]);
+		}
+
+		// Retrieve Payment Intent
+		$paymentIntentId = (string)($data['payment_intent'] ?? $virtualOrderPage->stripePaymentIntentId()->toString());
+		$paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
+
+		// Update content of VirtualOrderPage
+		$virtualOrderPage->version()->update([
+			'paymentDetails' => (array)$paymentIntent->toArray(),
+		]);
+
+		// Prepare meta data
+		$metadata = [
+			'order_uid' => (string)$virtualOrderPage->uid(),
+		];
+
+		if ($paymentIntent->status === 'requires_capture') {
+			// Capture Payment Intent
+			$paymentIntent = $paymentIntent->capture([
+				'metadata' => $metadata,
+			]);
+		} else {
+			// Update Payment Intent
+			$paymentIntent = $paymentIntent->update($paymentIntentId, [
+				'metadata' => $metadata,
+			]);
+		}
+
+		// Update content of VirtualOrderPage
+		if ($paymentIntent->status === 'succeeded') {
+			$virtualOrderPage->version()->update([
+				'paymentComplete' => true,
+				'paidDate' => date('c'),
+			]);
+		}
+
+		return $virtualOrderPage;
+	}
 }
+
+Gateways::$gateways['invoice'] = true;
 
 /**
  *  Definition of the initializePayment and completePayment methods for PayPal stored in the $gateways array
@@ -122,13 +123,13 @@ Gateways::$gateways['paypal'] = [
  */
 Gateways::$gateways['credit-card'] = [
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		return completeStripePayment($virtualOrderPage, $data);
+		return Gateways::completeStripePayment($virtualOrderPage, $data);
 	},
 ];
 
 Gateways::$gateways['sepa-debit'] = [
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		return completeStripePayment($virtualOrderPage, $data);
+		return Gateways::completeStripePayment($virtualOrderPage, $data);
 	},
 ];
 
@@ -159,7 +160,7 @@ Gateways::$gateways['klarna'] = [
 		return $virtualOrderPage;
 	},
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		$virtualOrderPage = completeStripePayment($virtualOrderPage, $data);
+		$virtualOrderPage = Gateways::completeStripePayment($virtualOrderPage, $data);
 		return $virtualOrderPage;
 	},
 ];
@@ -183,7 +184,7 @@ Gateways::$gateways['ideal'] = [
 		return $virtualOrderPage;
 	},
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		$virtualOrderPage = completeStripePayment($virtualOrderPage, $data);
+		$virtualOrderPage = Gateways::completeStripePayment($virtualOrderPage, $data);
 		return $virtualOrderPage;
 	},
 ];
