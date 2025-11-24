@@ -392,7 +392,8 @@ class Merx
 			// $orderPage->version()->update([
 			// 	'invoiceNumber' => $latestOrder?->invoiceNumber()->toInt() + 1 ?? 1,
 			// ]);
-			// $orderPage->changeStatus('listed');
+
+			$orderPage->changeStatus('listed');
 
 			return $orderPage;
 		} catch (\Exception $ex) {
