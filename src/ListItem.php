@@ -119,7 +119,7 @@ class ListItem extends Obj
 		if (is_string($type)) {
 			if (!in_array($type, static::$allowedTypes)) {
 				throw new InvalidArgumentException(
-					message: 'Type ' . $type . ' is not allowed. Allowed types: ' . implode(static::$allowedTypes),
+					message: 'Type ' . $type . ' is not allowed. Allowed types: ' . implode(', ', static::$allowedTypes),
 				);
 			}
 			$this->type = $type;
@@ -139,7 +139,7 @@ class ListItem extends Obj
 			$listItem = new ListItem(key: $data);
 		} elseif (is_array($data)) {
 			if (!array_key_exists('key', $data)) {
-				$data['key'] = (($data['page'] instanceof Page) ? $data['page']->uuid() : $data['page']) ?? null;
+				$data['key'] = ($data['page'] ?? null instanceof Page) ? $data['page']->uuid() : $data['page'] ?? null;
 			}
 			$listItem = new ListItem(...$data);
 		} elseif ($data instanceof ListItem) {
