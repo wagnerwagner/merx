@@ -1,0 +1,5 @@
+type: fields
+fields:
+  email:
+    type: email
+    required: true

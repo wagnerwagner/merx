@@ -41,7 +41,6 @@ class Merx
 
 	public static string $sessionTokenParameterName = 'sessionToken';
 
-
 	public function __construct()
 	{
 		$this->cart = new Cart();
@@ -267,7 +266,7 @@ class Merx
 			}
 
 			// check if paymentMethod exists
-			$paymentMethod = $data['paymentMethod'] ?? $data['paymentmethod'] ?? $data['payment-method'] ?? null;
+			$paymentMethod = $data['paymentMethod'] ?? null;
 			if (Str::length($paymentMethod) === 0) {
 				throw new Exception([
 					'key' => 'merx.noPaymentMethod',
@@ -282,7 +281,6 @@ class Merx
 			$virtualOrderPage = new OrderPage([
 				'slug' => Str::random(16),
 				'template' => 'order',
-				'model' => 'order',
 				'content' => $data,
 			]);
 
@@ -336,7 +334,7 @@ class Merx
 	 *
 	 * @param array $data Data required for payment gateway’s `completePayment()`
 	 */
-	public function createOrder(array $data = []): Page
+	public function createOrder(array $data = []): Page|OrderPage
 	{
 		try {
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
@@ -378,6 +376,7 @@ class Merx
 
 			/** @var OrderPage $orderPage */
 			$orderPage = $ordersPage->createChild($virtualOrderPageArray);
+			$orderPage = $orderPage->changeStatus('listed');
 
 			// Reset language
 			$kirby->setCurrentLanguage($currentLanguageCode);

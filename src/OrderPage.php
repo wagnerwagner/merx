@@ -16,6 +16,7 @@ use Wagnerwagner\Merx\ProductList;
  * This class is used to create order pages.
  * It is used to store the order data and to validate the order data.
  *
+ * @method \Kirby\Content\Field created() Date, when the order was created (date('c')).
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  */

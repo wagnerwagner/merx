@@ -1,6 +1,6 @@
 title: field.order
 
-num: '{{ page.created.toDate("YmdHi") }}'
+num: '{{ page.created.toDate("YmdHis") }}'
 
 status:
   draft: page.status.error
@@ -9,7 +9,6 @@ status:
 
 options:
   changeSlug: false
-  changeStatus: false
   changeTemplate: false
   changeTitle: false
   delete: false
