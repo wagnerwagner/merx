@@ -1,15 +1,12 @@
 headline: field.orders
 type: pages
-parent: site.find(kirby.option('ww.merx.ordersPage'))
+parent: site.ordersPage
 template: order
-sortBy: num desc
 layout: table
 create: false
 search: true
 image: false
 text: "Order {{ page.invoiceNumber }}"
-batch: true
-sortBy: created
 flip: true
 columns:
   name:
