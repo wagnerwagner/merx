@@ -30,8 +30,5 @@ return [
 				break;
 		}
 	},
-	'ww.merx.cart.add:before' => function (Cart $cart, string|array|ListItem $data): void
-	{
-
-	},
+	'ww.merx.cart.add:before' => function (Cart $cart, string|array|ListItem $data): void {},
 ];
