@@ -86,6 +86,8 @@ App::plugin(
 			'ww.merx.sections/orders' => __DIR__ . '/blueprints/sections/orders.yml',
 			'sections/payment' => __DIR__ . '/blueprints/sections/payment.yml',
 			'ww.merx.sections/payment' => __DIR__ . '/blueprints/sections/payment.yml',
+			'sections/personal-data' => __DIR__ . '/blueprints/sections/personal-data.yml',
+			'ww.merx.sections/personal-data' => __DIR__ . '/blueprints/sections/personal-data.yml',
 			'tabs/orders' => __DIR__ . '/blueprints/tabs/orders.yml',
 			'ww.merx.tabs/orders' => __DIR__ . '/blueprints/tabs/orders.yml',
 			'tabs/shop-settings' => __DIR__ . '/blueprints/tabs/shop-settings.yml',
