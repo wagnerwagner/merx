@@ -21,6 +21,7 @@ return [
 			]);
 
 			$merx = merx();
+			$data['paymentMethod'] = $data['paymentMethod'] ?? $data['paymentmethod'] ?? $data['payment-method'] ?? null;
 
 			$redirect = $merx->initializePayment($data);
 
