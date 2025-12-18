@@ -5,7 +5,6 @@ use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\Cart;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
-use Kirby\Exception\Exception;
 use Kirby\Plugin\Plugin;
 use Wagnerwagner\Merx\License;
 use Wagnerwagner\Merx\PricingRules;
@@ -103,6 +102,10 @@ App::plugin(
 			{
 				return Merx::formatCurrency($field->toFloat(), $currency ?? Merx::pricingRule()?->currency);
 			},
+		],
+		'pageModels' => [
+			'product' => \Wagnerwagner\Merx\ProductPage::class,
+			'order' => \Wagnerwagner\Merx\OrderPage::class,
 		],
 		'siteMethods' => [
 		  'cart' => fn (): Cart => cart(),

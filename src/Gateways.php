@@ -110,7 +110,7 @@ Gateways::$gateways['paypal'] = [
 		// execute payment
 		$paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
 		$virtualOrderPage->version()->update([
-			'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
+			'paymentDetails' => (array)$paypalResponse,
 			'paymentComplete' => true,
 			'paidDate' => date('c'),
 		]);

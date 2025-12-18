@@ -44,8 +44,6 @@ class ListItems extends Collection
 
 	/**
    * Total price of the ListItems
-   *
-	 * @throws Exception When items do have different currencies
 	 */
 	public function total(): ?Price
 	{
@@ -59,14 +57,6 @@ class ListItems extends Collection
 
 			if ($currency !== null && $listItemTotal !== null && $currency !== $listItemTotal?->currency) {
 				return null;
-				// throw new Exception(
-				// 	key: 'merx.mixedCurrencies.total',
-				// 	data: [
-				// 		'key' => $listItem->key,
-				// 		'currency' => $currency,
-				// 		'newCurrency' => $listItemTotal?->currency,
-				// 	],
-				// );
 			}
 
 			$tax = $listItemTotal?->tax ?? null;

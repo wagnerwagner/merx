@@ -25,10 +25,7 @@ return [
 
 			$redirect = $merx->initializePayment($data);
 
-			return [
-				'status' => 201,
-				'redirect' => $redirect,
-			];
+			go($redirect);
 		},
 	],
 ];

@@ -3,7 +3,6 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\App;
-use Kirby\Cms\Page;
 use NumberFormatter;
 use Wagnerwagner\Merx\Gateways;
 use Wagnerwagner\Merx\Cart;
@@ -198,6 +197,8 @@ class Merx
 			}
 		}
 
+		$orderPageFromSession['parent'] = $kirby->site()->ordersPage();
+
 		return new OrderPage((array)$orderPageFromSession);
 	}
 
@@ -231,13 +232,14 @@ class Merx
 	{
 		try {
 			$redirect = $this->returnUrl();
+			$kirby = kirby();
 
 			// set language for single language installations
 			if (!option('languages', false) && option('locale', false)) {
 				$locale = \Kirby\Toolkit\Locale::normalize(option('locale'));
 				$lang = substr($locale[LC_ALL] ?? $locale[LC_MESSAGES], 0, 2);
-				kirby()->setCurrentTranslation($lang);
-				kirby()->setCurrentLanguage($lang);
+				$kirby->setCurrentTranslation($lang);
+				$kirby->setCurrentLanguage($lang);
 			}
 
 			// cleaning up and secure post data
@@ -249,7 +251,7 @@ class Merx
 			$cart = $this->cart;
 
 			// run hook
-			kirby()->trigger('ww.merx.initializePayment:before', compact('data', 'cart'));
+			$kirby->trigger('ww.merx.initializePayment:before', compact('data', 'cart'));
 
 			// check cart
 			if ($cart->count() <= 0) {
@@ -282,6 +284,7 @@ class Merx
 				'slug' => Str::random(16),
 				'template' => 'order',
 				'content' => $data,
+				'parent' => $kirby->site()->ordersPage(),
 			]);
 
 			// check for validation errors
@@ -304,10 +307,10 @@ class Merx
 			}
 
 			// save virtual order page as session
-			kirby()->session()->set('ww.merx.virtualOrderPage', $virtualOrderPage->toArray());
+			$kirby->session()->set('ww.merx.virtualOrderPage', $virtualOrderPage->toArray());
 
 			// run hook
-			kirby()->trigger('ww.merx.initializePayment:after', compact('virtualOrderPage', 'redirect'));
+			$kirby->trigger('ww.merx.initializePayment:after', compact('virtualOrderPage', 'redirect'));
 
 			return $redirect;
 		} catch (\Exception $ex) {
@@ -334,7 +337,7 @@ class Merx
 	 *
 	 * @param array $data Data required for payment gateway’s `completePayment()`
 	 */
-	public function createOrder(array $data = []): Page|OrderPage
+	public function createOrder(array $data = []): OrderPage
 	{
 		try {
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
@@ -371,8 +374,12 @@ class Merx
 			$virtualOrderPageArray = $virtualOrderPage->toArray();
 			$virtualOrderPageArray['template'] = 'order';
 			$virtualOrderPageArray['model'] = 'order';
-			$virtualOrderPageArray['content']['created'] = date('c');
 			$virtualOrderPageArray['draft'] = false;
+			$virtualOrderPageArray['content']['created'] = date('c');
+
+			if (is_callable(option('ww.merx.invoiceNumber'))) {
+				$virtualOrderPageArray['content']['invoiceNumber'] = option('ww.merx.invoiceNumber')($virtualOrderPage);
+			}
 
 			/** @var OrderPage $orderPage */
 			$orderPage = $ordersPage->createChild($virtualOrderPageArray);
@@ -385,14 +392,6 @@ class Merx
 			$kirby->session()->remove('ww.merx.virtualOrderPage');
 
 			kirby()->trigger('ww.merx.completePayment:after', compact('orderPage'));
-
-			/** @todo make customizable */
-			// $latestOrder = $ordersPage->children()->listed()->last();
-			// $orderPage->version()->update([
-			// 	'invoiceNumber' => $latestOrder?->invoiceNumber()->toInt() + 1 ?? 1,
-			// ]);
-
-			$orderPage->changeStatus('listed');
 
 			return $orderPage;
 		} catch (\Exception $ex) {

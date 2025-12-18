@@ -139,7 +139,9 @@ class ListItem extends Obj
 			$listItem = new ListItem(key: $data);
 		} elseif (is_array($data)) {
 			if (!array_key_exists('key', $data)) {
-				$data['key'] = ($data['page'] ?? null instanceof Page) ? $data['page']->uuid() : $data['page'] ?? null;
+				// Use page id or uuid as key
+				$page = $data['page'] ?? null;
+				$data['key'] = ($page instanceof Page) ? $page->uuid() : $page;
 			}
 			$listItem = new ListItem(...$data);
 		} elseif ($data instanceof ListItem) {

@@ -4,8 +4,6 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
-use Kirby\Form\Form;
-use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
@@ -17,39 +15,18 @@ use Wagnerwagner\Merx\ProductList;
  * It is used to store the order data and to validate the order data.
  *
  * @method \Kirby\Content\Field created() Date, when the order was created (date('c')).
+ * @method \Kirby\Content\Field paidDate() Date, when the order was paid (date('c')).
+ * @method \Kirby\Content\Field paymentComplete() True, when payment is complete
+ * @method \Kirby\Content\Field paymentDetails() Details from the payment provider. Array stored as yaml
+ * @method \Kirby\Content\Field payPalOrderId()
+ * @method \Kirby\Content\Field stripePaymentIntentId()
+ * @method \Kirby\Content\Field redirect() URL the user is redirected to
+ * @method \Kirby\Content\Field invoiceNumber()
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  */
 class OrderPage extends Page
 {
-	/**
-	 * Returns all content validation errors
-	 *
-	 * This is required since otherwise errors won’t show for virtual pages.
-	 *
-	 * @return array
-	 */
-	public function errors(): array
-	{
-		$kirby = $this->kirby();
-		if ($kirby->multilang() === true) {
-			I18n::$locale = $kirby->language()->code();
-		}
-
-		$fields = array_change_key_case($this->blueprint()->fields());
-		// add model to each field
-		$fields = array_map(function ($field) {
-			$field['model'] = $this;
-			return $field;
-		}, $fields);
-
-		$form = new Form([
-			'fields' => $fields,
-			'values' => $this->content()->toArray(),
-		]);
-		return $form->errors();
-	}
-
 	/**
 	 * Returns invoiceNumber
 	 */
@@ -66,11 +43,12 @@ class OrderPage extends Page
 		$data = $this->items()->yaml();
 		$data = array_map(function (mixed $item) {
 			$page = is_string($item['page']) ? $item['page'] : $item['page'][0] ?? null;
+			$price = $item['price'] ? new Price(price: $item['price'], currency: $item['currency'] ?? null, tax: $item['taxrate'] ?? null) : null;
 			return new ListItem(
 				key: $item['key'],
 				title: $item['title'] ?? null,
 				page: $page,
-				price: $item['price'] ?? null,
+				price: $price,
 				quantity: $item['quantity'] ?? 1.0,
 				quantifier: $item['quantifier'] ?? null,
 				type: $item['type'] ?? null,

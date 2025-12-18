@@ -2,6 +2,9 @@ title: field.order
 
 num: '{{ page.created.toDate("YmdHis") }}'
 
+navigation:
+  sortBy: num desc
+
 status:
   draft: page.status.error
   unlisted: page.status.incomplete

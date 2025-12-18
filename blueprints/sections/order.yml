@@ -1,5 +1,10 @@
 type: fields
 fields:
+  created:
+    type: date
+    width: 1/2
+    disabled: true
+    translate: false
   items:
     extends: fields/list-items
   infoOrder:

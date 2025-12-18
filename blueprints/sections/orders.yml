@@ -6,14 +6,12 @@ layout: table
 create: false
 search: true
 image: false
-text: "Order {{ page.invoiceNumber }}"
-flip: true
 columns:
-  name:
-    value: "{{ page.name }}"
+  email:
+    value: "{{ page.email }}"
   created:
     value: "{{ page.created.toDate('c') }}"
   total:
-    value: "{{ page.total.toString }}"
+    value: "{{ page.total }}"
   payment:
     value: "{{ page.paymentMethod }}"
