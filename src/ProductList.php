@@ -9,6 +9,7 @@ namespace Wagnerwagner\Merx;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ *
  * @extends \Wagnerwagner\Merx\ListItems<Wagnerwagner\Merx\ListItem>
  */
 class ProductList extends ListItems

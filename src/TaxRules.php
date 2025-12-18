@@ -10,6 +10,7 @@ use Kirby\Cms\Collection;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ *
  * @extends \Kirby\Cms\Collection<TaxRule>
  */
 class TaxRules extends Collection

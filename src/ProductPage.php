@@ -13,6 +13,7 @@ use Kirby\Cms\Structure;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ *
  * @method \Kirby\Content\Field prices()
  * @method \Kirby\Content\Field taxRule()
  * @method \Kirby\Content\Field stock()

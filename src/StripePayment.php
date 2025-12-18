@@ -11,9 +11,10 @@ use Stripe\Webhook;
 /**
  * Payment class for Stripe Payment.
  *
- * @internal
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ *
+ * @internal
  */
 class StripePayment
 {

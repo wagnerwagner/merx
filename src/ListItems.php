@@ -12,6 +12,7 @@ use Kirby\Toolkit\Collection;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ *
  * @extends \Kirby\Cms\Collection<ListItem>
  */
 class ListItems extends Collection

@@ -14,6 +14,9 @@ use Wagnerwagner\Merx\ProductList;
  * This class is used to create order pages.
  * It is used to store the order data and to validate the order data.
  *
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
+ *
  * @method \Kirby\Content\Field created() Date, when the order was created (date('c')).
  * @method \Kirby\Content\Field paidDate() Date, when the order was paid (date('c')).
  * @method \Kirby\Content\Field paymentComplete() True, when payment is complete
@@ -22,8 +25,6 @@ use Wagnerwagner\Merx\ProductList;
  * @method \Kirby\Content\Field stripePaymentIntentId()
  * @method \Kirby\Content\Field redirect() URL the user is redirected to
  * @method \Kirby\Content\Field invoiceNumber()
- * @author Tobias Wolf
- * @copyright Wagnerwagner GmbH
  */
 class OrderPage extends Page
 {

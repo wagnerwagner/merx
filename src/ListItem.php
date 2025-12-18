@@ -44,8 +44,8 @@ class ListItem extends Obj
 	 * Create a new ListItem
 	 *
 	 * @param null|string $title Will be overwritten by $page’s title
-	 * @param null|string|Page $page Page object or page slug
-	 * @param null|float|Price $price Will be overwritten by $page’s price when $price is float or null
+	 * @param null|string|\Kirby\Cms\Page $page Page object or page slug
+	 * @param null|float|\Wagnerwagner\Merx\Price $price Will be overwritten by $page’s price when $price is float or null
 	 * @param float $quantity Quantity of the ListItem. E.g. 3.0 for 3 items.
 	 * @param null|float $quantifier Multiplier for the price. Could be used when the item has a price per meter.
 	 * @param null|string $type Type of ListItem. See ListItem::$allowedTypes for allowed types.

@@ -7,9 +7,10 @@ use Kirby\Plugin\Plugin;
 use Kirby\Toolkit\Str;
 
 /**
- * @internal
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ *
+ * @internal
  */
 class License extends \Kirby\Plugin\License
 {
