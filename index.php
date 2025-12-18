@@ -98,7 +98,14 @@ App::plugin(
 		],
 		'hooks' => include __DIR__ . '/config/hooks.php',
 		'fieldMethods' => [
-			'toFormattedPrice' => function (Field $field, string|null $currency = null): string
+			'toFormattedPrice' =>
+			/**
+			 * Convert field to formatted price
+			 *
+			 * @param \Kirby\Content\Field $field Field
+			 * @param ?string $field Field
+			 */
+			function (Field $field, string|null $currency = null): string
 			{
 				return Merx::formatCurrency($field->toFloat(), $currency ?? Merx::pricingRule()?->currency);
 			},
@@ -108,12 +115,24 @@ App::plugin(
 			'order' => \Wagnerwagner\Merx\OrderPage::class,
 		],
 		'siteMethods' => [
-		  'cart' => fn (): Cart => cart(),
-			'checkoutPage' => fn (): Page => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
-			'merx' => fn (): Merx => merx(),
-			'ordersPage' => fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('ww.merx.ordersPage')),
-			'pricingRules' => fn (): PricingRules => Merx::pricingRules(),
-			'taxRules' => fn (): TaxRules => Merx::taxRules(),
+		  'cart' =>
+				/** Current cart of user */
+				fn (): Cart => cart(),
+			'checkoutPage' =>
+				/** First page with template “checkout” */
+				fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
+			'merx' =>
+				/** Current Merx instance */
+				fn (): Merx => merx(),
+			'ordersPage' =>
+				/** Parent page of all orders */
+				fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('ww.merx.ordersPage')),
+			'pricingRules' =>
+				/** Pricing rules as defined in ww.merx.pricingRules */
+				fn (): PricingRules => Merx::pricingRules(),
+			'taxRules' =>
+				/** Pricing rules as defined in ww.merx.taxRules */
+				fn (): TaxRules => Merx::taxRules(),
 	  ]
 	],
 	license: function (Plugin $plugin) {
