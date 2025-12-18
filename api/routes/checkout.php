@@ -9,7 +9,7 @@ return [
 		'pattern' => $endpoint . '/checkout',
 		'auth' => false,
 		'method' => 'POST',
-		'action' => function (): array
+		'action' => function ()
 		{
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
