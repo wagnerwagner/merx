@@ -152,20 +152,29 @@ class ListItem extends Obj
 	}
 
 	/**
-	 * Total price of the ListItem
+	 * Price per item
+	 */
+	public function price(): ?Price
+	{
+		return $this->price;
+	}
+
+	/**
+	 * Total price
+	 * Price per item × quantity
 	 */
 	public function total(): ?Price
 	{
-		$priceSingle = $this->price?->price;
+		$pricePerItem = $this->price?->price;
 
-		if (!is_float($priceSingle)) {
+		if (!is_float($pricePerItem)) {
 			return null;
 		}
 
 		$tax = $this->price?->tax ?? null;
 
 		return new Price(
-			price: $priceSingle * $this->quantity,
+			price: $pricePerItem * $this->quantity,
 			tax: $tax?->toFloat(),
 			currency: $this->price?->currency,
 		);

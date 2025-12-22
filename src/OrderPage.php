@@ -37,7 +37,7 @@ class OrderPage extends Page
 	}
 
 	/**
-	 * Cart of this Order.
+	 * List of products of the Order
 	 */
 	public function cart(): ProductList
 	{
