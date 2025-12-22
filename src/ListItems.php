@@ -3,12 +3,11 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Data\Yaml;
-use Kirby\Exception\Exception;
 use Kirby\Toolkit\Collection;
 
 /**
- * Collection of ListItem objects
- * Base for Cart and ProductList
+ * Collection of ListItem objects.
+ * Base for Cart and ProductList.
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH

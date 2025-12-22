@@ -12,7 +12,7 @@ use Kirby\Exception\Exception;
 use Kirby\Toolkit\I18n;
 
 /**
- * Main class for Merx plugin
+ * This is the core of the plugin. The class mainly contains helper methods.
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
@@ -40,6 +40,9 @@ class Merx
 
 	public static string $sessionTokenParameterName = 'sessionToken';
 
+	/**
+	 * Initializes cart and gateways
+	 */
 	public function __construct()
 	{
 		$this->cart = new Cart();
@@ -102,7 +105,7 @@ class Merx
 	}
 
 	/**
-	 * Calculate tax amount from gross price and tax rate
+	 * Calculates tax amount from gross price and tax rate
 	 *
 	 * E.g. calculateTax(200, 19) → 31.932773109243698
 	 *
@@ -412,17 +415,26 @@ class Merx
 		}
 	}
 
+	/**
+	 * Gets all tax rules defined by tax rule option
+	 */
 	public static function taxRules(array $options = []): TaxRules
 	{
 		return new TaxRules(option('ww.merx.taxRules', $options));
 	}
 
+	/**
+	 * Gets the tax rule by its key
+	 */
 	public static function taxRule(null|string $key): ?TaxRule
 	{
 		$taxRules = self::taxRules();
 		return $taxRules->getRuleByKey($key);
 	}
 
+	/**
+	 * Gets all pricing rules defined by pricing rule option
+	 */
 	public static function pricingRules(array $options = []): PricingRules
 	{
 		return new PricingRules(option('ww.merx.pricingRules', $options));
@@ -430,8 +442,6 @@ class Merx
 
   /**
    * Finds the pricing rule that applies to the current context
-   *
-   * @return PricingRule|null
    */
 	public static function pricingRule(): ?PricingRule
 	{

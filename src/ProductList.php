@@ -30,7 +30,7 @@ class ProductList extends ListItems
 	}
 
 	/**
-	 * Updates existing item.
+	 * Updates existing item
 	 */
 	public function updateItem(string $key, array $data): self
 	{
