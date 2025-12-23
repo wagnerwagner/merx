@@ -6,6 +6,7 @@ use Wagnerwagner\Merx\OrderPage;
 return [
 	'ordersPage' => 'orders',
 	'production' => false,
+	'logging' => true,
 	'api.endpoint' => 'shop',
 	'taxRules' => [
 		'default' => [
