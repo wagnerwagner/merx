@@ -6,7 +6,7 @@ return [
 	'error.merx.completePayment' => 'The payment could not be completed.',
 	'error.merx.emptycart' => 'Cart is empty.',
 	'error.merx.fieldsvalidation' => 'Field validation failed.',
-	'error.merx.initializePayment' => 'The payment could not be initialized.',
+	'error.merx.initializeOrder' => 'The payment could not be initialized.',
 	'error.merx.mixedCurrencies.add' => 'Mixed currencies. Could not add item “{ key }” with currency “{newCurrency}”',
 	'error.merx.mixedCurrencies.currency' => 'Mixed currencies. Could not determine currency. List contains more than one currency. {key}',
 	'error.merx.mixedCurrencies.total' => 'Mixed currencies. Could not calculate total sum with mixed currencies.',

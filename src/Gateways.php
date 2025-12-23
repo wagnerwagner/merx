@@ -77,10 +77,10 @@ class Gateways
 Gateways::$gateways['invoice'] = true;
 
 /**
- *  Definition of the initializePayment and completePayment methods for PayPal stored in the $gateways array
+ *  Definition of the initializeOrder and completePayment methods for PayPal stored in the $gateways array
  */
 Gateways::$gateways['paypal'] = [
-	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
+	'initializeOrder' => function (OrderPage $virtualOrderPage): OrderPage {
 		if (option('ww.merx.production') === true) {
 			if (option('ww.merx.paypal.live.clientID') === null && option('ww.merx.paypal.live.secret') === null) {
 				throw new Exception('Missing PayPal live keys');
@@ -134,7 +134,7 @@ Gateways::$gateways['sepa-debit'] = [
 ];
 
 Gateways::$gateways['klarna'] = [
-	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
+	'initializeOrder' => function (OrderPage $virtualOrderPage): OrderPage {
 		$email = $virtualOrderPage->email()->toString();
 		$country = $virtualOrderPage->country()->toString();
 
@@ -166,7 +166,7 @@ Gateways::$gateways['klarna'] = [
 ];
 
 Gateways::$gateways['ideal'] = [
-	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
+	'initializeOrder' => function (OrderPage $virtualOrderPage): OrderPage {
 		$cart = new Cart();
 		$paymentIntent = $cart->getStripePaymentIntent([
 			'payment_method_types' => ['ideal'],

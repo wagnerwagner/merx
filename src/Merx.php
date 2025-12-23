@@ -215,8 +215,8 @@ class Merx
 		if (!is_array($gateway)) {
 			$gateway = [];
 		}
-		if (!array_key_exists('initializePayment', $gateway)) {
-			$gateway['initializePayment'] = null;
+		if (!array_key_exists('initializeOrder', $gateway)) {
+			$gateway['initializeOrder'] = null;
 		}
 		if (!array_key_exists('completePayment', $gateway)) {
 			$gateway['completePayment'] = null;
@@ -226,12 +226,12 @@ class Merx
 
 
 	/**
-	 * Creates virtual OrderPage and validates it. Runs payment gateway’s initializePayment function. Saves virtual OrderPage in user session.
+	 * Creates virtual OrderPage and validates it. Runs payment gateway’s initializeOrder function. Saves virtual OrderPage in user session.
 	 *
 	 * @param array $data Content of `OrderPage`. Must contain `paymentMethod`.
-	 * @return string `api/shop/success` or result of `initializePayment()` of `paymentMethod` gateway.
+	 * @return string `api/shop/success` or result of `initializeOrder()` of `paymentMethod` gateway.
 	 */
-	public function initializePayment(array $data): string
+	public function initializeOrder(array $data): string
 	{
 		try {
 			$redirect = $this->returnUrl();
@@ -254,7 +254,7 @@ class Merx
 			$cart = $this->cart;
 
 			// run hook
-			$kirby->trigger('ww.merx.initializePayment:before', compact('data', 'cart'));
+			$kirby->trigger('ww.merx.initializeOrder:before', ['cart' => $cart, 'data' => $data]);
 
 			// check cart
 			if ($cart->count() <= 0) {
@@ -302,8 +302,9 @@ class Merx
 
 			// run gateway
 			$gateway = $this->getGateway($paymentMethod);
-			if (is_callable($gateway['initializePayment'])) {
-				$virtualOrderPage = $gateway['initializePayment']($virtualOrderPage);
+			if (is_callable($gateway['initializeOrder'])) {
+				/** @var \OrderPage */
+				$virtualOrderPage = $gateway['initializeOrder']($virtualOrderPage);
 				if ($virtualOrderPage->redirect()->isNotEmpty()) {
 					$redirect = (string)$virtualOrderPage->redirect();
 				}
@@ -313,7 +314,7 @@ class Merx
 			$kirby->session()->set('ww.merx.virtualOrderPage', $virtualOrderPage->toArray());
 
 			// run hook
-			$kirby->trigger('ww.merx.initializePayment:after', compact('virtualOrderPage', 'redirect'));
+			$kirby->trigger('ww.merx.initializeOrder:after', ['virtualOrderPage' => $virtualOrderPage, 'redirect' => $redirect]);
 
 			return $redirect;
 		} catch (\Exception $ex) {
@@ -321,7 +322,7 @@ class Merx
 				throw $ex;
 			}
 			throw new Exception([
-				'key' => 'merx.initializePayment',
+				'key' => 'merx.initializeOrder',
 				'httpCode' => 500,
 				'details' => [
 					'message' => $ex->getMessage(),
@@ -346,7 +347,7 @@ class Merx
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
 			$gateway = $this->getGateway($virtualOrderPage->paymentMethod()->toString());
 
-			kirby()->trigger('ww.merx.completePayment:before', compact('virtualOrderPage', 'gateway', 'data'));
+			kirby()->trigger('ww.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
 
 			if (is_callable($gateway['completePayment'])) {
 				$gateway['completePayment']($virtualOrderPage, $data);
