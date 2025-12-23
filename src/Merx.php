@@ -228,6 +228,8 @@ class Merx
 	/**
 	 * Creates virtual OrderPage and validates it. Runs payment gateway’s initializeOrder function. Saves virtual OrderPage in user session.
 	 *
+	 * `initializePayment` of the payment gateway is called
+	 *
 	 * @param array $data Content of `OrderPage`. Must contain `paymentMethod`.
 	 * @return string `api/shop/success` or result of `initializeOrder()` of `paymentMethod` gateway.
 	 */
@@ -302,7 +304,7 @@ class Merx
 
 			// run gateway
 			$gateway = $this->getGateway($paymentMethod);
-			if (is_callable($gateway['initializeOrder'])) {
+			if (is_callable($gateway['initializePayment'])) {
 				/** @var \OrderPage */
 				$virtualOrderPage = $gateway['initializeOrder']($virtualOrderPage);
 				if ($virtualOrderPage->redirect()->isNotEmpty()) {
@@ -339,6 +341,8 @@ class Merx
 	/**
 	 * Runs payment gateway’s completePayment function
 	 *
+	 * `completePayment` of the payment gateway is called
+   *
 	 * @param array $data Data required for payment gateway’s `completePayment()`
 	 */
 	public function createOrder(array $data = []): OrderPage
