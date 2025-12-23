@@ -215,8 +215,8 @@ class Merx
 		if (!is_array($gateway)) {
 			$gateway = [];
 		}
-		if (!array_key_exists('initializeOrder', $gateway)) {
-			$gateway['initializeOrder'] = null;
+		if (!array_key_exists('initializePayment', $gateway)) {
+			$gateway['initializePayment'] = null;
 		}
 		if (!array_key_exists('completePayment', $gateway)) {
 			$gateway['completePayment'] = null;
@@ -306,7 +306,7 @@ class Merx
 			$gateway = $this->getGateway($paymentMethod);
 			if (is_callable($gateway['initializePayment'])) {
 				/** @var \OrderPage */
-				$virtualOrderPage = $gateway['initializeOrder']($virtualOrderPage);
+				$virtualOrderPage = $gateway['initializePayment']($virtualOrderPage);
 				if ($virtualOrderPage->redirect()->isNotEmpty()) {
 					$redirect = (string)$virtualOrderPage->redirect();
 				}
@@ -320,28 +320,32 @@ class Merx
 
 			return $redirect;
 		} catch (\Exception $ex) {
-			if (get_class($ex) === 'Kirby\Exception\Exception') {
-				throw $ex;
+			if (get_class($ex) !== 'Kirby\Exception\Exception') {
+				$ex = new Exception([
+					'key' => 'merx.initializeOrder',
+					'httpCode' => 500,
+					'details' => [
+						'message' => $ex->getMessage(),
+						'code' => $ex->getCode(),
+						'file' => $ex->getFile(),
+						'line' => $ex->getLine(),
+					],
+					'previous' => $ex,
+				]);
 			}
-			throw new Exception([
-				'key' => 'merx.initializeOrder',
-				'httpCode' => 500,
-				'details' => [
-					'message' => $ex->getMessage(),
-					'code' => $ex->getCode(),
-					'file' => $ex->getFile(),
-					'line' => $ex->getLine(),
-				],
-				'previous' => $ex,
-			]);
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log($ex, 'error');
+			}
+			throw $ex;
 		}
 	}
 
 
 	/**
-	 * Runs payment gateway’s completePayment function
+	 * Stores order page to file system
 	 *
-	 * `completePayment` of the payment gateway is called
+	 * Calls `completePayment` of the payment gateway
+	 * Deletes cart
    *
 	 * @param array $data Data required for payment gateway’s `completePayment()`
 	 */
@@ -399,24 +403,27 @@ class Merx
 			$this->cart->delete();
 			$kirby->session()->remove('wagnerwagner.merx.virtualOrderPage');
 
-			kirby()->trigger('wagnerwagner.merx.completePayment:after', ['orderPage' => $orderPage]);
+			kirby()->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
 
 			return $orderPage;
 		} catch (\Exception $ex) {
-			if (get_class($ex) === 'Kirby\Exception\Exception') {
-				throw $ex;
+			if (get_class($ex) !== 'Kirby\Exception\Exception') {
+				$ex = new Exception([
+					'key' => 'merx.createOrder',
+					'httpCode' => 500,
+					'details' => [
+						'message' => $ex->getMessage(),
+						'code' => $ex->getCode(),
+						'file' => $ex->getFile(),
+						'line' => $ex->getLine(),
+					],
+					'previous' => $ex,
+				]);
 			}
-			throw new Exception([
-				'key' => 'merx.completePayment',
-				'httpCode' => 500,
-				'details' => [
-					'message' => $ex->getMessage(),
-					'code' => $ex->getCode(),
-					'file' => $ex->getFile(),
-					'line' => $ex->getLine(),
-				],
-				'previous' => $ex,
-			]);
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log($ex, 'error');
+			}
+			throw $ex;
 		}
 	}
 
