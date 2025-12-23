@@ -64,7 +64,7 @@ class Logger {
 	 * Create log in Kirby’s log directory
 	 *
 	 * @param string|int|array $content
-	 * @param string $level should be one of the eight RFC 5424 levels (debug, info, notice, warning, error, critical, alert, emergency)
+	 * @param string $level Should be one of the eight RFC 5424 levels (debug, info, notice, warning, error, critical, alert, emergency)
 	 */
 	public static function log(string|int|array $content, $level = 'info'): void
 	{
