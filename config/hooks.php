@@ -2,6 +2,7 @@
 
 use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\ListItem;
+use Wagnerwagner\Merx\OrderPage;
 
 return [
 	'wagnerwagner.merx.stripe-hooks' => function (\Stripe\Event $stripeEvent): void
