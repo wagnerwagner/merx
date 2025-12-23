@@ -395,7 +395,7 @@ class Merx
 			$this->cart->delete();
 			$kirby->session()->remove('ww.merx.virtualOrderPage');
 
-			kirby()->trigger('ww.merx.completePayment:after', compact('orderPage'));
+			kirby()->trigger('ww.merx.completePayment:after', ['orderPage' => $orderPage]);
 
 			return $orderPage;
 		} catch (\Exception $ex) {
