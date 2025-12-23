@@ -4,7 +4,7 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
 use Kirby\Http\Remote;
-use OrderPage;
+use Wagnerwagner\Merx\OrderPage;
 
 /**
  * Payment Class for PayPal Payments using PayPal REST API v2
