@@ -2,7 +2,7 @@
 
 use Kirby\Toolkit\I18n;
 
-/** @var string $endpoint ww.merx.api.endpoint option */
+/** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [
 	[

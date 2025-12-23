@@ -58,7 +58,7 @@ class License extends \Kirby\Plugin\License
 
 	public function licenseKey(): ?string
 	{
-		return option('ww.merx.license');
+		return option('wagnerwagner.merx.license');
 	}
 
 	private function crossfoot(int $int): string

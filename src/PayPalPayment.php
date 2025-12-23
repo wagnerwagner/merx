@@ -29,7 +29,7 @@ class PayPalPayment
 	 */
 	private static function request(string $endpoint, array $params = []): array
 	{
-		if (option('ww.merx.production') === true) {
+		if (option('wagnerwagner.merx.production') === true) {
 			$baseUrl = self::$paypalLiveApiEntry;
 		} else {
 			$baseUrl = self::$paypalSandboxApiEntry;
@@ -66,10 +66,10 @@ class PayPalPayment
 	 */
 	private static function getAccessToken(): array
 	{
-		if (option('ww.merx.production') === true) {
-			$auth = option('ww.merx.paypal.live.clientID') . ':' . option('ww.merx.paypal.live.secret');
+		if (option('wagnerwagner.merx.production') === true) {
+			$auth = option('wagnerwagner.merx.paypal.live.clientID') . ':' . option('wagnerwagner.merx.paypal.live.secret');
 		} else {
-			$auth = option('ww.merx.paypal.sandbox.clientID') . ':' . option('ww.merx.paypal.sandbox.secret');
+			$auth = option('wagnerwagner.merx.paypal.sandbox.clientID') . ':' . option('wagnerwagner.merx.paypal.sandbox.secret');
 		}
 		$endpoint = '/v1/oauth2/token';
 		$response = self::request(
@@ -102,8 +102,8 @@ class PayPalPayment
 		$siteTitle = (string)site()->title();
 		$access = self::getAccessToken();
 
-		if (option('ww.merx.paypal.purchaseUnits')) {
-			$purchaseUnits = option('ww.merx.paypal.purchaseUnits')();
+		if (option('wagnerwagner.merx.paypal.purchaseUnits')) {
+			$purchaseUnits = option('wagnerwagner.merx.paypal.purchaseUnits')();
 		} else {
 			$purchaseUnits = [
 				[
@@ -124,7 +124,7 @@ class PayPalPayment
 			'user_action' => 'PAY_NOW',
 			'shipping_preference' => 'NO_SHIPPING',
 			'brand_name' => $siteTitle,
-		], option('ww.merx.paypal.applicationContext', []));
+		], option('wagnerwagner.merx.paypal.applicationContext', []));
 
 		$data = [
 			'intent' => 'CAPTURE',

@@ -17,7 +17,7 @@ class ProductPageTest extends TestCase
 	{
 		$this->kirby = new App([
 			'options' => [
-				'ww.merx.pricingRules' => [
+				'wagnerwagner.merx.pricingRules' => [
 					'de' => [
 						'name' => 'de (EUR)',
 						'currency' => 'EUR',
@@ -31,7 +31,7 @@ class ProductPageTest extends TestCase
 						'taxIncluded' => false,
 					],
 				],
-				'ww.merx.taxRules' => [
+				'wagnerwagner.merx.taxRules' => [
 					'default' => [
 						'name' => fn (): string => t('taxRule.default', 'default'),
 						'rule' => fn (?App $kirby): float => $kirby->languageCode() === 'de' ? 19 : 20,

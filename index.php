@@ -28,7 +28,7 @@ function formatIBAN(string $iban): string
 }
 
 App::plugin(
-	name: 'ww/merx',
+	name: 'wagnerwagner/merx',
 	extends: [
 		'api' => [
 			'collections' => array_merge(
@@ -38,7 +38,7 @@ App::plugin(
 				include __DIR__ . '/api/data/cart.php',
 			),
 			'routes' => function (App $kirby) {
-				$endpoint = (string)$kirby->option('ww.merx.api.endpoint', 'shop');
+				$endpoint = (string)$kirby->option('wagnerwagner.merx.api.endpoint', 'shop');
 				return array_merge(
 					include __DIR__ . '/api/routes/cart.php',
 					include __DIR__ . '/api/routes/checkout.php',
@@ -62,35 +62,35 @@ App::plugin(
 		],
 		'blueprints' => [
 			'fields/list-items' => __DIR__ . '/blueprints/fields/list-items.yml',
-			'ww.merx.fields/list-items' => __DIR__ . '/blueprints/fields/list-items.yml',
+			'wagnerwagner.merx.fields/list-items' => __DIR__ . '/blueprints/fields/list-items.yml',
 			'fields/price' => __DIR__ . '/blueprints/fields/price.yml',
-			'ww.merx.fields/price' => __DIR__ . '/blueprints/fields/price.yml',
+			'wagnerwagner.merx.fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'fields/prices' => __DIR__ . '/blueprints/fields/prices.yml',
-			'ww.merx.fields/prices' => __DIR__ . '/blueprints/fields/prices.yml',
+			'wagnerwagner.merx.fields/prices' => __DIR__ . '/blueprints/fields/prices.yml',
 			'fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
-			'ww.merx.fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
+			'wagnerwagner.merx.fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
 			'layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
-			'ww.merx.layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
+			'wagnerwagner.merx.layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
 			'pages/checkout' => __DIR__ . '/blueprints/pages/checkout.yml',
-			'ww.merx.pages/checkout' => __DIR__ . '/blueprints/pages/checkout.yml',
+			'wagnerwagner.merx.pages/checkout' => __DIR__ . '/blueprints/pages/checkout.yml',
 			'pages/order' => __DIR__ . '/blueprints/pages/order.yml',
-			'ww.merx.pages/order' => __DIR__ . '/blueprints/pages/order.yml',
+			'wagnerwagner.merx.pages/order' => __DIR__ . '/blueprints/pages/order.yml',
 			'pages/orders' => __DIR__ . '/blueprints/pages/orders.yml',
-			'ww.merx.pages/orders' => __DIR__ . '/blueprints/pages/orders.yml',
+			'wagnerwagner.merx.pages/orders' => __DIR__ . '/blueprints/pages/orders.yml',
 			'pages/product' => __DIR__ . '/blueprints/pages/product.yml',
-			'ww.merx.pages/product' => __DIR__ . '/blueprints/pages/product.yml',
+			'wagnerwagner.merx.pages/product' => __DIR__ . '/blueprints/pages/product.yml',
 			'sections/order' => __DIR__ . '/blueprints/sections/order.yml',
-			'ww.merx.sections/order' => __DIR__ . '/blueprints/sections/order.yml',
+			'wagnerwagner.merx.sections/order' => __DIR__ . '/blueprints/sections/order.yml',
 			'sections/orders' => __DIR__ . '/blueprints/sections/orders.yml',
-			'ww.merx.sections/orders' => __DIR__ . '/blueprints/sections/orders.yml',
+			'wagnerwagner.merx.sections/orders' => __DIR__ . '/blueprints/sections/orders.yml',
 			'sections/payment' => __DIR__ . '/blueprints/sections/payment.yml',
-			'ww.merx.sections/payment' => __DIR__ . '/blueprints/sections/payment.yml',
+			'wagnerwagner.merx.sections/payment' => __DIR__ . '/blueprints/sections/payment.yml',
 			'sections/personal-data' => __DIR__ . '/blueprints/sections/personal-data.yml',
-			'ww.merx.sections/personal-data' => __DIR__ . '/blueprints/sections/personal-data.yml',
+			'wagnerwagner.merx.sections/personal-data' => __DIR__ . '/blueprints/sections/personal-data.yml',
 			'tabs/orders' => __DIR__ . '/blueprints/tabs/orders.yml',
-			'ww.merx.tabs/orders' => __DIR__ . '/blueprints/tabs/orders.yml',
+			'wagnerwagner.merx.tabs/orders' => __DIR__ . '/blueprints/tabs/orders.yml',
 			'tabs/shop-settings' => __DIR__ . '/blueprints/tabs/shop-settings.yml',
-			'ww.merx.tabs/shop-settings' => __DIR__ . '/blueprints/tabs/shop-settings.yml',
+			'wagnerwagner.merx.tabs/shop-settings' => __DIR__ . '/blueprints/tabs/shop-settings.yml',
 		],
 		'translations' => [
 			'de' => include __DIR__ . '/translations/de.php',
@@ -126,12 +126,12 @@ App::plugin(
 				fn (): Merx => merx(),
 			'ordersPage' =>
 				/** Parent page of all orders */
-				fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('ww.merx.ordersPage')),
+				fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('wagnerwagner.merx.ordersPage')),
 			'pricingRules' =>
-				/** Pricing rules as defined in ww.merx.pricingRules */
+				/** Pricing rules as defined in wagnerwagner.merx.pricingRules */
 				fn (): PricingRules => Merx::pricingRules(),
 			'taxRules' =>
-				/** Pricing rules as defined in ww.merx.taxRules */
+				/** Pricing rules as defined in wagnerwagner.merx.taxRules */
 				fn (): TaxRules => Merx::taxRules(),
 	  ]
 	],

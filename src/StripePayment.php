@@ -25,10 +25,10 @@ class StripePayment
 	 */
 	private static function setStripeApiKey(): void
 	{
-		if (option('ww.merx.production') === true) {
-			Stripe::setApiKey(option('ww.merx.stripe.live.secret_key'));
+		if (option('wagnerwagner.merx.production') === true) {
+			Stripe::setApiKey(option('wagnerwagner.merx.stripe.live.secret_key'));
 		} else {
-			Stripe::setApiKey(option('ww.merx.stripe.test.secret_key'));
+			Stripe::setApiKey(option('wagnerwagner.merx.stripe.test.secret_key'));
 		}
 	}
 
@@ -42,7 +42,7 @@ class StripePayment
 	{
 		self::setStripeApiKey();
 
-		$endpoint_secret = option('ww.merx.stripe.webhook_signing_secret', false);
+		$endpoint_secret = option('wagnerwagner.merx.stripe.webhook_signing_secret', false);
 		if ($endpoint_secret === false || empty($endpoint_secret)) {
 			throw new Exception('No Stripe Webhook signing secret');
 		}

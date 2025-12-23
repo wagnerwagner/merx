@@ -16,7 +16,7 @@ use Throwable;
  */
 class Cart extends ProductList
 {
-	protected string $sessionName = 'ww.merx.cartItems';
+	protected string $sessionName = 'wagnerwagner.merx.cartItems';
 
 	/**
 	 * Constructor
@@ -30,9 +30,9 @@ class Cart extends ProductList
 			$data = $kirby->session()->get($this->sessionName);
 		}
 		parent::__construct($data, true);
-		kirby()->trigger('ww.merx.cart.create:before', ['cart' => $this, 'data' => $data]);
+		kirby()->trigger('wagnerwagner.merx.cart.create:before', ['cart' => $this, 'data' => $data]);
 		$this->save();
-		kirby()->trigger('ww.merx.cart.create:after', ['cart' => $this]);
+		kirby()->trigger('wagnerwagner.merx.cart.create:after', ['cart' => $this]);
 	}
 
 	/**
@@ -50,7 +50,7 @@ class Cart extends ProductList
 	public function add(string|array|ListItem $data): static
 	{
 		try {
-			kirby()->trigger('ww.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
+			kirby()->trigger('wagnerwagner.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
 			parent::add($data);
 
 			// if ($this->currency() === false) {
@@ -63,7 +63,7 @@ class Cart extends ProductList
 			// }
 
 			$this->save();
-			kirby()->trigger('ww.merx.cart.add:after', ['cart' => $this]);
+			kirby()->trigger('wagnerwagner.merx.cart.add:after', ['cart' => $this]);
 			return $this;
 		} catch (\Exception $ex) {
 			$key = null;
@@ -92,10 +92,10 @@ class Cart extends ProductList
 	 */
 	public function remove(string $key): static
 	{
-		kirby()->trigger('ww.merx.cart.remove:before', ['cart' => $this, 'key' => $key]);
+		kirby()->trigger('wagnerwagner.merx.cart.remove:before', ['cart' => $this, 'key' => $key]);
 		parent::remove($key);
 		$this->save();
-		kirby()->trigger('ww.merx.cart.remove:after', ['cart' => $this, 'key' => $key]);
+		kirby()->trigger('wagnerwagner.merx.cart.remove:after', ['cart' => $this, 'key' => $key]);
 		return $this;
 	}
 
@@ -106,10 +106,10 @@ class Cart extends ProductList
 	public function updateItem(string $key, array $data): static
 	{
 		try {
-			kirby()->trigger('ww.merx.cart.updateItem:before', ['cart' => $this, 'key' => $key, 'data' => $data]);
+			kirby()->trigger('wagnerwagner.merx.cart.updateItem:before', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			parent::updateItem($key, $data);
 			$this->save();
-			kirby()->trigger('ww.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
+			kirby()->trigger('wagnerwagner.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			return $this;
 		} catch (\Exception $ex) {
 			throw new Exception([
@@ -165,9 +165,9 @@ class Cart extends ProductList
 	public function delete(): void
 	{
 		$kirby = App::instance();
-		$kirby->trigger('ww.merx.cart.delete:before', ['cart' => $this]);
+		$kirby->trigger('wagnerwagner.merx.cart.delete:before', ['cart' => $this]);
 		$kirby->session()->remove($this->sessionName);
-		$kirby->trigger('ww.merx.cart.delete:after', ['cart' => $this]);
+		$kirby->trigger('wagnerwagner.merx.cart.delete:after', ['cart' => $this]);
 		$this->data = [];
 	}
 
@@ -184,7 +184,7 @@ class Cart extends ProductList
 	}
 
 	/**
-	 * Could be used for ww.merx.paypal.purchaseUnits
+	 * Could be used for wagnerwagner.merx.paypal.purchaseUnits
 	 *
 	 * @since 1.3.0
 	 *

@@ -46,7 +46,7 @@ class Merx
 	public function __construct()
 	{
 		$this->cart = new Cart();
-		$this->gateways = array_merge(Gateways::$gateways, option('ww.merx.gateways', []));
+		$this->gateways = array_merge(Gateways::$gateways, option('wagnerwagner.merx.gateways', []));
 	}
 
 
@@ -59,7 +59,7 @@ class Merx
 	{
 		$kirby = kirby();
 		$tokenQuery = Merx::$sessionTokenParameterName . '=' . $kirby->session()->token();
-		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('ww.merx.api.endpoint', 'shop') . '/success';
+		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('wagnerwagner.merx.api.endpoint', 'shop') . '/success';
 		return $apiEndpint . '?' . $tokenQuery;
 	}
 
@@ -191,12 +191,12 @@ class Merx
 	private function getVirtualOrderPageFromSession(): OrderPage
 	{
 		$kirby = App::instance();
-		$orderPageFromSession = $kirby->session()->get('ww.merx.virtualOrderPage');
+		$orderPageFromSession = $kirby->session()->get('wagnerwagner.merx.virtualOrderPage');
 		if (!$orderPageFromSession) {
-			$orderPageFromSession = $kirby->sessionHandler()->getManually($_GET[static::$sessionTokenParameterName])->get('ww.merx.virtualOrderPage');
+			$orderPageFromSession = $kirby->sessionHandler()->getManually($_GET[static::$sessionTokenParameterName])->get('wagnerwagner.merx.virtualOrderPage');
 
 			if (!$orderPageFromSession) {
-				throw new \Exception('Session "ww.merx.virtualOrderPage" does not exist.');
+				throw new \Exception('Session "wagnerwagner.merx.virtualOrderPage" does not exist.');
 			}
 		}
 
@@ -254,7 +254,7 @@ class Merx
 			$cart = $this->cart;
 
 			// run hook
-			$kirby->trigger('ww.merx.initializeOrder:before', ['cart' => $cart, 'data' => $data]);
+			$kirby->trigger('wagnerwagner.merx.initializeOrder:before', ['cart' => $cart, 'data' => $data]);
 
 			// check cart
 			if ($cart->count() <= 0) {
@@ -311,10 +311,10 @@ class Merx
 			}
 
 			// save virtual order page as session
-			$kirby->session()->set('ww.merx.virtualOrderPage', $virtualOrderPage->toArray());
+			$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', $virtualOrderPage->toArray());
 
 			// run hook
-			$kirby->trigger('ww.merx.initializeOrder:after', ['virtualOrderPage' => $virtualOrderPage, 'redirect' => $redirect]);
+			$kirby->trigger('wagnerwagner.merx.initializeOrder:after', ['virtualOrderPage' => $virtualOrderPage, 'redirect' => $redirect]);
 
 			return $redirect;
 		} catch (\Exception $ex) {
@@ -347,7 +347,7 @@ class Merx
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
 			$gateway = $this->getGateway($virtualOrderPage->paymentMethod()->toString());
 
-			kirby()->trigger('ww.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
+			kirby()->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
 
 			if (is_callable($gateway['completePayment'])) {
 				$gateway['completePayment']($virtualOrderPage, $data);
@@ -367,7 +367,7 @@ class Merx
 			if ($ordersPage === null) {
 				// create orders page if it does not exist
 				$ordersPage = $kirby->site()->createChild([
-					'id' => option('ww.merx.ordersPage'),
+					'id' => option('wagnerwagner.merx.ordersPage'),
 					'template' => 'orders',
 					'draft' => false,
 					'content' => [
@@ -381,8 +381,8 @@ class Merx
 			$virtualOrderPageArray['draft'] = false;
 			$virtualOrderPageArray['content']['created'] = date('c');
 
-			if (is_callable(option('ww.merx.invoiceNumber'))) {
-				$virtualOrderPageArray['content']['invoiceNumber'] = option('ww.merx.invoiceNumber')($virtualOrderPage);
+			if (is_callable(option('wagnerwagner.merx.invoiceNumber'))) {
+				$virtualOrderPageArray['content']['invoiceNumber'] = option('wagnerwagner.merx.invoiceNumber')($virtualOrderPage);
 			}
 
 			/** @var OrderPage $orderPage */
@@ -393,9 +393,9 @@ class Merx
 			$kirby->setCurrentLanguage($currentLanguageCode);
 
 			$this->cart->delete();
-			$kirby->session()->remove('ww.merx.virtualOrderPage');
+			$kirby->session()->remove('wagnerwagner.merx.virtualOrderPage');
 
-			kirby()->trigger('ww.merx.completePayment:after', ['orderPage' => $orderPage]);
+			kirby()->trigger('wagnerwagner.merx.completePayment:after', ['orderPage' => $orderPage]);
 
 			return $orderPage;
 		} catch (\Exception $ex) {
@@ -421,7 +421,7 @@ class Merx
 	 */
 	public static function taxRules(array $options = []): TaxRules
 	{
-		return new TaxRules(option('ww.merx.taxRules', $options));
+		return new TaxRules(option('wagnerwagner.merx.taxRules', $options));
 	}
 
 	/**
@@ -438,7 +438,7 @@ class Merx
 	 */
 	public static function pricingRules(array $options = []): PricingRules
 	{
-		return new PricingRules(option('ww.merx.pricingRules', $options));
+		return new PricingRules(option('wagnerwagner.merx.pricingRules', $options));
 	}
 
   /**

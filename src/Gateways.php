@@ -81,12 +81,12 @@ Gateways::$gateways['invoice'] = true;
  */
 Gateways::$gateways['paypal'] = [
 	'initializeOrder' => function (OrderPage $virtualOrderPage): OrderPage {
-		if (option('ww.merx.production') === true) {
-			if (option('ww.merx.paypal.live.clientID') === null && option('ww.merx.paypal.live.secret') === null) {
+		if (option('wagnerwagner.merx.production') === true) {
+			if (option('wagnerwagner.merx.paypal.live.clientID') === null && option('wagnerwagner.merx.paypal.live.secret') === null) {
 				throw new Exception('Missing PayPal live keys');
 			}
 		} else {
-			if (option('ww.merx.paypal.sandbox.clientID') === null && option('ww.merx.paypal.sandbox.secret') === null) {
+			if (option('wagnerwagner.merx.paypal.sandbox.clientID') === null && option('wagnerwagner.merx.paypal.sandbox.secret') === null) {
 				throw new Exception('Missing PayPal sandbox keys');
 			}
 		}

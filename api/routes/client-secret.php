@@ -1,6 +1,6 @@
 <?php
 
-/** @var string $endpoint ww.merx.api.endpoint option */
+/** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [
 	[
@@ -21,7 +21,7 @@ return [
 				/** @var \Wagnerwagner\Merx\Cart $cart */
 				$cart = $this->cart();
 				$paymentIntent = $cart->getStripePaymentIntent($params);
-				kirby()->session()->set('ww.site.paymentIntentId', $paymentIntent->id);
+				kirby()->session()->set('wagnerwagner.merx.stripePaymentIntentId', $paymentIntent->id);
 				return [
 					'clientSecret' => $paymentIntent->client_secret,
 				];

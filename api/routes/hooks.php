@@ -3,7 +3,7 @@
 use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\StripePayment;
 
-/** @var string $endpoint ww.merx.api.endpoint option */
+/** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [
 	[
@@ -18,7 +18,7 @@ return [
 			$payload = @file_get_contents('php://input');
 
 			$event = StripePayment::constructEvent($payload);
-			$this->kirby()->trigger('ww.merx.stripe-hooks', [
+			$this->kirby()->trigger('wagnerwagner.merx.stripe-hooks', [
 				'stripeEvent' => $event,
 			]);
 

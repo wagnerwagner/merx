@@ -2,7 +2,7 @@
 
 use Kirby\Toolkit\I18n;
 
-/** @var string $endpoint ww.merx.api.endpoint option */
+/** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [
 	[
@@ -15,7 +15,7 @@ return [
 			I18n::$locale = $this->language();
 
 			$data = $this->requestBody();
-			$paymentIntentId = kirby()->session()->get('ww.site.paymentIntentId', '');
+			$paymentIntentId = kirby()->session()->get('wagnerwagner.merx.stripePaymentIntentId', '');
 			$data = array_merge($data, [
 				'stripePaymentIntentId' => $paymentIntentId,
 			]);
