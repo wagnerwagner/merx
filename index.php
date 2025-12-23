@@ -103,7 +103,7 @@ App::plugin(
 			 * Convert field to formatted price
 			 *
 			 * @param \Kirby\Content\Field $field Field
-			 * @param ?string $currency Field Three-letter ISO currency code. When null, currency from pricing rule is used
+			 * @param ?string $currency Three-letter ISO currency code. When null, currency from pricing rule is used
 			 */
 			function (Field $field, string|null $currency = null): string
 			{
