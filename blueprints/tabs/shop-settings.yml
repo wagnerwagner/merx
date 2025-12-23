@@ -1,4 +1,4 @@
-label: tab.shop-settings.label
+label: tab.shopSettings.label
 icon: settings
 sections:
   checkoutPage:

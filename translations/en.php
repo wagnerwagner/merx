@@ -41,7 +41,7 @@ return [
 	'page.status.error' => 'Error',
 	'page.status.incomplete' => 'Incomplete',
 	'page.title.product' => 'Product',
-	'product.price.on-request' => 'Price on request',
+	'product.price.onRequest' => 'Price on request',
 	'section.orders.info' => "{ count } Orders\n { amount } Items\n{ amountPerOrder } Items/Order",
-	'tab.shop-settings.label' => 'Shop settings',
+	'tab.shopSettings.label' => 'Shop settings',
 ];
