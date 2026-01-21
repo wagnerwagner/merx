@@ -14,6 +14,18 @@ namespace Wagnerwagner\Merx;
  */
 class ProductList extends ListItems
 {
+	/**
+	 * Adds a new product to the list.
+	 *
+	 * ```php
+	 * $productList->add('products/nice-shoes'); // ID of a ProductPage
+	 * $productList->add('page://L1cJEiOOQI3VzljV'); // UUID of a ProductPage
+	 * $productList->add(['key' => 'individual-shoes', 'page' => 'products/nice-shoes']); // Array including key
+	 * $productList->add(new ListItem(key: 'nice-socks', price: 10])); // Custom LitItem
+	 * ```
+	 *
+	 * @see \Wagnerwagner\Merx\ListItem
+	 */
 	public function add(
 		string|array|ListItem $data
 	): static

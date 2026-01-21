@@ -38,10 +38,6 @@ class ProductPage extends Page
 		}
 		$pricingRule = $pricingRule ?? Merx::pricingRule();
 
-		if ($this->content()->get('price')->exists()) {
-			return new Price(price: $this->content()->get('price')->toFloat(), pricingRule: $pricingRule);
-		}
-
 		if ($pricingRule === null) {
 			return $this->prices()->first();
 		}
@@ -50,11 +46,16 @@ class ProductPage extends Page
 			return $this->prices()->findBy('pricingRule', $pricingRule);
 		}
 
+		// Fallback to price field
+		if ($this->content()->get('price')->exists()) {
+			return new Price(price: $this->content()->get('price')->toFloat(), pricingRule: Merx::pricingRules()->getRuleByKey('default'));
+		}
+
 		return null;
 	}
 
   /**
-   * Tax object for the product.
+   * Returns the Tax object associated with this product.
    */
 	public function tax(): ?Tax
 	{
@@ -62,7 +63,7 @@ class ProductPage extends Page
 	}
 
 	/**
-	 * List of Price objects created from the prices field
+	 * Returns a collection of Price objects created from the prices field
 	 *
 	 * @return \Kirby\Cms\Structure<\Wagnerwagner\Merx\Price>
 	 */

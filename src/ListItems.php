@@ -133,7 +133,7 @@ class ListItems extends Collection
 	}
 
 	/**
-	 * Get the currency of this List
+	 * Gets the currency of this List
 	 *
 	 * @return string|bool|null
    * Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
@@ -159,7 +159,6 @@ class ListItems extends Collection
    *
 	 * @param string $key
 	 * @param ListItem $value
-	 * @return void
 	 */
 	public function __set(string $key, $value): void
 	{

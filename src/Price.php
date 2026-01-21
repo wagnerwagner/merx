@@ -35,10 +35,17 @@ class Price extends Obj
 	/**
 	 * Price constructor.
 	 *
+	 * ```php
+	 * new Price(100.0, 0.19, 'default', 'EUR');
+	 * new Price(100.0, new Tax(100.0, 0.19, 'EUR'));
+	 * new Price(100.0, new Tax(100.0, 0.19, 'EUR'), 'default', 'EUR');
+	 * new Price(100.0, new Tax(100.0, 0.19, 'USD'), new PricingRule('default', 'US', 'USD', true, false));
+	 * ```
+	 *
 	 * @param float $price Gross or net price, depending on tax inclusion, defined by $pricingRule (default is gross [tax included]).
 	 * @param Tax|float|null $tax Tax object or tax rate as float (e.g. 0.19 for 19%), or null.
 	 * @param PricingRule|string|null $pricingRule PricingRule object, its key as string, or null.
-	 * @param string|null $currency Three-letter ISO currency code, or null.
+	 * @param string|null $currency Three-letter ISO currency code, or null. If pricing rule is set, currency is taken from pricing rule.
 	 */
 	public function __construct(
 		float $price,

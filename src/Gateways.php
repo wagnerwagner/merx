@@ -12,6 +12,7 @@ use Kirby\Data\Data;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ * @internal
  */
 class Gateways
 {

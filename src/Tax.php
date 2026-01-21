@@ -21,6 +21,12 @@ class Tax extends Obj
 	/** Three-letter ISO currency code, in uppercase. E.g. EUR */
 	public string|null $currency = null;
 
+	/**
+	 * Creates a new tax
+	 *
+	 * @param null|float $rate E.g. 0.19 (for 19 %)
+	 * @param null|string $currency Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
+	 */
 	public function __construct(float $priceNet, ?float $rate = null, null|string $currency = null)
 	{
 		$this->currency = $currency;
@@ -30,15 +36,18 @@ class Tax extends Obj
 		$this->rate = $rate;
 	}
 
+	/**
+	 * Converts the tax to a float
+	 */
 	public function toFloat(): float
 	{
 		return $this->rate ?? 0.0;
 	}
 
 	/**
-	 * @property string $key Use `price` to get net price as formatted currency
+	 * Converts the tax rate or price to a formatted string
 	 *
-	 * @return string  Formatted currency
+	 * @param string $key Use `rate` to get tax rate as formatted percent. Use `price` to get tax price as formatted currency.
 	 */
 	public function toString(string $key = 'price'): string
 	{

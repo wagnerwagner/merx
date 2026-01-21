@@ -25,7 +25,12 @@ class PricingRule extends Obj {
 	public string|null $currency = null;
 
 	/**
-	 * @param callable|null $rule A function that returns true if the rule applies, or false otherwise.
+	 * Constructor
+	 *
+	 * @param null|string $currency Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
+	 * @param null|callable $rule A function that returns true when the rule applies, or false when it does not.
+	 * It is passed the Kirby instance as first argument.
+	 * @param bool $taxIncluded Whether the price is including tax or not
 	 */
 	public function __construct(
 		string $key,
@@ -72,6 +77,11 @@ class PricingRule extends Obj {
 		return false;
 	}
 
+	/**
+	 * Converts the pricing rule to an array. Rule function is removed.
+	 *
+	 * @return array
+	 */
 	public function toArray(): array
 	{
 		$array = parent::toArray();

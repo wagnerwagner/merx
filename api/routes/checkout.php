@@ -9,6 +9,10 @@ return [
 		'pattern' => $endpoint . '/checkout',
 		'auth' => false,
 		'method' => 'POST',
+		/** Required post data keys:
+		 * `paymentMethod` or `paymentmethod` or `payment-method`
+		 * and all fields required by the order blueprint
+		 */
 		'action' => function ()
 		{
 			/** @var \Kirby\Cms\Api $this */

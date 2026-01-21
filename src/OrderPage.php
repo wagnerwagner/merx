@@ -9,10 +9,9 @@ use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
 
 /**
- * Abstract base class for order pages
+ * Page model for order page
  *
- * This class is used to create order pages.
- * It is used to store and to validate the order data.
+ * This model is used to store and validate order data.
  *
  * @method \Kirby\Content\Field email() User’s email address
  * @method \Kirby\Content\Field created() Date, when the order was created (date('c')).
