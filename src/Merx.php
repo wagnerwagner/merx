@@ -107,14 +107,14 @@ class Merx
 	/**
 	 * Calculates tax amount from gross price and tax rate
 	 *
-	 * E.g. calculateTax(200, 19) → 31.932773109243698
+	 * E.g. calculateTax(200, 0.19) → 31.932773109243698
 	 *
 	 * @param float $grossPrice E.g. 200
-	 * @param float $taxRate Tax rate in percent. E.g. 19
+	 * @param float $taxRate Tax rate. E.g. 0.19
 	 */
 	public static function calculateTax(float $grossPrice, float $taxRate): float
 	{
-		return $grossPrice - ($grossPrice / (1 + $taxRate / 100));
+		return $grossPrice - ($grossPrice / (1 + $taxRate));
 	}
 
 
