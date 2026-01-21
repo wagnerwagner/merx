@@ -4,7 +4,7 @@ translate: false
 columns:
   price:
     mobile: true
-  pricingKey:
+  pricingRule:
     mobile: true
 fields:
   price:
@@ -12,7 +12,7 @@ fields:
     before: null
     required: false
     width: 1/2
-  pricingKey:
+  pricingRule:
     label: field.pricing
     type: select
     options:

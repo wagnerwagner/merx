@@ -75,7 +75,7 @@ class ProductPage extends Page
 		return $this->prices ?? $prices
 			->filter(fn ($item) => $item->price()->isNotEmpty())
 			->map(function ($item) use ($pricingRules, $taxRule) {
-				$pricingRule = $pricingRules->getRuleByKey($item->pricingKey()->value());
+				$pricingRule = $pricingRules->getRuleByKey($item->pricingRule()->value());
 				return new Price(
 					price: $item->price()->toFloat(),
 					pricingRule: $pricingRule,
