@@ -8,7 +8,7 @@ class TaxRuleTest extends TestCase
 {
 	public function testConstructorSetsProperties()
 	{
-		$rule = new TaxRule('vat', 'VAT', function () { return 19; });
+		$rule = new TaxRule('vat', 'VAT', fn () => 0.19);
 		$this->assertEquals('vat', $rule->key);
 		$this->assertEquals('VAT', $rule->name);
 		$this->assertTrue(is_callable($rule->rule));
@@ -28,7 +28,7 @@ class TaxRuleTest extends TestCase
 
 	public function testTaxRateReturnsCorrectValue()
 	{
-		$rule = new TaxRule('vat', null, function () { return 19; });
+		$rule = new TaxRule('vat', null, fn () => 0.19);
 		$this->assertEquals(0.19, $rule->taxRate());
 	}
 
@@ -44,7 +44,7 @@ class TaxRuleTest extends TestCase
 
 	public function testToArrayIncludesTaxRate()
 	{
-		$rule = new TaxRule('vat', 'VAT', function () { return 19; });
+		$rule = new TaxRule('vat', 'VAT', function () { return 0.19; });
 		$array = $rule->toArray();
 		$this->assertArrayHasKey('rule', $array);
 		$this->assertEquals(0.19, $array['rule']);

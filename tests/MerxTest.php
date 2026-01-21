@@ -42,7 +42,7 @@ final class MerxTest extends TestCase
 	{
 		$this->assertEquals(
 			31.932773109243698,
-			Merx::calculateTax(200, 19)
+			Merx::calculateTax(200, 0.19)
 		);
 	}
 

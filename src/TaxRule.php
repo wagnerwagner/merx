@@ -43,7 +43,7 @@ class TaxRule extends Obj {
 	 * Gets the tax rate as decimal value
 	 *
 	 * @param App|null $kirby The Kirby instance
-	 * @return float|null The tax rate or null if no rule is set
+	 * @return float|null The tax rate (e.g. 0.19) or null if no rule is set
 	 */
 	public function taxRate(?App $kirby = null): ?float
 	{

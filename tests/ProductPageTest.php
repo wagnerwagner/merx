@@ -34,11 +34,11 @@ class ProductPageTest extends TestCase
 				'wagnerwagner.merx.taxRules' => [
 					'default' => [
 						'name' => fn (): string => t('taxRule.default', 'default'),
-						'rule' => fn (?App $kirby): float => $kirby->languageCode() === 'de' ? 19 : 20,
+						'rule' => fn (?App $kirby): float => $kirby->languageCode() === 'de' ? 0.19 : 0.2,
 					],
 					'reduced' => [
 						'name' => fn (): string => t('taxRule.reduced', 'reduced'),
-						'rule' => fn (?App $kirby): float => $kirby->languageCode() === 'de' ? 7 : 5.5,
+						'rule' => fn (?App $kirby): float => $kirby->languageCode() === 'de' ? 0.7 : 0.55,
 					],
 				],
 			],
