@@ -14,9 +14,17 @@ return [
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
 
-			$merx = merx();
-			$orderPage = $merx->createOrder($_GET);
-			go($orderPage->url());
+			try {
+				$merx = merx();
+				$orderPage = $merx->createOrder($_GET);
+				go($orderPage->url());
+			} catch (Exception $exception) {
+				// Only throw exception for json requests, otherwise redirect to checkout page.
+				if ($this->kirby()->visitor()->acceptsMimeType('application/json')) {
+					throw $exception;
+				}
+				go($this->site()->checkoutPage());
+			}
 		},
 	],
 ];
