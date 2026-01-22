@@ -16,7 +16,7 @@ return [
 
 			$merx = merx();
 			$orderPage = $merx->createOrder($_GET);
-			go($orderPage->url());
+			go($orderPage->secureUrl());
 		},
 	],
 ];

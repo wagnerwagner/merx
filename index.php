@@ -113,6 +113,7 @@ App::plugin(
 		'pageModels' => [
 			'product' => \Wagnerwagner\Merx\ProductPage::class,
 			'order' => \Wagnerwagner\Merx\OrderPage::class,
+			'orders' => \Wagnerwagner\Merx\OrdersPage::class,
 		],
 		'siteMethods' => [
 		  'cart' =>

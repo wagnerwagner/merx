@@ -293,6 +293,7 @@ class Merx
 			]);
 
 			// check for validation errors
+			$kirby->impersonate('kirby');
 			$errors = $virtualOrderPage->errors();
 			if (sizeof($errors) > 0) {
 				throw new Exception([
@@ -317,6 +318,8 @@ class Merx
 
 			// run hook
 			$kirby->trigger('wagnerwagner.merx.initializeOrder:after', ['virtualOrderPage' => $virtualOrderPage, 'redirect' => $redirect]);
+
+			$kirby->impersonate(null);
 
 			return $redirect;
 		} catch (\Exception $ex) {
@@ -352,16 +355,17 @@ class Merx
 	public function createOrder(array $data = []): OrderPage
 	{
 		try {
+			$kirby = kirby();
+
+			$kirby->impersonate('kirby');
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
 			$gateway = $this->getGateway($virtualOrderPage->paymentMethod()->toString());
 
-			kirby()->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
+			$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
 
 			if (is_callable($gateway['completePayment'])) {
 				$gateway['completePayment']($virtualOrderPage, $data);
 			}
-
-			$kirby = kirby();
 
 			// Set to default language to make sure content is saved in default language
 			$currentLanguageCode = null;
@@ -370,7 +374,6 @@ class Merx
 				$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
 			}
 
-			$kirby->impersonate('kirby');
 			$ordersPage = $kirby->site()->ordersPage();
 			if ($ordersPage === null) {
 				// create orders page if it does not exist
@@ -403,7 +406,9 @@ class Merx
 			$this->cart->delete();
 			$kirby->session()->remove('wagnerwagner.merx.virtualOrderPage');
 
-			kirby()->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
+			$kirby->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
+
+			$kirby->impersonate(null);
 
 			return $orderPage;
 		} catch (\Exception $ex) {
