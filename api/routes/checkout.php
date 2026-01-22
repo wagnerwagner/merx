@@ -12,8 +12,10 @@ return [
 		/** Required post data keys:
 		 * `paymentMethod` or `paymentmethod` or `payment-method`
 		 * and all fields required by the order blueprint
+		 *
+		 * @return array Array with redirect url when request header accepts json, otherwise redirects with code 303.
 		 */
-		'action' => function ()
+		'action' => function (): array
 		{
 			/** @var \Kirby\Cms\Api $this */
 			I18n::$locale = $this->language();
@@ -27,9 +29,18 @@ return [
 			$merx = merx();
 			$data['paymentMethod'] = $data['paymentMethod'] ?? $data['paymentmethod'] ?? $data['payment-method'] ?? null;
 
-			$redirect = $merx->initializeOrder($data);
+			$redirectUrl = $merx->initializeOrder($data);
 
-			go($redirect);
+			if ($this->kirby()->visitor()->acceptsMimeType('application/json')) {
+				return [
+					'status' => 'redirect',
+					'message' => 'redirect',
+					'code' => 303,
+					'redirectUrl' => $redirectUrl,
+				];
+			}
+
+			go($redirectUrl, 303);
 		},
 	],
 ];
