@@ -96,8 +96,8 @@ class Price extends Obj
 	 *
 	 * Could be used when it is a price per meter and the quantity is the length of the product.
 	 */
-  public function quantify(float $quantifier = 1): self
-  {
+	public function quantify(float $quantifier = 1): self
+	{
 		$basePrice = $this->price;
 		if ($this->pricingRule?->taxIncluded === false) {
 			$basePrice = $this->priceNet;
@@ -109,7 +109,7 @@ class Price extends Obj
 			pricingRule: $this->pricingRule,
 			currency: $this->currency,
 		);
-  }
+	}
 
 	/**
 	 * Returns if the tax is included in the price
@@ -146,7 +146,7 @@ class Price extends Obj
 	 * Use $key to determine which price is used.
 	 *
 	 * @param string $key Use `priceNet` to get net price as formatted currency. When not set, `price` or `priceNet` is used, depending on tax inclusion of pricing rule.
-	 * @return string  Formatted price as string, e.g. "119,00 €"
+	 * @return string	Formatted price as string, e.g. "119,00 €"
 	 */
 	public function toString(?string $key = null): string
 	{

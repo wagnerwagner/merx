@@ -116,9 +116,9 @@ class ProductPage extends Page
 
 	/**
 	 * Summary info string about the orders including this product
-   * Used for the orders tab in the product page
+	 * Used for the orders tab in the product page
 	 *
-   * @see /blueprints/tabs/orders.yml
+	 * @see /blueprints/tabs/orders.yml
 	 * @return string Localized info text
 	 */
 	public function orderInfo(): string

@@ -25,7 +25,7 @@ class PricingRules extends Collection
 	 * Value of the array is an array with the following keys:
 	 * - `name`: The name of the pricing rule.
 	 * - `rule`: The rule to apply to the pricing rule.
-	 *   It is passed the Kirby instance as first argument. It must return true when the rule applies, or false when it does not.
+	 *	 It is passed the Kirby instance as first argument. It must return true when the rule applies, or false when it does not.
 	 * - `currency`: Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
 	 * - `taxIncluded`: Whether the price is including tax or not.
 	 */
@@ -62,12 +62,12 @@ class PricingRules extends Collection
 		return $this->findByKey($key);
 	}
 
-  /**
-   * Finds the pricing rule that applies to the current context
-   *
-   * Pricing rules are defined in the config and are checked in the order they are defined.
-   * The first rule that returns true for `$rule->checkRule()` is returned.
-   */
+	/**
+	 * Finds the pricing rule that applies to the current context
+	 *
+	 * Pricing rules are defined in the config and are checked in the order they are defined.
+	 * The first rule that returns true for `$rule->checkRule()` is returned.
+	 */
 	public function findRule(): ?PricingRule
 	{
 		$kirby = App::instance();

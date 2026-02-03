@@ -226,7 +226,7 @@ class Cart extends ProductList
 				'items' => array_map(function ($cartItem) use ($currencyCode) {
 					$cartUnitAmount = new stdClass;
 					$cartUnitAmount->value = number_format($cartItem['price'], 2, '.', '');
-					$cartUnitAmount->currency_code =  $currencyCode;
+					$cartUnitAmount->currency_code = $currencyCode;
 
 					return [
 						'name' => $cartItem['title'] ?? $cartItem['id'],

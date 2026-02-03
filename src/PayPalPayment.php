@@ -23,7 +23,7 @@ class PayPalPayment
 	 * Handles the request for the gateway. Use 'use Kirby\Http\Remote'
 	 *
 	 * @param string $endpoint
-	 * @param array  $params Request parameters as described in https://getkirby.com/docs/reference/objects/http/remote/request#params-array
+	 * @param array $params Request parameters as described in https://getkirby.com/docs/reference/objects/http/remote/request#params-array
 	 *
 	 * @return array PayPal REST API response
 	 */

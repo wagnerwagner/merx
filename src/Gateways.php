@@ -78,7 +78,7 @@ class Gateways
 Gateways::$gateways['invoice'] = true;
 
 /**
- *  Definition of the initializePayment and completePayment methods for PayPal stored in the $gateways array
+ * Definition of the initializePayment and completePayment methods for PayPal stored in the $gateways array
  */
 Gateways::$gateways['paypal'] = [
 	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
@@ -120,7 +120,7 @@ Gateways::$gateways['paypal'] = [
 ];
 
 /**
- *  Credit Card payment gateway using Stripe
+ * Credit Card payment gateway using Stripe
  */
 Gateways::$gateways['credit-card'] = [
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
@@ -146,10 +146,10 @@ Gateways::$gateways['klarna'] = [
 			'payment_method_data' => [
 				'type' => 'klarna',
 				'billing_details' => [
-				  'email' => $email,
-				  'address' => [
-					  'country' => $country,
-				  ],
+					'email' => $email,
+					'address' => [
+						'country' => $country,
+					],
 				],
 			],
 			'return_url' => Merx::returnUrl(),

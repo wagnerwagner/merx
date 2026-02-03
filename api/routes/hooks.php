@@ -10,7 +10,7 @@ return [
 		'pattern' => $endpoint . '/hooks/stripe',
 		'auth' => false,
 		'method' => 'POST',
-		'action'  => function (): array
+		'action' => function (): array
 		{
 			/** @var \Kirby\Cms\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
