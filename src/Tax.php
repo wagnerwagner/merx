@@ -37,6 +37,16 @@ class Tax extends Obj
 	}
 
 	/**
+	 * Converts the tax rate to a formatted string
+	 *
+	 * E.g. 19 %
+	 */
+	public function rate(): string
+	{
+		return Merx::formatPercent($this->rate, maxFractionDigits: 1);
+	}
+
+	/**
 	 * Converts the tax to a float
 	 */
 	public function toFloat(): float
@@ -51,11 +61,7 @@ class Tax extends Obj
 	 */
 	public function toString(string $key = 'price'): string
 	{
-		if ($key === 'rate') {
-			return Merx::formatPercent($this->rate, maxFractionDigits: 1);
-		} else {
-			return Merx::formatCurrency($this->$key ?? 0, $this->currency);
-		}
+		return Merx::formatCurrency($this->$key ?? 0, $this->currency);
 	}
 
 	public function __toString(): string
