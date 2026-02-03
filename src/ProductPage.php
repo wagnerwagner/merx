@@ -48,18 +48,15 @@ class ProductPage extends Page
 
 		// Fallback to price field
 		if ($this->content()->get('price')->exists()) {
-			return new Price(price: $this->content()->get('price')->toFloat(), pricingRule: Merx::pricingRules()->getRuleByKey('default'));
+			$taxRule = Merx::taxRule($this->taxRule()->value());
+			return new Price(
+				price: $this->content()->get('price')->toFloat(),
+				pricingRule: Merx::pricingRules()->getRuleByKey('default'),
+				tax: $taxRule?->taxRate(),
+			);
 		}
 
 		return null;
-	}
-
-  /**
-   * Returns the Tax object associated with this product.
-   */
-	public function tax(): ?Tax
-	{
-		return $this->price()?->tax();
 	}
 
 	/**
@@ -83,6 +80,14 @@ class ProductPage extends Page
 					tax: $taxRule?->taxRate(),
 				);
 			});
+	}
+
+	/**
+	 * Returns the Tax object associated with this product.
+	 */
+	public function tax(): ?Tax
+	{
+		return $this->price()?->tax();
 	}
 
 	/**
