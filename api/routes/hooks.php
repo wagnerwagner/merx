@@ -13,7 +13,7 @@ return [
 		'action'  => function (): array
 		{
 			/** @var \Kirby\Cms\Api $this */
-			I18n::$locale = $this->language();
+			$this->kirby()->setCurrentTranslation($this->language());
 
 			$payload = @file_get_contents('php://input');
 

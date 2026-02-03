@@ -9,7 +9,7 @@ use Wagnerwagner\Merx\Cart;
 use Kirby\Toolkit\Str;
 use Kirby\Toolkit\Escape;
 use Kirby\Exception\Exception;
-use Kirby\Toolkit\I18n;
+use Kirby\Toolkit\Locale;
 
 /**
  * This is the core of the plugin. The class mainly contains helper methods.
@@ -53,7 +53,7 @@ class Merx
 	/**
 	 * Url to be used to complete the payment
 	 *
-	 * @return string  e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6
+	 * @return string e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6
 	 */
 	static function returnUrl(): string
 	{
@@ -75,12 +75,12 @@ class Merx
 		string|null $locale = null,
 		int|null $maxFractionDigits = null,
 	): string {
-		$locale  ??= I18n::locale();
+		$locale ??= Locale::get(LC_NUMERIC);
 		$formatter = static::currencyNumberFormatter($locale);
 		if (is_int($maxFractionDigits)) {
 			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
 		}
-		$number    = $formatter?->formatCurrency($number, $currency) ?? $number;
+		$number = $formatter?->formatCurrency($number, $currency) ?? $number;
 		return (string)$number;
 	}
 
@@ -95,12 +95,12 @@ class Merx
 		string|null $locale = null,
 		int|null $maxFractionDigits = null,
 	): string {
-		$locale  ??= I18n::locale();
+		$locale ??= Locale::get(LC_NUMERIC);
 		$formatter = static::percentNumberFormatter($locale);
 		if (is_int($maxFractionDigits)) {
 			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
 		}
-		$number    = $formatter?->format($number) ?? $number;
+		$number = $formatter?->format($number) ?? $number;
 		return (string)$number;
 	}
 
@@ -120,11 +120,11 @@ class Merx
 
 	/**
 	 * Helper method to format IBAN
-   *
+	 *
 	 * @param string $iban E.g. DE0000000000000000
 	 * @return string
-   * Space separated string with 4 characters per group.
-   * E.g. DE00 0000 0000 0000 00
+	 * Space separated string with 4 characters per group.
+	 * E.g. DE00 0000 0000 0000 00
 	 */
 	public static function formatIBAN(string $iban): string
 	{
@@ -346,7 +346,7 @@ class Merx
 	 *
 	 * Calls `completePayment` of the payment gateway
 	 * Deletes cart
-   *
+	 *
 	 * @param array $data Data required for payment gateway’s `completePayment()`
 	 */
 	public function createOrder(array $data = []): OrderPage
@@ -452,20 +452,20 @@ class Merx
 		return new PricingRules(option('wagnerwagner.merx.pricingRules', $options));
 	}
 
-  /**
-   * Finds the pricing rule that applies to the current context
-   */
+	/**
+	 * Finds the pricing rule that applies to the current context
+	 */
 	public static function pricingRule(): ?PricingRule
 	{
 		$pricingRules = static::pricingRules();
 		return $pricingRules->findRule();
 	}
 
-  /**
-   * Currency of the pricing rule
-   *
-   * @return string|null Three-letter ISO currency code, in uppercase. E.g. EUR or USD
-   */
+	/**
+	 * Currency of the pricing rule
+	 *
+	 * @return string|null Three-letter ISO currency code, in uppercase. E.g. EUR or USD
+	 */
 	public static function currency(): ?string
 	{
 		return self::pricingRule()?->currency;

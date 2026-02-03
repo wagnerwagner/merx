@@ -18,7 +18,7 @@ return [
 		'action' => function (): array
 		{
 			/** @var \Kirby\Cms\Api $this */
-			I18n::$locale = $this->language();
+			$this->kirby()->setCurrentTranslation($this->language());
 
 			$data = $this->requestBody();
 			$paymentIntentId = kirby()->session()->get('wagnerwagner.merx.stripePaymentIntentId', '');

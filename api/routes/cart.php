@@ -1,6 +1,5 @@
 <?php
 
-use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\Cart;
 
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
@@ -13,7 +12,7 @@ return [
 		'action' => function (): Cart
 		{
 			/** @var \Kirby\Cms\Api $this */
-			I18n::$locale = $this->language();
+			$this->kirby()->setCurrentTranslation($this->language());
 
 			/** @var \Wagnerwagner\Merx\Cart $cart */
 			$cart = $this->cart();
@@ -27,7 +26,7 @@ return [
 		'action' => function (): Cart
 		{
 			/** @var \Kirby\Cms\Api $this */
-			I18n::$locale = $this->language();
+			$this->kirby()->setCurrentTranslation($this->language());
 
 			$allowedKeys = ['key', 'page', 'quantity', 'data'];
 
@@ -49,7 +48,7 @@ return [
 		'action' => function (): Cart
 		{
 			/** @var \Kirby\Cms\Api $this */
-			I18n::$locale = $this->language();
+			$this->kirby()->setCurrentTranslation($this->language());
 
 			$key = $this->requestBody('key');
 			$allowedKeys = ['key', 'page', 'quantity', 'data'];
@@ -72,7 +71,7 @@ return [
 		'action' => function (): Cart
 		{
 			/** @var \Kirby\Cms\Api*/
-			I18n::$locale = $this->language();
+			$this->kirby()->setCurrentTranslation($this->language());
 
 			$key = $this->requestBody('key');
 
