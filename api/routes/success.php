@@ -9,7 +9,7 @@ return [
 		'method' => 'GET',
 		'action' => function ()
 		{
-			/** @var \Kirby\Cms\Api $this */
+			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
 			try {

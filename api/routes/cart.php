@@ -11,7 +11,7 @@ return [
 		'method' => 'GET',
 		'action' => function (): Cart
 		{
-			/** @var \Kirby\Cms\Api $this */
+			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
 			/** @var \Wagnerwagner\Merx\Cart $cart */
@@ -25,7 +25,7 @@ return [
 		'method' => 'POST',
 		'action' => function (): Cart
 		{
-			/** @var \Kirby\Cms\Api $this */
+			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
 			$allowedKeys = ['key', 'page', 'quantity', 'data'];
@@ -47,7 +47,7 @@ return [
 		'method' => 'PATCH',
 		'action' => function (): Cart
 		{
-			/** @var \Kirby\Cms\Api $this */
+			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
 			$key = $this->requestBody('key');
@@ -70,7 +70,7 @@ return [
 		'method' => 'DELETE',
 		'action' => function (): Cart
 		{
-			/** @var \Kirby\Cms\Api*/
+			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
 			$key = $this->requestBody('key');

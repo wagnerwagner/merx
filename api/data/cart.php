@@ -4,7 +4,7 @@ use Wagnerwagner\Merx\Cart;
 
 return [
 	'cart' => function(): Cart {
-		/** @var \Kirby\Cms\Api $this */
+		/** @var \Kirby\Api\Api $this */
 		return cart();
 	}
 ];

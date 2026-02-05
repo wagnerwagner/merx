@@ -1,6 +1,5 @@
 <?php
 
-use Kirby\Cms\Api;
 use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
 use Wagnerwagner\Merx\Tax;
@@ -9,7 +8,7 @@ return [
 	'fields' => [
 		'products' => function (ProductList $productList): ?array
 		{
-			/** @var Api $this */
+			/** @var \Kirby\Api\Api $this */
 			$listItems = $productList->filterByType('product');
 			return $listItems->count() === 0 ? null : [
 				'items' => $this->collection('listitems', $listItems)->toArray(),
@@ -18,7 +17,7 @@ return [
 		},
 		'shippings' => function (ProductList $productList): ?array
 		{
-			/** @var Api $this */
+			/** @var \Kirby\Api\Api $this */
 			$listItems = $productList->filterByType('shipping');
 			return $listItems->count() === 0 ? null : [
 				'items' => $this->collection('listitems', $listItems)->toArray(),
@@ -27,7 +26,7 @@ return [
 		},
 		'quantity' => fn (ProductList $productList): int => $productList->quantity(),
 		'taxRates' => fn (ProductList $productList): array => array_values(array_map(function (Tax $tax) {
-			/** @var Api $this */
+			/** @var \Kirby\Api\Api $this */
 			return $this->model('tax', $tax)->toArray();
 		}, $productList->taxRates())),
 		'total' => fn (ProductList $productList): ?Price => $productList->total(),

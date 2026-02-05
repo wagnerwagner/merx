@@ -11,7 +11,7 @@ return [
 		'method' => 'POST',
 		'action' => function (): array
 		{
-			/** @var \Kirby\Cms\Api $this */
+			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
 			$payload = @file_get_contents('php://input');
