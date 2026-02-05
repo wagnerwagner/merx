@@ -248,8 +248,8 @@ class Merx
 			}
 
 			// cleaning up and secure post data
-			$data = array_map(function (string $item) {
-				return Escape::html(Str::trim($item));
+			$data = array_map(function ($item) {
+				return is_string($item) ? Escape::html(Str::trim($item)) : $item;
 			}, $data);
 
 			// get cart

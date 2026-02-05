@@ -137,14 +137,6 @@ class Cart extends ProductList
 	{
 		$amount = $this->total()->toFloat();
 		if ($amount === 0.0) {
-			// set language for single language installations
-			if (!option('languages', false) && option('locale', false)) {
-				$locale = \Kirby\Toolkit\Locale::normalize(option('locale'));
-				$lang = substr($locale[LC_ALL] ?? $locale[LC_MESSAGES], 0, 2);
-				kirby()->setCurrentTranslation($lang);
-				kirby()->setCurrentLanguage($lang);
-			}
-
 			throw new Exception([
 				'key' => 'merx.emptycart',
 				'httpCode' => 400,
