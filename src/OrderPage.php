@@ -21,7 +21,7 @@ use Wagnerwagner\Merx\ProductList;
  * @method \Kirby\Content\Field payPalOrderId()
  * @method \Kirby\Content\Field stripePaymentIntentId()
  * @method \Kirby\Content\Field redirect() URL the user is redirected to
- * @method \Kirby\Content\Field invoiceNumber()
+ * @method \Kirby\Content\Field orderNumber() Sequential number for each order. Can be customized with wagnerwagner.merx.orderNumber option.
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
@@ -29,11 +29,11 @@ use Wagnerwagner\Merx\ProductList;
 class OrderPage extends Page
 {
 	/**
-	 * Returns invoiceNumber
+	 * Returns order number
 	 */
 	public function title(): Field
 	{
-		return new Field($this, 'title', $this->invoiceNumber());
+		return new Field($this, 'title', $this->orderNumber());
 	}
 
 	/**

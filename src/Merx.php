@@ -389,8 +389,8 @@ class Merx
 			$virtualOrderPageArray['draft'] = false;
 			$virtualOrderPageArray['content']['created'] = date('c');
 
-			if (is_callable(option('wagnerwagner.merx.invoiceNumber'))) {
-				$virtualOrderPageArray['content']['invoiceNumber'] = option('wagnerwagner.merx.invoiceNumber')($virtualOrderPage);
+			if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
+				$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
 			}
 
 			/** @var OrderPage $orderPage */
