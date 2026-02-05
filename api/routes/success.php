@@ -1,7 +1,5 @@
 <?php
 
-use Kirby\Toolkit\I18n;
-
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [

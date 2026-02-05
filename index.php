@@ -22,11 +22,6 @@ function cart(array $data = []): Cart
 	return new Cart($data);
 }
 
-function formatIBAN(string $iban): string
-{
-	return Merx::formatIBAN($iban);
-}
-
 App::plugin(
 	name: 'wagnerwagner/merx',
 	extends: [
@@ -42,8 +37,8 @@ App::plugin(
 				return array_merge(
 					include __DIR__ . '/api/routes/cart.php',
 					include __DIR__ . '/api/routes/checkout.php',
-					include __DIR__ . '/api/routes/client-secret.php',
 					include __DIR__ . '/api/routes/hooks.php',
+					include __DIR__ . '/api/routes/stripe-client-secret.php',
 					include __DIR__ . '/api/routes/success.php',
 				);
 			},
@@ -115,7 +110,7 @@ App::plugin(
 			'order' => \Wagnerwagner\Merx\OrderPage::class,
 		],
 		'siteMethods' => [
-		  'cart' =>
+			'cart' =>
 				/** Current cart of user */
 				fn (): Cart => cart(),
 			'checkoutPage' =>
@@ -133,7 +128,7 @@ App::plugin(
 			'taxRules' =>
 				/** Pricing rules as defined in wagnerwagner.merx.taxRules */
 				fn (): TaxRules => Merx::taxRules(),
-	  ]
+		]
 	],
 	license: function (Plugin $plugin) {
 		return new License($plugin);

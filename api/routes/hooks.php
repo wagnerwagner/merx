@@ -1,6 +1,5 @@
 <?php
 
-use Kirby\Toolkit\I18n;
 use Wagnerwagner\Merx\StripePayment;
 
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */

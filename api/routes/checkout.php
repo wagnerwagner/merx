@@ -1,7 +1,5 @@
 <?php
 
-use Kirby\Toolkit\I18n;
-
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [
@@ -21,13 +19,17 @@ return [
 			$this->kirby()->setCurrentTranslation($this->language());
 
 			$data = $this->requestBody();
-			$paymentIntentId = kirby()->session()->get('wagnerwagner.merx.stripePaymentIntentId', '');
-			$data = array_merge($data, [
-				'stripePaymentIntentId' => $paymentIntentId,
-			]);
 
 			$merx = merx();
+
 			$data['paymentMethod'] = $data['paymentMethod'] ?? $data['paymentmethod'] ?? $data['payment-method'] ?? null;
+
+			if ($data['paymentMethod'] === 'stripe-elements') {
+				$paymentIntentId = kirby()->session()->get('wagnerwagner.merx.stripePaymentIntentId', '');
+				$data = array_merge($data, [
+					'stripePaymentIntentId' => $paymentIntentId,
+				]);
+			}
 
 			$redirectUrl = $merx->initializeOrder($data);
 

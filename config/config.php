@@ -22,10 +22,10 @@ return [
 			'taxIncluded' => true,
 		],
 	],
-	'invoiceNumber' => function (OrderPage $virtualOrderPage): int
+	'orderNumber' => function (OrderPage $virtualOrderPage): int
 	{
 		$lastOrder = $virtualOrderPage->siblings()->listed()->last();
-		return ($lastOrder?->invoiceNumber()->toInt() ?? 0) + 1;
+		return ($lastOrder?->orderNumber()->toInt() ?? 0) + 1;
 	},
 	'paypal.applicationContext' => [],
 	'paypal.live.clientID' => '',
@@ -38,5 +38,6 @@ return [
 	'stripe.test.publishable_key' => '',
 	'stripe.test.secret_key' => '',
 	'stripe.webhook_signing_secret' => '',
+	'stripe.paymentIntentParameters' => [],
 	'gateways' => [],
 ];

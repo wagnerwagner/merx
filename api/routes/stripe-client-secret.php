@@ -4,19 +4,14 @@
 
 return [
 	[
-		'pattern' => $endpoint . '/client-secret',
+		'pattern' => $endpoint . '/stripe-client-secret',
 		'auth' => false,
 		'action' => function (): array
 		{
 				/** @var \Kirby\Api\Api $this */
-				$paymentMethod = $this->requestQuery('payment-method', 'card');
-				$params = [
-						'payment_method_types' => [$paymentMethod],
-				];
-
-				if ($paymentMethod === 'sepa_debit') {
-					$params['capture_method'] = 'automatic';
-				}
+				$params = option('wagnerwagner.merx.stripe.paymentIntentParameters', [
+					'automatic_payment_methods' => ['enabled' => true],
+				]);
 
 				/** @var \Wagnerwagner\Merx\Cart $cart */
 				$cart = $this->cart();

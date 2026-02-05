@@ -119,71 +119,7 @@ Gateways::$gateways['paypal'] = [
 	}
 ];
 
-/**
- * Credit Card payment gateway using Stripe
- */
-Gateways::$gateways['credit-card'] = [
-	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		return Gateways::completeStripePayment($virtualOrderPage, $data);
-	},
-];
-
-Gateways::$gateways['sepa-debit'] = [
-	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		return Gateways::completeStripePayment($virtualOrderPage, $data);
-	},
-];
-
-Gateways::$gateways['klarna'] = [
-	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-		$email = $virtualOrderPage->email()->toString();
-		$country = $virtualOrderPage->country()->toString();
-
-		$cart = new Cart();
-		$paymentIntent = $cart->getStripePaymentIntent([
-			'payment_method_types' => ['klarna'],
-			'confirm' => true,
-			'payment_method_data' => [
-				'type' => 'klarna',
-				'billing_details' => [
-					'email' => $email,
-					'address' => [
-						'country' => $country,
-					],
-				],
-			],
-			'return_url' => Merx::returnUrl(),
-		]);
-
-		$virtualOrderPage->version()->update([
-			'redirect' => $paymentIntent->next_action->redirect_to_url->url,
-		]);
-		return $virtualOrderPage;
-	},
-	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		$virtualOrderPage = Gateways::completeStripePayment($virtualOrderPage, $data);
-		return $virtualOrderPage;
-	},
-];
-
-Gateways::$gateways['ideal'] = [
-	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-		$cart = new Cart();
-		$paymentIntent = $cart->getStripePaymentIntent([
-			'payment_method_types' => ['ideal'],
-			'capture_method' => 'automatic',
-			'confirm' => true,
-			'payment_method_data' => [
-				'type' => 'ideal',
-			],
-			'return_url' => Merx::returnUrl(),
-		]);
-
-		$virtualOrderPage->version()->update([
-			'redirect' => $paymentIntent->next_action->redirect_to_url->url,
-		]);
-		return $virtualOrderPage;
-	},
+Gateways::$gateways['stripe-elements'] = [
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
 		$virtualOrderPage = Gateways::completeStripePayment($virtualOrderPage, $data);
 		return $virtualOrderPage;

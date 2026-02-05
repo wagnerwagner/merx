@@ -56,9 +56,9 @@ class StripePayment
 			return $event;
 		} catch(\UnexpectedValueException $e) {
 			// Invalid payload
-		  http_response_code(400);
-		  echo json_encode(['Error parsing payload: ' => $e->getMessage()]);
-		  exit();
+			http_response_code(400);
+			echo json_encode(['Error parsing payload: ' => $e->getMessage()]);
+			exit();
 		} catch(\Stripe\Exception\SignatureVerificationException $e) {
 			// Invalid signature
 			http_response_code(400);
@@ -82,8 +82,6 @@ class StripePayment
 
 		$intent = PaymentIntent::create(array_merge([
 			'amount' => round($amount * 100),
-			'capture_method' => 'manual',
-			'payment_method_types' => ['card'],
 		], $params), $options);
 
 		return $intent;
