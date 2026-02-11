@@ -9,9 +9,7 @@ return [
 		'action' => function (): array
 		{
 				/** @var \Kirby\Api\Api $this */
-				$params = option('wagnerwagner.merx.stripe.paymentIntentParameters', [
-					'automatic_payment_methods' => ['enabled' => true],
-				]);
+				$params = option('wagnerwagner.merx.stripe.paymentIntentParameters', []);
 
 				/** @var \Wagnerwagner\Merx\Cart $cart */
 				$cart = $this->cart();
