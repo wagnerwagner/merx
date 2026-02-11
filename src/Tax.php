@@ -55,13 +55,11 @@ class Tax extends Obj
 	}
 
 	/**
-	 * Converts the tax rate or price to a formatted string
-	 *
-	 * @param string $key Use `rate` to get tax rate as formatted percent. Use `price` to get tax price as formatted currency.
+	 * Converts the price to a formatted string
 	 */
-	public function toString(string $key = 'price'): string
+	public function toString(): string
 	{
-		return Merx::formatCurrency($this->$key ?? 0, $this->currency);
+		return Merx::formatCurrency($this->price ?? 0, $this->currency);
 	}
 
 	public function __toString(): string
