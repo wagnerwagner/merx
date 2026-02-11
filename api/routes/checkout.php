@@ -21,9 +21,12 @@ return [
 			$data = $this->requestBody();
 
 			$merx = merx();
+			$cart = $merx->cart();
 
 			$data['paymentGateway'] = $data['paymentGateway'] ?? $data['paymentgateway'] ?? $data['payment-gateway'] ?? null;
 
+			$stripePaymentIntent = ($data['paymentGateway'] === 'stripe-elements') ?  $cart->getStripePaymentIntent(option('wagnerwagner.merx.stripe.paymentIntentParameters', [])) : null;
+			$data['stripePaymentIntentId'] = $stripePaymentIntent->id;
 			$redirectUrl = $merx->initializeOrder($data);
 
 			if ($this->kirby()->visitor()->acceptsMimeType('application/json')) {
@@ -31,6 +34,7 @@ return [
 					'status' => 'redirect',
 					'message' => 'redirect',
 					'code' => 303,
+					'stripeClientSecret' => $stripePaymentIntent->client_secret,
 					'redirectUrl' => $redirectUrl,
 				];
 			}

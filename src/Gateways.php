@@ -127,14 +127,6 @@ Gateways::$gateways['paypal'] = [
 ];
 
 Gateways::$gateways['stripe-elements'] = [
-	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-		$paymentIntentId = kirby()->session()->pull('wagnerwagner.merx.stripePaymentIntentId');
-		$virtualOrderPage->version()->update([
-			'stripePaymentIntentId' => $paymentIntentId,
-		]);
-
-		return $virtualOrderPage;
-	},
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
 		$virtualOrderPage = Gateways::completeStripePayment($virtualOrderPage, $data);
 		return $virtualOrderPage;
