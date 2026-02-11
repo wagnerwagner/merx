@@ -23,7 +23,7 @@ return [
 								return $orderPage->update([
 									'paymentDetails' => (array)$paymentIntent->toArray(),
 									'paymentComplete' => true,
-									'paidDate' => date('c'),
+									'datePaid' => date('c'),
 								]);
 							});
 						}

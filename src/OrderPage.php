@@ -14,8 +14,8 @@ use Wagnerwagner\Merx\ProductList;
  * This model is used to store and validate order data.
  *
  * @method \Kirby\Content\Field email() User’s email address
- * @method \Kirby\Content\Field created() Date, when the order was created (date('c')).
- * @method \Kirby\Content\Field paidDate() Date, when the order was paid (date('c')).
+ * @method \Kirby\Content\Field dateCreated() Date, when the order was created (date('c')).
+ * @method \Kirby\Content\Field datePaid() Date, when the order was paid (date('c')).
  * @method \Kirby\Content\Field paymentComplete() True, when payment is complete
  * @method \Kirby\Content\Field paymentDetails() Details from the payment provider. Array stored as yaml
  * @method \Kirby\Content\Field payPalOrderId()

@@ -1,6 +1,6 @@
 title: field.order
 
-num: '{{ page.created.toDate("YmdHis") }}'
+num: '{{ page.dateCreated.toDate("YmdHis") }}'
 
 navigation:
   sortBy: num desc

@@ -9,8 +9,8 @@ image: false
 columns:
   email:
     value: "{{ page.email }}"
-  created:
-    value: "{{ page.created.toDate('c') }}"
+  dateCreated:
+    value: "{{ page.dateCreated.toDate('c') }}"
   total:
     value: "{{ page.total }}"
   payment:
