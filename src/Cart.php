@@ -159,8 +159,8 @@ class Cart extends ProductList
 		$kirby = App::instance();
 		$kirby->trigger('wagnerwagner.merx.cart.delete:before', ['cart' => $this]);
 		$kirby->session()->remove($this->sessionName);
-		$kirby->trigger('wagnerwagner.merx.cart.delete:after', ['cart' => $this]);
 		$this->data = [];
+		$kirby->trigger('wagnerwagner.merx.cart.delete:after', ['cart' => $this]);
 	}
 
 
