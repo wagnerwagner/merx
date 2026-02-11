@@ -3,7 +3,20 @@ fields:
   dateCreated:
     type: date
     width: 1/2
-    disabled: true
+    time:
+      display: HH:mm:ss
+      step:
+        unit: second
+        size: 1
+    translate: false
+  datePaid:
+    type: date
+    width: 1/2
+    time:
+      display: HH:mm:ss
+      step:
+        unit: second
+        size: 1
     translate: false
   items:
     extends: fields/list-items
