@@ -40,13 +40,13 @@ class PayPalPayment
 			$params,
 		);
 		if (in_array(substr($response->code(), 0, 1), ['4', '5'])) {
-			throw new Exception([
-				'key' => 'merx.paypalError',
-				'httpCode' => $response->code(),
-				'details' => [
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: $response->code(),
+				details: [
 					'paypalResponse' => $response->json(),
 				],
-			]);
+			);
 		}
 		return $response->json(true);
 	}

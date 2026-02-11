@@ -137,10 +137,10 @@ class Cart extends ProductList
 	{
 		$amount = $this->total()->toFloat();
 		if ($amount === 0.0) {
-			throw new Exception([
-				'key' => 'merx.emptycart',
-				'httpCode' => 400,
-			]);
+			throw new Exception(
+				key: 'merx.emptycart',
+				httpCode: 400,
+			);
 		}
 
 		$params = array_merge([

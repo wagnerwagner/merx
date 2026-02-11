@@ -260,25 +260,21 @@ class Merx
 
 			// check cart
 			if ($cart->count() <= 0) {
-				throw new Exception([
-					'key' => 'merx.emptycart',
-					'httpCode' => 500,
-					'details' => [
-						'message' => 'Cart contains zero items.',
-					],
-					'data' => [
+				throw new Exception(
+					key: 'merx.emptycart',
+					data: [
 						'cart' => $cart->toArray(),
 					],
-				]);
+				);
 			}
 
 			// check if paymentMethod exists
 			$paymentMethod = $data['paymentMethod'] ?? null;
 			if (Str::length($paymentMethod) === 0) {
-				throw new Exception([
-					'key' => 'merx.noPaymentMethod',
-					'httpCode' => 400,
-				]);
+				throw new Exception(
+					key: 'merx.noPaymentMethod',
+					httpCode: 400,
+				);
 			}
 
 			// add cart to content
@@ -295,11 +291,11 @@ class Merx
 			// check for validation errors
 			$errors = $virtualOrderPage->errors();
 			if (sizeof($errors) > 0) {
-				throw new Exception([
-					'key' => 'merx.fieldsvalidation',
-					'httpCode' => 400,
-					'details' => $errors,
-				]);
+				throw new Exception(
+					key: 'merx.fieldsvalidation',
+					httpCode: 400,
+					details: $errors,
+				);
 			}
 
 			// run gateway
@@ -321,17 +317,17 @@ class Merx
 			return $redirect;
 		} catch (\Exception $ex) {
 			if (get_class($ex) !== 'Kirby\Exception\Exception') {
-				$ex = new Exception([
-					'key' => 'merx.initializeOrder',
-					'httpCode' => 500,
-					'details' => [
+				$ex = new Exception(
+					key: 'merx.initializeOrder',
+					httpCode: 500,
+					details: [
 						'message' => $ex->getMessage(),
 						'code' => $ex->getCode(),
 						'file' => $ex->getFile(),
 						'line' => $ex->getLine(),
 					],
-					'previous' => $ex,
-				]);
+					previous: $ex,
+				);
 			}
 			if (option('wagnerwagner.merx.logging') === true) {
 				Logger::log($ex, 'error');
@@ -408,17 +404,17 @@ class Merx
 			return $orderPage;
 		} catch (\Exception $ex) {
 			if (get_class($ex) !== 'Kirby\Exception\Exception') {
-				$ex = new Exception([
-					'key' => 'merx.createOrder',
-					'httpCode' => 500,
-					'details' => [
+				$ex = new Exception(
+					key: 'merx.createOrder',
+					httpCode: 500,
+					details: [
 						'message' => $ex->getMessage(),
 						'code' => $ex->getCode(),
 						'file' => $ex->getFile(),
 						'line' => $ex->getLine(),
 					],
-					'previous' => $ex,
-				]);
+					previous: $ex,
+				);
 			}
 			if (option('wagnerwagner.merx.logging') === true) {
 				Logger::log($ex, 'error');

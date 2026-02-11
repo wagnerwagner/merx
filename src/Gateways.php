@@ -102,10 +102,10 @@ Gateways::$gateways['paypal'] = [
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
 		// check if user canceled payment
 		if (!isset($data['PayerID'])) {
-			throw new Exception([
-				'key' => 'merx.paymentCanceled',
-				'httpCode' => 400,
-			]);
+			throw new Exception(
+				key: 'merx.paymentCanceled',
+				httpCode: 400,
+			);
 		}
 
 		// execute payment
