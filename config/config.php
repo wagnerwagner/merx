@@ -38,6 +38,9 @@ return [
 	'stripe.test.publishable_key' => '',
 	'stripe.test.secret_key' => '',
 	'stripe.webhook_signing_secret' => '',
-	'stripe.paymentIntentParameters' => [],
+	'stripe.paymentIntentParameters' => [
+		'capture_method' => 'manual',
+		'automatic_payment_methods' => ['enabled' => true],
+	],
 	'gateways' => [],
 ];
