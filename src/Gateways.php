@@ -67,7 +67,7 @@ class Gateways
 		if ($paymentIntent->status === 'succeeded') {
 			$virtualOrderPage->version()->update([
 				'paymentComplete' => true,
-				'paidDate' => date('c'),
+				'datePaid' => date('c'),
 			]);
 		}
 
@@ -113,7 +113,7 @@ Gateways::$gateways['paypal'] = [
 		$virtualOrderPage->version()->update([
 			'paymentDetails' => (array)$paypalResponse,
 			'paymentComplete' => true,
-			'paidDate' => date('c'),
+			'datePaid' => date('c'),
 		]);
 		return $virtualOrderPage;
 	}

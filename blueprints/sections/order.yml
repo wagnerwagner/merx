@@ -1,6 +1,6 @@
 type: fields
 fields:
-  created:
+  dateCreated:
     type: date
     width: 1/2
     disabled: true
@@ -15,10 +15,10 @@ fields:
       en: >
         Invoice Number: {{ page.invoiceNumber }}<br>
         Total: {{ page.total.toString }}<br>
-        Invoice Date: {{ page.created }}<br>
-        Paid Date: {{ page.paidDate }}<br>
+        Invoice Date: {{ page.dateCreated }}<br>
+        Paid Date: {{ page.datePaid }}<br>
       de: >
         Rechnungsnummer: {{ page.invoiceNumber }}<br>
         Summe: {{ page.total.toString }}<br>
-        Rechnungsdatum: {{ page.created }}<br>
-        Bezahldatum: {{ page.paidDate }}<br>
+        Rechnungsdatum: {{ page.dateCreated }}<br>
+        Bezahldatum: {{ page.datePaid }}<br>
