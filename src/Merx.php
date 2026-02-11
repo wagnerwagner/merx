@@ -9,6 +9,7 @@ use Wagnerwagner\Merx\Cart;
 use Kirby\Toolkit\Str;
 use Kirby\Toolkit\Escape;
 use Kirby\Exception\Exception;
+use Kirby\Http\Url;
 use Kirby\Toolkit\Locale;
 
 /**
@@ -53,14 +54,21 @@ class Merx
 	/**
 	 * Url to be used to complete the payment
 	 *
-	 * @return string e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6
+	 * Includes the session token and language code (for multilang pages)
+	 *
+	 * @return string e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6&language=de
 	 */
 	static function returnUrl(): string
 	{
 		$kirby = kirby();
-		$tokenQuery = Merx::$sessionTokenParameterName . '=' . $kirby->session()->token();
 		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('wagnerwagner.merx.api.endpoint', 'shop') . '/success';
-		return $apiEndpint . '?' . $tokenQuery;
+		$url = Url::build([
+			'query' => [
+				Merx::$sessionTokenParameterName => $kirby->session()->token(),
+				'language' => $kirby->multilang() ? $kirby->currentLanguage()->code() : null,
+			]
+		], $apiEndpint);
+		return $url;
 	}
 
 
