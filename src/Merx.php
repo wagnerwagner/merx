@@ -60,7 +60,7 @@ class Merx
 	 */
 	static function returnUrl(): string
 	{
-		$kirby = kirby();
+		$kirby = App::instance();
 		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('wagnerwagner.merx.api.endpoint', 'shop') . '/success';
 		$url = Url::build([
 			'query' => [
@@ -245,7 +245,7 @@ class Merx
 	{
 		try {
 			$redirect = $this->returnUrl();
-			$kirby = kirby();
+			$kirby = App::instance();
 
 			// cleaning up and secure post data
 			$data = array_map(function ($item) {
@@ -347,17 +347,17 @@ class Merx
 	 */
 	public function createOrder(array $data = []): OrderPage
 	{
+		$kirby = App::instance();
+
 		try {
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
 			$gateway = $this->getGateway($virtualOrderPage->paymentMethod()->toString());
 
-			kirby()->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
+			$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
 
 			if (is_callable($gateway['completePayment'])) {
 				$gateway['completePayment']($virtualOrderPage, $data);
 			}
-
-			$kirby = kirby();
 
 			// Set to default language to make sure content is saved in default language
 			$currentLanguageCode = null;
@@ -384,6 +384,7 @@ class Merx
 			$virtualOrderPageArray['model'] = 'order';
 			$virtualOrderPageArray['draft'] = false;
 			$virtualOrderPageArray['content']['dateCreated'] = date('c');
+			$virtualOrderPageArray['translations'] = null;
 
 			if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
 				$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
@@ -399,7 +400,7 @@ class Merx
 			$this->cart->delete();
 			$kirby->session()->remove('wagnerwagner.merx.virtualOrderPage');
 
-			kirby()->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
+			$kirby->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
 
 			return $orderPage;
 		} catch (\Exception $ex) {

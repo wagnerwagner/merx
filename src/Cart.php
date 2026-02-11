@@ -25,14 +25,14 @@ class Cart extends ProductList
 	 */
 	public function __construct(array $data = [])
 	{
-		$kirby = kirby();
+		$kirby = App::instance();
 		if (count($data) === 0 && is_array($kirby->session()->get($this->sessionName))) {
 			$data = $kirby->session()->get($this->sessionName);
 		}
 		parent::__construct($data, true);
-		kirby()->trigger('wagnerwagner.merx.cart.create:before', ['cart' => $this, 'data' => $data]);
+		$kirby->trigger('wagnerwagner.merx.cart.create:before', ['cart' => $this, 'data' => $data]);
 		$this->save();
-		kirby()->trigger('wagnerwagner.merx.cart.create:after', ['cart' => $this]);
+		$kirby->trigger('wagnerwagner.merx.cart.create:after', ['cart' => $this]);
 	}
 
 	/**
@@ -49,8 +49,9 @@ class Cart extends ProductList
 	 */
 	public function add(string|array|ListItem $data): static
 	{
+		$kirby = App::instance();
 		try {
-			kirby()->trigger('wagnerwagner.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
+			$kirby->trigger('wagnerwagner.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
 			parent::add($data);
 
 			// if ($this->currency() === false) {
@@ -63,7 +64,7 @@ class Cart extends ProductList
 			// }
 
 			$this->save();
-			kirby()->trigger('wagnerwagner.merx.cart.add:after', ['cart' => $this]);
+			$kirby->trigger('wagnerwagner.merx.cart.add:after', ['cart' => $this]);
 			return $this;
 		} catch (\Exception $ex) {
 			$key = null;
@@ -92,10 +93,11 @@ class Cart extends ProductList
 	 */
 	public function remove(string $key): static
 	{
-		kirby()->trigger('wagnerwagner.merx.cart.remove:before', ['cart' => $this, 'key' => $key]);
+		$kirby = App::instance();
+		$kirby->trigger('wagnerwagner.merx.cart.remove:before', ['cart' => $this, 'key' => $key]);
 		parent::remove($key);
 		$this->save();
-		kirby()->trigger('wagnerwagner.merx.cart.remove:after', ['cart' => $this, 'key' => $key]);
+		$kirby->trigger('wagnerwagner.merx.cart.remove:after', ['cart' => $this, 'key' => $key]);
 		return $this;
 	}
 
@@ -105,11 +107,12 @@ class Cart extends ProductList
 	 */
 	public function updateItem(string $key, array $data): static
 	{
+		$kirby = App::instance();
 		try {
-			kirby()->trigger('wagnerwagner.merx.cart.updateItem:before', ['cart' => $this, 'key' => $key, 'data' => $data]);
+			$kirby->trigger('wagnerwagner.merx.cart.updateItem:before', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			parent::updateItem($key, $data);
 			$this->save();
-			kirby()->trigger('wagnerwagner.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
+			$kirby->trigger('wagnerwagner.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			return $this;
 		} catch (\Exception $ex) {
 			throw new Exception([
@@ -166,11 +169,12 @@ class Cart extends ProductList
 
 	private function save(): static
 	{
+		$kirby = App::instance();
 		if ($this->count() === 0) {
-			kirby()->session()->remove($this->sessionName);
+			$kirby->session()->remove($this->sessionName);
 		} else {
 			$sessionData = $this->toArray(fn (ListItem $item) => $item->toSessionArray());
-			kirby()->session()->set($this->sessionName, $sessionData);
+			$kirby->session()->set($this->sessionName, $sessionData);
 		}
 		return $this;
 	}
