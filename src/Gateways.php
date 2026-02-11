@@ -3,7 +3,6 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
-use Kirby\Data\Data;
 
 /**
  * Gateway class dummy holder
