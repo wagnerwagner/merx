@@ -247,14 +247,6 @@ class Merx
 			$redirect = $this->returnUrl();
 			$kirby = kirby();
 
-			// set language for single language installations
-			if (!option('languages', false) && option('locale', false)) {
-				$locale = \Kirby\Toolkit\Locale::normalize(option('locale'));
-				$lang = substr($locale[LC_ALL] ?? $locale[LC_MESSAGES], 0, 2);
-				$kirby->setCurrentTranslation($lang);
-				$kirby->setCurrentLanguage($lang);
-			}
-
 			// cleaning up and secure post data
 			$data = array_map(function ($item) {
 				return is_string($item) ? Escape::html(Str::trim($item)) : $item;
