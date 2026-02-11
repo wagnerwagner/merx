@@ -58,7 +58,7 @@ final class MerxTest extends TestCase
 	public function testinitializeOrderEmpty(): void
 	{
 		$merx = new Merx();
-		$this->expectExceptionCode('error.merx.noPaymentMethod');
+		$this->expectExceptionCode('error.merx.noPaymentGateway');
 		$merx->initializeOrder([]);
 	}
 }

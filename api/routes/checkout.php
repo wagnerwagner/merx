@@ -8,7 +8,7 @@ return [
 		'auth' => false,
 		'method' => 'POST',
 		/** Required post data keys:
-		 * `paymentMethod` or `paymentmethod` or `payment-method`
+		 * `paymentGateway` or `paymentgateway` or `payment-gateway`
 		 * and all fields required by the order blueprint
 		 *
 		 * @return array Array with redirect url when request header accepts json, otherwise redirects with code 303.
@@ -22,14 +22,7 @@ return [
 
 			$merx = merx();
 
-			$data['paymentMethod'] = $data['paymentMethod'] ?? $data['paymentmethod'] ?? $data['payment-method'] ?? null;
-
-			if ($data['paymentMethod'] === 'stripe-elements') {
-				$paymentIntentId = kirby()->session()->get('wagnerwagner.merx.stripePaymentIntentId', '');
-				$data = array_merge($data, [
-					'stripePaymentIntentId' => $paymentIntentId,
-				]);
-			}
+			$data['paymentGateway'] = $data['paymentGateway'] ?? $data['paymentgateway'] ?? $data['payment-gateway'] ?? null;
 
 			$redirectUrl = $merx->initializeOrder($data);
 

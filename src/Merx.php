@@ -199,9 +199,9 @@ class Merx
 	private function getVirtualOrderPageFromSession(): OrderPage
 	{
 		$kirby = App::instance();
-		$orderPageFromSession = $kirby->session()->get('wagnerwagner.merx.virtualOrderPage');
+		$orderPageFromSession = $kirby->session()->pull('wagnerwagner.merx.virtualOrderPage');
 		if (!$orderPageFromSession) {
-			$orderPageFromSession = $kirby->sessionHandler()->getManually($_GET[static::$sessionTokenParameterName])->get('wagnerwagner.merx.virtualOrderPage');
+			$orderPageFromSession = $kirby->sessionHandler()->getManually($_GET[static::$sessionTokenParameterName])->pull('wagnerwagner.merx.virtualOrderPage');
 
 			if (!$orderPageFromSession) {
 				throw new \Exception('Session "wagnerwagner.merx.virtualOrderPage" does not exist.');
@@ -268,11 +268,11 @@ class Merx
 				);
 			}
 
-			// check if paymentMethod exists
-			$paymentMethod = $data['paymentMethod'] ?? null;
-			if (Str::length($paymentMethod) === 0) {
+			// check if paymentGateway exists
+			$paymentGateway = $data['paymentGateway'] ?? null;
+			if (Str::length($paymentGateway) === 0) {
 				throw new Exception(
-					key: 'merx.noPaymentMethod',
+					key: 'merx.noPaymentGateway',
 					httpCode: 400,
 				);
 			}
@@ -299,10 +299,10 @@ class Merx
 			}
 
 			// run gateway
-			$gateway = $this->getGateway($paymentMethod);
+			$gateway = $this->getGateway($paymentGateway);
 			if (is_callable($gateway['initializePayment'])) {
 				/** @var \OrderPage */
-				$virtualOrderPage = $gateway['initializePayment']($virtualOrderPage);
+				$virtualOrderPage = $gateway['initializePayment']($virtualOrderPage, $data);
 				if ($virtualOrderPage->redirect()->isNotEmpty()) {
 					$redirect = (string)$virtualOrderPage->redirect();
 				}
@@ -351,7 +351,7 @@ class Merx
 
 		try {
 			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
-			$gateway = $this->getGateway($virtualOrderPage->paymentMethod()->toString());
+			$gateway = $this->getGateway($virtualOrderPage->paymentGateway()->toString());
 
 			$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
 
@@ -398,7 +398,6 @@ class Merx
 			$kirby->setCurrentLanguage($currentLanguageCode);
 
 			$this->cart->delete();
-			$kirby->session()->remove('wagnerwagner.merx.virtualOrderPage');
 
 			$kirby->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
 
