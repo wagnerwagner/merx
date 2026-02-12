@@ -29,7 +29,7 @@ return [
 	'field.page' => 'Page',
 	'field.payment' => 'Payment',
 	'field.paymentComplete' => 'Payment complete',
-	'field.paymentMethod' => 'Payment method',
+	'field.paymentGateway' => 'Payment method',
 	'field.personalData' => 'Personal Data',
 	'field.price' => 'Price',
 	'field.priceNet' => 'Price (net)',

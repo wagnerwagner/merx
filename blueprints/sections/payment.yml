@@ -1,7 +1,7 @@
 type: fields
 fields:
-  paymentMethod:
-    label: field.paymentMethod
+  paymentGateway:
+    label: field.paymentGateway
     type: text
     required: true
     width: 1/2
