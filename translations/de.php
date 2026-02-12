@@ -10,7 +10,7 @@ return [
 	'error.merx.mixedCurrencies.add' => 'Mixed currencies. Could not add item “{ key }” with currency “{newCurrency}”',
 	'error.merx.mixedCurrencies.currency' => 'Mixed currencies. Could not determine currency. List contains more than one currency. {key}',
 	'error.merx.mixedCurrencies.total' => 'Mixed currencies. Could not calculate total sum with mixed currencies.',
-	'error.merx.noPaymentGateway' => 'Keine Zahlungsmethode angegeben.',
+	'error.merx.noPaymentGateway' => 'Keine Bezahlschnittstelle angegeben.',
 	'error.merx.order.changeNum' => 'Die Position einer vollständigen Bestellung kann nicht geändert werden.',
 	'error.merx.order.changeStatus' => 'Der Status einer vollständigen Bestellung kann nicht geändert werden.',
 	'error.merx.paymentCanceled' => 'Die Bezahlung wurde abgebrochen.',

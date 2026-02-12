@@ -10,7 +10,7 @@ return [
 	'error.merx.mixedCurrencies.add' => 'Mixed currencies. Could not add item “{ key }” with currency “{newCurrency}”',
 	'error.merx.mixedCurrencies.currency' => 'Mixed currencies. Could not determine currency. List contains more than one currency. {key}',
 	'error.merx.mixedCurrencies.total' => 'Mixed currencies. Could not calculate total sum with mixed currencies.',
-	'error.merx.noPaymentGateway' => 'No payment method provided.',
+	'error.merx.noPaymentGateway' => 'No payment gateway provided.',
 	'error.merx.order.changeNum' => 'Sorting number of a complete order cannot be changed.',
 	'error.merx.order.changeStatus' => 'Status of a complete order cannot be changed.',
 	'error.merx.paymentCanceled' => 'You canceled the payment.',
