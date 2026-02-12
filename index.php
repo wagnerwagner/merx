@@ -38,6 +38,7 @@ App::plugin(
 					include __DIR__ . '/api/routes/cart.php',
 					include __DIR__ . '/api/routes/checkout.php',
 					include __DIR__ . '/api/routes/hooks.php',
+					include __DIR__ . '/api/routes/stripe-client-secret.php',
 					include __DIR__ . '/api/routes/success.php',
 				);
 			},
