@@ -4,7 +4,7 @@
 		"Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
 		"This file is @generated automatically"
 	],
-	"content-hash": "d1b717188ffa5d46652b2bb3d9e1f3db",
+	"content-hash": "3a72342e62de0e2575e34d45c7f95a89",
 	"packages": [
 		{
 			"name": "getkirby/composer-installer",
@@ -1627,16 +1627,16 @@
 		},
 		{
 			"name": "getkirby/cms",
-			"version": "5.3.0",
+			"version": "5.3.1",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/getkirby/kirby.git",
-				"reference": "3e1446322398c5b7705a03a9e8ad14920b9bbfa6"
+				"reference": "0ccfcabfbc86fc84127e876c249a75b7a15f1964"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/getkirby/kirby/zipball/3e1446322398c5b7705a03a9e8ad14920b9bbfa6",
-				"reference": "3e1446322398c5b7705a03a9e8ad14920b9bbfa6",
+				"url": "https://api.github.com/repos/getkirby/kirby/zipball/0ccfcabfbc86fc84127e876c249a75b7a15f1964",
+				"reference": "0ccfcabfbc86fc84127e876c249a75b7a15f1964",
 				"shasum": ""
 			},
 			"require": {
@@ -1723,7 +1723,7 @@
 					"type": "custom"
 				}
 			],
-			"time": "2026-02-10T12:03:52+00:00"
+			"time": "2026-02-16T19:34:35+00:00"
 		},
 		{
 			"name": "kelunik/certificate",
@@ -2203,16 +2203,16 @@
 		},
 		{
 			"name": "netresearch/jsonmapper",
-			"version": "v5.0.0",
+			"version": "v5.0.1",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/cweiske/jsonmapper.git",
-				"reference": "8c64d8d444a5d764c641ebe97e0e3bc72b25bf6c"
+				"reference": "980674efdda65913492d29a8fd51c82270dd37bb"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/cweiske/jsonmapper/zipball/8c64d8d444a5d764c641ebe97e0e3bc72b25bf6c",
-				"reference": "8c64d8d444a5d764c641ebe97e0e3bc72b25bf6c",
+				"url": "https://api.github.com/repos/cweiske/jsonmapper/zipball/980674efdda65913492d29a8fd51c82270dd37bb",
+				"reference": "980674efdda65913492d29a8fd51c82270dd37bb",
 				"shasum": ""
 			},
 			"require": {
@@ -2248,9 +2248,9 @@
 			"support": {
 				"email": "cweiske@cweiske.de",
 				"issues": "https://github.com/cweiske/jsonmapper/issues",
-				"source": "https://github.com/cweiske/jsonmapper/tree/v5.0.0"
+				"source": "https://github.com/cweiske/jsonmapper/tree/v5.0.1"
 			},
-			"time": "2024-09-08T10:20:00+00:00"
+			"time": "2026-02-22T16:28:03+00:00"
 		},
 		{
 			"name": "nikic/php-parser",
@@ -3082,16 +3082,16 @@
 		},
 		{
 			"name": "phpunit/phpunit",
-			"version": "11.5.53",
+			"version": "11.5.55",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/sebastianbergmann/phpunit.git",
-				"reference": "a997a653a82845f1240d73ee73a8a4e97e4b0607"
+				"reference": "adc7262fccc12de2b30f12a8aa0b33775d814f00"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/a997a653a82845f1240d73ee73a8a4e97e4b0607",
-				"reference": "a997a653a82845f1240d73ee73a8a4e97e4b0607",
+				"url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/adc7262fccc12de2b30f12a8aa0b33775d814f00",
+				"reference": "adc7262fccc12de2b30f12a8aa0b33775d814f00",
 				"shasum": ""
 			},
 			"require": {
@@ -3164,7 +3164,7 @@
 			"support": {
 				"issues": "https://github.com/sebastianbergmann/phpunit/issues",
 				"security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-				"source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.53"
+				"source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.55"
 			},
 			"funding": [
 				{
@@ -3188,7 +3188,7 @@
 					"type": "tidelift"
 				}
 			],
-			"time": "2026-02-10T12:28:25+00:00"
+			"time": "2026-02-18T12:37:06+00:00"
 		},
 		{
 			"name": "psr/container",
@@ -5731,16 +5731,16 @@
 		},
 		{
 			"name": "webmozart/assert",
-			"version": "2.1.2",
+			"version": "2.1.5",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/webmozarts/assert.git",
-				"reference": "ce6a2f100c404b2d32a1dd1270f9b59ad4f57649"
+				"reference": "79155f94852fa27e2f73b459f6503f5e87e2c188"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/webmozarts/assert/zipball/ce6a2f100c404b2d32a1dd1270f9b59ad4f57649",
-				"reference": "ce6a2f100c404b2d32a1dd1270f9b59ad4f57649",
+				"url": "https://api.github.com/repos/webmozarts/assert/zipball/79155f94852fa27e2f73b459f6503f5e87e2c188",
+				"reference": "79155f94852fa27e2f73b459f6503f5e87e2c188",
 				"shasum": ""
 			},
 			"require": {
@@ -5787,9 +5787,9 @@
 			],
 			"support": {
 				"issues": "https://github.com/webmozarts/assert/issues",
-				"source": "https://github.com/webmozarts/assert/tree/2.1.2"
+				"source": "https://github.com/webmozarts/assert/tree/2.1.5"
 			},
-			"time": "2026-01-13T14:02:24+00:00"
+			"time": "2026-02-18T14:09:36+00:00"
 		}
 	],
 	"aliases": [],
