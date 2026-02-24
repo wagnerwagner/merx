@@ -11,12 +11,13 @@ use Kirby\Cms\Structure;
  *
  * Used in Cart, ProductList and ListItems.
  *
- * @author Tobias Wolf
- * @copyright Wagnerwagner GmbH
- *
  * @method \Kirby\Content\Field prices()
  * @method \Kirby\Content\Field taxRule()
  * @method \Kirby\Content\Field stock()
+ *
+ * @see https://merx.wagnerwagner.de/guide/getting-started/adding-products
+ * @author Tobias Wolf
+ * @copyright Wagnerwagner GmbH
  */
 class ProductPage extends Page
 {

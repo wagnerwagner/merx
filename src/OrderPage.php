@@ -23,6 +23,7 @@ use Wagnerwagner\Merx\ProductList;
  * @method \Kirby\Content\Field redirect() URL the user is redirected to
  * @method \Kirby\Content\Field orderNumber() Sequential number for each order. Can be customized with wagnerwagner.merx.orderNumber option.
  *
+ * @see https://merx.wagnerwagner.de/guide/getting-started/displaying-order
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  */

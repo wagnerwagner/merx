@@ -53,7 +53,7 @@ class License extends \Kirby\Plugin\License
 
 	public function privateLicense(): string
 	{
-		return 'MERX-XXXXXXX-XXXX' . Str::substr($this->licenseKey(), -4);
+		return 'MERX2-XXXXXXX-XXXX' . Str::substr($this->licenseKey(), -4);
 	}
 
 	public function licenseKey(): ?string
@@ -72,7 +72,7 @@ class License extends \Kirby\Plugin\License
 
 	public function isValid(): bool
 	{
-		$licenseArr = Str::split(Str::after($this->licenseKey(), 'MERX-'), '-');
+		$licenseArr = Str::split(Str::after($this->licenseKey(), 'MERX2-'), '-');
 		return self::crossfoot(hexdec($licenseArr[0])) + self::crossfoot(hexdec($licenseArr[1])) === 90;
 	}
 }
