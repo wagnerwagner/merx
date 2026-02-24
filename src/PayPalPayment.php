@@ -102,19 +102,20 @@ class PayPalPayment
 		$siteTitle = (string)site()->title();
 		$access = self::getAccessToken();
 
-		if (option('wagnerwagner.merx.paypal.purchaseUnits')) {
+		$purchaseUnits = [];
+		if (is_callable(option('wagnerwagner.merx.paypal.purchaseUnits'))) {
 			$purchaseUnits = option('wagnerwagner.merx.paypal.purchaseUnits')();
-		} else {
-			$purchaseUnits = [
-				[
-					'description' => $siteTitle,
-					'amount' => [
-						'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
-						'currency_code' => $currency,
-					],
-				],
-			];
 		}
+
+		$purchaseUnits = [...$purchaseUnits, ...[
+			[
+				'description' => $siteTitle,
+				'amount' => [
+					'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
+					'currency_code' => $currency,
+				],
+			],
+		]];
 
 		$returnUrl = Merx::returnUrl();
 

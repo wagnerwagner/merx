@@ -30,7 +30,7 @@ return [
 	'paypal.applicationContext' => [],
 	'paypal.live.clientID' => '',
 	'paypal.live.secret' => '',
-	'paypal.purchaseUnits' => null, /** fn (): array */
+	'paypal.purchaseUnits' => fn (): array => [],
 	'paypal.sandbox.clientID' => '',
 	'paypal.sandbox.secret' => '',
 	'stripe.live.publishable_key' => '',
