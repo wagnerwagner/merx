@@ -79,4 +79,16 @@ final class PriceTest extends TestCase
 		$price = new Price(77.77, null);
 		$this->assertEquals('77.77', (string)$price);
 	}
+
+	public function testUpdatePrice()
+	{
+		$price = new Price(100.0, 0.19, 'default', 'EUR');
+		$price->updatePrice(90.0);
+		$this->assertEquals(90.0, $price->price);
+		$this->assertEquals(75.63, $price->priceNet);
+		$this->assertEquals(14.37, $price->tax->price);
+		$this->assertEquals(0.19, $price->tax->rate);
+		$this->assertEquals('EUR', $price->currency);
+		$this->assertEquals('default', $price->pricingRule->key);
+	}
 }

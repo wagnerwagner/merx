@@ -151,9 +151,16 @@ class ListItem extends Obj
 		return $listItem;
 	}
 
-	public function updatePrice(): ListItem
+	/**
+	 * Updates the price according to the page’s price definition
+	 *
+	 * @return self
+	 */
+	public function updatePrice(): self
 	{
-		$this->price = $this->page->price(quantity: $this->quantity);
+		if ($this->page instanceof ProductPage) {
+			$this->price = $this->page->price(pricingRule: $this->price->pricingRule, quantity: $this->quantity);
+		}
 		return $this;
 	}
 
@@ -191,7 +198,7 @@ class ListItem extends Obj
 	 */
 	public function toSessionArray(): array
 	{
-		$array = (array) $this;
+		$array = (array)$this;
 
 		// remove price definition, when page is present
 		if ($array['page'] instanceof Page) {
