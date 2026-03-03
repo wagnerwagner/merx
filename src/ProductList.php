@@ -52,6 +52,11 @@ class ProductList extends ListItems
 			$listItem->$dataKey = $val;
 		}
 
+		// Update the price according to the quantity. Required for volume-based pricing.
+		if (!array_key_exists('price', $data) && $listItem->page instanceof ProductPage) {
+			$listItem->updatePrice($listItem->quantity);
+		}
+
 		if ($listItem->quantity === 0.0) {
 			$this->remove($key);
 		}

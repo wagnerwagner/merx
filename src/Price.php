@@ -72,11 +72,11 @@ class Price extends Obj
 
 		if ($taxRate) {
 			if ($taxIncluded === true) {
+				$this->price = $this->price;
 				$this->priceNet = round($this->price / (1 + $taxRate), $roundingPrecision);
-				$this->price = round($this->price, $roundingPrecision);
 			} else {
-				$this->priceNet = $this->price;
 				$this->price = round($this->priceNet * (1 + $taxRate), $roundingPrecision);
+				$this->priceNet = $this->price;
 			}
 		}
 
@@ -109,6 +109,42 @@ class Price extends Obj
 			pricingRule: $this->pricingRule,
 			currency: $this->currency,
 		);
+	}
+
+	/**
+	 * Updates the net price and recalculates the price and tax
+	 *
+	 * @param float $priceNet New net price (without tax)
+	 * @return self
+	 */
+	public function updateNetPrice(float $priceNet): self
+	{
+		$this->priceNet = $priceNet;
+		$this->price = round($this->priceNet * (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
+		$this->tax = new Tax(
+			priceNet: $this->priceNet,
+			rate: $this->tax?->rate,
+			currency: $this->currency,
+		);
+		return $this;
+	}
+
+	/**
+	 * Updates the price and recalculates the net price and tax
+	 *
+	 * @param float $price New gross price (including tax)
+	 * @return self
+	 */
+	public function updatePrice(float $price): self
+	{
+		$this->price = $price;
+		$this->priceNet = round($this->price / (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
+		$this->tax = new Tax(
+			priceNet: $this->priceNet,
+			rate: $this->tax?->rate,
+			currency: $this->currency,
+		);
+		return $this;
 	}
 
 	/**

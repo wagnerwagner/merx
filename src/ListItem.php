@@ -84,7 +84,7 @@ class ListItem extends Obj
 		} else {
 			// Update price by page’s definition
 			if ($this->page instanceof ProductPage && $priceUpdate === true) {
-				$this->price = $this->page->price();
+				$this->price = $this->page->price(quantity: $quantity);
 			}
 		}
 
@@ -149,6 +149,12 @@ class ListItem extends Obj
 		}
 
 		return $listItem;
+	}
+
+	public function updatePrice(): ListItem
+	{
+		$this->price = $this->page->price(quantity: $this->quantity);
+		return $this;
 	}
 
 	/**

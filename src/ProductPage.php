@@ -29,8 +29,12 @@ class ProductPage extends Page
 
 	/**
 	 * Converts price content field to Price class
+	 *
+	 * @param null|string|PricingRule $pricingRule Pricing rule to use, or its key as string, or null for default pricing rule
+	 * @param null|float $quantity Quantity used for volume-based pricing
+	 * @return ?Price Price object, or null if no price is found
 	 */
-	public function price(null|string|PricingRule $pricingRule = null): ?Price
+	public function price(null|string|PricingRule $pricingRule = null, null|float $quantity = null): ?Price
 	{
 		if (is_string($pricingRule)) {
 			$pricingRule = Merx::pricingRules()->getRuleByKey($pricingRule);
