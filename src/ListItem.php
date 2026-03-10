@@ -178,7 +178,8 @@ class ListItem extends Obj
 	 */
 	public function total(): ?Price
 	{
-		$pricePerItem = $this->price?->price;
+		$taxIncluded = $this->price?->pricingRule?->taxIncluded;
+		$pricePerItem = $taxIncluded ? $this->price?->price : $this->price?->priceNet;
 
 		if (!is_float($pricePerItem)) {
 			return null;
@@ -190,6 +191,7 @@ class ListItem extends Obj
 			price: $pricePerItem * $this->quantity,
 			tax: $tax?->toFloat(),
 			currency: $this->price?->currency,
+			pricingRule: $this->price?->pricingRule,
 		);
 	}
 

@@ -51,6 +51,7 @@ class ListItems extends Collection
 		$priceNet = 0.0;
 		$taxRate = 0.0;
 		$currency = null;
+		$pricingRule = null;
 		foreach ($this as $listItem) {
 			/** @var ListItem $listItem */
 			$listItemTotal = $listItem->total();
@@ -65,14 +66,16 @@ class ListItems extends Collection
 			$priceNet += (float)$listItemTotal?->priceNet;
 			$taxRate += (float)$tax?->rate;
 			$currency = $currency ?? $listItemTotal?->currency;
+			$pricingRule = $pricingRule ?? $listItemTotal?->pricingRule;
 		}
 
 		$tax = new Tax(priceNet: $priceNet, rate: $taxRate, currency: $currency);
 
 		return new Price(
-			price: $price,
+			price: $pricingRule?->taxIncluded ? $price : $priceNet,
 			tax: $tax,
 			currency: $currency,
+			pricingRule: $pricingRule,
 		);
 	}
 

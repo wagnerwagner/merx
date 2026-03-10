@@ -6,10 +6,11 @@ use Wagnerwagner\Merx\Tax;
 return [
 	'fields' => [
 		'currency' => fn (Price $price): ?string => $price->currency,
-		'price' => fn (Price $price): string => $price->toString(),
+		'price' => fn (Price $price): string => $price->toString('price'),
 		'priceRaw' => fn (Price $price): float => $price->price,
 		'priceNet' => fn (Price $price): string => $price->toString('priceNet'),
 		'priceNetRaw' => fn (Price $price): ?float => $price->priceNet,
+		'priceIncludingTax' => fn (Price $price): ?bool => $price->pricingRule?->taxIncluded,
 		'tax' => fn (Price $price): ?Tax => $price->tax,
 	],
 	'type' => Price::class,
@@ -33,6 +34,7 @@ return [
 			'priceRaw',
 			'priceNet',
 			'priceNetRaw',
+			'priceIncludingTax',
 			'tax',
 		],
 	],
