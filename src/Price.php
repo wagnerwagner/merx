@@ -121,11 +121,13 @@ class Price extends Obj
 	{
 		$this->priceNet = $priceNet;
 		$this->price = round($this->priceNet * (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
-		$this->tax = new Tax(
-			priceNet: $this->priceNet,
-			rate: $this->tax?->rate,
-			currency: $this->currency,
-		);
+		if ($this->tax !== null) {
+			$this->tax = new Tax(
+				priceNet: $this->priceNet,
+				rate: $this->tax?->rate,
+				currency: $this->currency,
+			);
+		}
 		return $this;
 	}
 
