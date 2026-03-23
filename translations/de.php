@@ -1,7 +1,7 @@
 <?php
 
 return [
-	'error.merx.cart.add' => 'Produkt "{key}" konnte nicht zum Warenkorb hinzugefügt werden.',
+	'error.merx.cart.add' => 'Produkt „{key}“ konnte nicht zum Warenkorb hinzugefügt werden.',
 	'error.merx.cart.update' => 'Produkte konnten nicht aktualisiert werden.',
 	'error.merx.createOrder' => 'Die Bezahlung konnte nicht abgeschlossen werden.',
 	'error.merx.emptycart' => 'Der Warenkorb ist leer.',
@@ -42,6 +42,6 @@ return [
 	'page.status.incomplete' => 'Unvollständig',
 	'page.title.product' => 'Produkt',
 	'product.price.onRequest' => 'Preis auf Anfrage',
-	'section.orders.info' => "{ count } Bestellungen\n { quantity } Stück\n{ quantityPerOrder } Stück/Bestellung",
+	'section.orders.info' => '{ count } Bestellungen\n { quantity } Stück\n{ quantityPerOrder } Stück/Bestellung',
 	'tab.shopSettings.label' => 'Shop-Einstellungen',
 ];

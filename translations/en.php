@@ -1,7 +1,7 @@
 <?php
 
 return [
-	'error.merx.cart.add' => 'Item "{key}" could not be added to cart.',
+	'error.merx.cart.add' => 'Item “{key}” could not be added to cart.',
 	'error.merx.cart.update' => 'Cart items could not be updated.',
 	'error.merx.createOrder' => 'The payment could not be completed.',
 	'error.merx.emptycart' => 'Cart is empty.',
