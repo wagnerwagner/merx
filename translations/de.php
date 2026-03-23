@@ -42,6 +42,6 @@ return [
 	'page.status.incomplete' => 'Unvollständig',
 	'page.title.product' => 'Produkt',
 	'product.price.onRequest' => 'Preis auf Anfrage',
-	'section.orders.info' => "{ count } Bestellungen\n { amount } Stück\n{ amountPerOrder } Stück/Bestellung",
+	'section.orders.info' => "{ count } Bestellungen\n { quantity } Stück\n{ quantityPerOrder } Stück/Bestellung",
 	'tab.shopSettings.label' => 'Shop-Einstellungen',
 ];

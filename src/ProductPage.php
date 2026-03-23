@@ -104,18 +104,18 @@ class ProductPage extends Page
 	{
 			$ordersPage = $this->site()->ordersPage();
 			return $this->orders ?? $this->orders = $ordersPage->children()->filter(function (OrderPage $page) {
-					return in_array((string)$this->uuid(), $page->productUuids());
+				return in_array((string)$this->uuid(), $page->productUuids());
 			})->map(function (OrderPage $page) {
-					/** @var ?ListItem $listItem */
-					$listItem = $page->cart()->filter(function (ListItem $listItem) {
-							return (string)$listItem->page?->uuid() === (string)$this->uuid();
-					})->first();
-					$page->content()->update([
-							'quantity' => $listItem?->quantity,
-							'price' => $listItem?->price->toString(),
-							'productTotal' => $listItem?->total()->toString(),
-					]);
-					return $page;
+				/** @var ?ListItem $listItem */
+				$listItem = $page->cart()->filter(function (ListItem $listItem) {
+					return (string)$listItem->page?->uuid() === (string)$this->uuid();
+				})->first();
+				$page->content()->update([
+					'quantity' => $listItem?->quantity,
+					'price' => $listItem?->price->toString(),
+					'productTotal' => $listItem?->total()->toString(),
+				]);
+				return $page;
 			});
 	}
 
@@ -128,13 +128,13 @@ class ProductPage extends Page
 	 */
 	public function orderInfo(): string
 	{
-			$amount = 0;
+			$quantity = 0;
 			$count = $this->orders()->count();
 			foreach ($this->orders() as $order) {
-					$amount += $order->quantity()->toFloat();
+				$quantity += $order->quantity()->toFloat();
 			}
-			$amountPerOrder = round($amount / $count, 1);
-			return tt('section.orders.info', null, compact('amount', 'count', 'amountPerOrder'));
+			$quantityPerOrder = round($quantity / $count, 1);
+			return tt('section.orders.info', null, compact('quantity', 'count', 'quantityPerOrder'));
 	}
 
 
@@ -143,8 +143,9 @@ class ProductPage extends Page
 	 *
 	 * @return null|float
 	 */
-	public function maxAmount(): ?float
+	public function maxQuantity(): ?float
 	{
-		return null;
+		$maxQuantity = $this->content()->get('maxQuantity')->or($this->site()->maxQuantity());
+		return $maxQuantity->isEmpty() ? null : $maxQuantity->toFloat();
 	}
 }

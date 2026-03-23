@@ -43,6 +43,6 @@ return [
 	'page.status.incomplete' => 'Incomplete',
 	'page.title.product' => 'Product',
 	'product.price.onRequest' => 'Price on request',
-	'section.orders.info' => "{ count } Orders\n { amount } Items\n{ amountPerOrder } Items/Order",
+	'section.orders.info' => "{ count } Orders\n { quantity } Items\n{ quantityPerOrder } Items/Order",
 	'tab.shopSettings.label' => 'Shop settings',
 ];

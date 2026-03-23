@@ -107,9 +107,9 @@ class ListItem extends Obj
 
 		// Set max amount to data from page
 		if ($this->page instanceof Page) {
-			if (is_float($this->page->maxAmount())) {
+			if (is_float($this->page->maxQuantity())) {
 				$data = array_merge($data ?? [], [
-					'maxAmount' => $this->page->maxAmount(),
+					'maxQuantity' => $this->page->maxQuantity(),
 				]);
 			}
 		}

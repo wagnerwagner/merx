@@ -18,9 +18,9 @@ sections:
   shopSettings:
     type: fields
     fields:
-      maxAmount:
+      maxQuantity:
         label:
-          en: Max Amount per Product
+          en: Max quantity per product
           de: Maximale Anzahl pro Produkt
         type: number
         translate: false
