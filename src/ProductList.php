@@ -38,7 +38,7 @@ class ProductList extends ListItems
 			$listItem->quantity += $existingItem->quantity;
 		}
 
-		$maxQuantity = $listItem->data['maxQuantity'];
+		$maxQuantity = $listItem->data['maxQuantity'] ?? null;
 		if (is_float($maxQuantity) && $listItem->quantity > $maxQuantity) {
 			throw new Exception(
 				key: 'merx.cart.maxQuantity',
