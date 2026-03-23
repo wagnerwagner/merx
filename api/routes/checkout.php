@@ -22,7 +22,7 @@ return [
 
 			$merx = merx();
 
-			$data['paymentGateway'] = $data['paymentGateway'] ?? $data['paymentgateway'] ?? $data['payment-gateway'] ?? null;
+			$data['paymentGateway'] = $data['paymentGateway'] ?? $data['paymentgateway'] ?? $data['payment-gateway'] ?? $data['payment_gateway'] ?? null;
 
 			$redirectUrl = $merx->initializeOrder($data);
 
