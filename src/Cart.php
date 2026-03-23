@@ -6,7 +6,6 @@ use Kirby\Cms\App;
 use Wagnerwagner\Merx\ProductList;
 use Kirby\Exception\Exception;
 use stdClass;
-use Throwable;
 
 /**
  * Storage for cart items

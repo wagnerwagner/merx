@@ -2,6 +2,8 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Exception\Exception;
+
 /**
  * Collection of ListItem objects for products
  *
@@ -34,6 +36,17 @@ class ProductList extends ListItems
 
 		if ($existingItem = $this->get($listItem->key)) {
 			$listItem->quantity += $existingItem->quantity;
+		}
+
+		$maxQuantity = $listItem->data['maxQuantity'];
+		if (is_float($maxQuantity) && $listItem->quantity > $maxQuantity) {
+			throw new Exception(
+				key: 'merx.cart.maxQuantity',
+				data: [
+					'title' => $listItem->title,
+					'maxQuantity' => $maxQuantity,
+				],
+			);
 		}
 
 		$this->set($listItem->key, $listItem);

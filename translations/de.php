@@ -3,6 +3,7 @@
 return [
 	'error.merx.cart.add' => 'Produkt „{key}“ konnte nicht zum Warenkorb hinzugefügt werden.',
 	'error.merx.cart.update' => 'Produkte konnten nicht aktualisiert werden.',
+	'error.merx.cart.maxQuantity' => 'Von „{title}“ sind nur noch {maxQuantity} verfügbar.',
 	'error.merx.createOrder' => 'Die Bezahlung konnte nicht abgeschlossen werden.',
 	'error.merx.emptycart' => 'Der Warenkorb ist leer.',
 	'error.merx.fieldsvalidation' => 'Felder sind invalide.',
