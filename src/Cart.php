@@ -53,34 +53,23 @@ class Cart extends ProductList
 		try {
 			$kirby->trigger('wagnerwagner.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
 			parent::add($data);
-
-			// if ($this->currency() === false) {
-			// 	throw new Exception(
-			// 		key: 'merx.mixedCurrencies.currency',
-			// 		data: [
-			// 			'key' => $this->key,
-			// 		],
-			// 	);
-			// }
-
 			$this->save();
 			$kirby->trigger('wagnerwagner.merx.cart.add:after', ['cart' => $this]);
 			return $this;
 		} catch (\Exception $ex) {
-			$key = null;
-			try {
-				$key = $data['key'] ?? $data->key ?? (string)$data ?? '';
-			} catch (Throwable) {}
-			throw new Exception([
-				'key' => 'merx.cart.add',
-				'data' => [
-					'key' => $key,
+			if ($ex instanceof Exception) {
+				throw $ex;
+			}
+			throw new Exception(
+				key: 'merx.cart.add',
+				data: [
+					'key' => $data['key'] ?? $data['page'] ?? $data->key ?? (string)$data ?? '',
 				],
-				'details' => [
+				details: [
 					'previous' => $ex->getMessage(),
 				],
-				'previous' => $ex,
-			]);
+				previous: $ex,
+			);
 		}
 	}
 
