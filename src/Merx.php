@@ -371,7 +371,7 @@ class Merx
 			if ($ordersPage === null) {
 				// create orders page if it does not exist
 				$ordersPage = $kirby->site()->createChild([
-					'id' => option('wagnerwagner.merx.ordersPage'),
+					'slug' => option('wagnerwagner.merx.ordersPage'),
 					'template' => 'orders',
 					'draft' => false,
 					'content' => [
