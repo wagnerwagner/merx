@@ -30,8 +30,8 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     $paymentIntentId = (string)($data['payment_intent'] ?? $virtualOrderPage->stripePaymentIntentId()->toString());
     $paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
 
-    if (isset($data['payment_intent']) && $paymentIntent->status !== 'requires_capture') {
-        // Status must be `requires_capture` when $data['payment_intent'] is set (redirect from Klarna).
+    if (in_array('order_uid', $paymentIntent->metadata->keys())) {
+        // Fail payment, when order_uid is already set.
         throw new Exception([
             'key' => 'merx.stripeError',
             'httpCode' => 500,
