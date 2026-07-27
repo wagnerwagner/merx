@@ -7,30 +7,30 @@ namespace Composer\Autoload;
 class ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d
 {
     public static $prefixLengthsPsr4 = array (
-        'W' => 
+        'W' =>
         array (
             'Wagnerwagner\\Merx\\' => 18,
         ),
-        'S' => 
+        'S' =>
         array (
             'Stripe\\' => 7,
         ),
-        'K' => 
+        'K' =>
         array (
             'Kirby\\' => 6,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Wagnerwagner\\Merx\\' => 
+        'Wagnerwagner\\Merx\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
-        'Stripe\\' => 
+        'Stripe\\' =>
         array (
             0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
         ),
-        'Kirby\\' => 
+        'Kirby\\' =>
         array (
             0 => __DIR__ . '/..' . '/getkirby/composer-installer/src',
         ),
