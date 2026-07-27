@@ -29,6 +29,14 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     $paymentIntentId = (string)($data['payment_intent'] ?? $virtualOrderPage->stripePaymentIntentId()->toString());
     $paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
 
+    if (isset($data['payment_intent']) && $paymentIntent->status !== 'requires_capture') {
+        // Status must be `requires_capture` when $data['payment_intent'] is set (redirect from Klarna).
+        throw new Exception([
+            'key' => 'merx.stripeError',
+            'httpCode' => 500,
+        ]);
+    }
+
     // Update content of VirtualOrderPage
     $virtualOrderPage->content()->update([
         'paymentDetails' => (array)$paymentIntent->toArray(),
@@ -56,6 +64,13 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
         $virtualOrderPage->content()->update([
             'paymentComplete' => true,
             'paidDate' => date('c'),
+        ]);
+    }
+
+    if (!in_array($paymentIntent->status, ['succeeded', 'processing'])) {
+        throw new Exception([
+            'key' => 'merx.stripeIncomplete',
+            'httpCode' => 500,
         ]);
     }
 
