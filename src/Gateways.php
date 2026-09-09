@@ -40,6 +40,14 @@ class Gateways
 		$paymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
 		$paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
 
+		if (in_array('order_uid', $paymentIntent->metadata->keys())) {
+			// Fail payment, when order_uid is already set.
+			throw new Exception(
+				key: 'merx.stripeError',
+				httpCode: 500,
+			);
+		}
+
 		// Update content of VirtualOrderPage
 		$virtualOrderPage->version()->update([
 			'paymentDetails' => (array)$paymentIntent->toArray(),
