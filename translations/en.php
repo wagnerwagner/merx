@@ -4,6 +4,8 @@ return [
 	'error.merx.cart.add' => 'Item “{key}” could not be added to cart.',
 	'error.merx.cart.update' => 'Cart items could not be updated.',
 	'error.merx.cart.maxQuantity' => 'There are only {maxQuantity} of “{title}” left.',
+	'error.merx.cart.missingItem' => 'Item “{key}” is not in the cart.',
+	'error.merx.cart.quantity' => 'Invalid quantity for “{title}”.',
 	'error.merx.createOrder' => 'The payment could not be completed.',
 	'error.merx.emptycart' => 'Cart is empty.',
 	'error.merx.fieldsvalidation' => 'Field validation failed.',

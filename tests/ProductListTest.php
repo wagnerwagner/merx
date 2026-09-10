@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Exception\Exception;
 use PHPUnit\Framework\TestCase;
 
 final class ProductListTest extends TestCase
@@ -44,5 +45,80 @@ final class ProductListTest extends TestCase
 			179.98,
 			$productList->total()->toFloat()
 		);
+	}
+
+
+	public function testAddRejectsNegativeQuantity(): void
+	{
+		$productList = new ProductList();
+
+		$this->expectException(Exception::class);
+		$productList->add(['key' => 'nice-shoes', 'price' => 99.99, 'quantity' => -1.0]);
+	}
+
+
+	public function testUpdateItemRejectsNegativeQuantity(): void
+	{
+		$productList = new ProductList();
+		$productList->add(['key' => 'nice-shoes', 'price' => 99.99]);
+
+		try {
+			$productList->updateItem('nice-shoes', ['quantity' => -5.0]);
+			$this->fail('Negative quantity was accepted.');
+		} catch (Exception) {
+			// The list must keep its original, non-negative total.
+			$this->assertEquals(99.99, $productList->total()->toFloat());
+		}
+	}
+
+
+	public function testUpdateItemRejectsInfiniteQuantity(): void
+	{
+		$productList = new ProductList();
+		$productList->add(['key' => 'nice-shoes', 'price' => 99.99]);
+
+		$this->expectException(Exception::class);
+		$productList->updateItem('nice-shoes', ['quantity' => INF]);
+	}
+
+
+	public function testUpdateItemEnforcesMaxQuantity(): void
+	{
+		$productList = new ProductList();
+		$productList->add([
+			'key' => 'nice-shoes',
+			'price' => 99.99,
+			'data' => ['maxQuantity' => 2.0],
+		]);
+
+		$this->expectException(Exception::class);
+		$productList->updateItem('nice-shoes', ['quantity' => 3.0]);
+	}
+
+
+	public function testUpdateItemKeepsMaxQuantityWhenDataIsReplaced(): void
+	{
+		$productList = new ProductList();
+		$productList->add([
+			'key' => 'nice-shoes',
+			'price' => 99.99,
+			'data' => ['maxQuantity' => 2.0],
+		]);
+
+		// A client must not be able to lift its own limit by overwriting `data`.
+		$this->expectException(Exception::class);
+		$productList->updateItem('nice-shoes', [
+			'quantity' => 3.0,
+			'data' => ['maxQuantity' => 999.0],
+		]);
+	}
+
+
+	public function testUpdateItemThrowsOnUnknownKey(): void
+	{
+		$productList = new ProductList();
+
+		$this->expectException(Exception::class);
+		$productList->updateItem('does-not-exist', ['quantity' => 1.0]);
 	}
 }

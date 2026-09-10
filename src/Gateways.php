@@ -88,6 +88,54 @@ class Gateways
 
 		return $virtualOrderPage;
 	}
+
+	/**
+	 * Checks whether a PayPal capture response actually paid for the order
+	 *
+	 * PayPal answers with HTTP 2xx even when the order was not captured, so the
+	 * status has to be checked explicitly before an order is marked as paid.
+	 *
+	 * @param array $paypalResponse Response of `PayPalPayment::executePayPalPayment()`
+	 * @throws \Kirby\Exception\Exception merx.paypalError when the order was not captured or a capture was declined
+	 *
+	 * @return bool `true` when every capture is settled, `false` when at least one capture is still pending
+	 */
+	public static function validatePayPalCapture(array $paypalResponse): bool
+	{
+		// PayPal only considers an order captured when its status is `COMPLETED`.
+		// `PENDING`, `VOIDED` and `PAYER_ACTION_REQUIRED` must never complete the order.
+		$status = $paypalResponse['status'] ?? null;
+		if ($status !== 'COMPLETED') {
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 400,
+				details: [
+					'status' => $status,
+				],
+			);
+		}
+
+		// A `COMPLETED` order can still hold captures which are declined or not settled yet.
+		$captureStatus = [];
+		foreach ($paypalResponse['purchase_units'] ?? [] as $purchaseUnit) {
+			foreach ($purchaseUnit['payments']['captures'] ?? [] as $capture) {
+				$captureStatus[] = $capture['status'] ?? null;
+			}
+		}
+
+		if (array_intersect(['DECLINED', 'FAILED'], $captureStatus) !== []) {
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 400,
+				details: [
+					'status' => $status,
+				],
+			);
+		}
+
+		// `PENDING` captures are completed by PayPal at a later point.
+		return array_filter($captureStatus, fn (?string $state) => $state !== 'COMPLETED') === [];
+	}
 }
 
 Gateways::$gateways['invoice'] = true;
@@ -125,11 +173,20 @@ Gateways::$gateways['paypal'] = [
 
 		// execute payment
 		$paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
+
+		// Store the response, even when the capture was not successful
 		$virtualOrderPage->version()->update([
 			'paymentDetails' => (array)$paypalResponse,
-			'paymentComplete' => true,
-			'datePaid' => date('c'),
 		]);
+
+		// Mark the order as paid only when PayPal actually captured it.
+		if (Gateways::validatePayPalCapture($paypalResponse) === true) {
+			$virtualOrderPage->version()->update([
+				'paymentComplete' => true,
+				'datePaid' => date('c'),
+			]);
+		}
+
 		return $virtualOrderPage;
 	}
 ];

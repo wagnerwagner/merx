@@ -366,40 +366,47 @@ class Merx
 				$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
 			}
 
-			$kirby->impersonate('kirby');
-			$ordersPage = $kirby->site()->ordersPage();
-			if ($ordersPage === null) {
-				// create orders page if it does not exist
-				$ordersPage = $kirby->site()->createChild([
-					'slug' => option('wagnerwagner.merx.ordersPage'),
-					'template' => 'orders',
-					'draft' => false,
-					'content' => [
-						'title' => t('field.orders'),
-					],
-				]);
-			}
-			$virtualOrderPageArray = $virtualOrderPage->toArray();
-			$virtualOrderPageArray['template'] = 'order';
-			$virtualOrderPageArray['model'] = 'order';
-			$virtualOrderPageArray['draft'] = false;
-			$virtualOrderPageArray['content']['dateCreated'] = date('c');
-			$virtualOrderPageArray['translations'] = null;
+			// Creating the order requires admin permissions. The callback makes sure the
+			// impersonation is always reset, even when an error occurs. Without it the
+			// `kirby` super user would stay active for the rest of the request.
+			/** @var \Wagnerwagner\Merx\OrderPage $orderPage */
+			$orderPage = $kirby->impersonate('kirby', function () use ($kirby, $virtualOrderPage, $currentLanguageCode): OrderPage {
+				$ordersPage = $kirby->site()->ordersPage();
+				if ($ordersPage === null) {
+					// create orders page if it does not exist
+					$ordersPage = $kirby->site()->createChild([
+						'slug' => option('wagnerwagner.merx.ordersPage'),
+						'template' => 'orders',
+						'draft' => false,
+						'content' => [
+							'title' => t('field.orders'),
+						],
+					]);
+				}
+				$virtualOrderPageArray = $virtualOrderPage->toArray();
+				$virtualOrderPageArray['template'] = 'order';
+				$virtualOrderPageArray['model'] = 'order';
+				$virtualOrderPageArray['draft'] = false;
+				$virtualOrderPageArray['content']['dateCreated'] = date('c');
+				$virtualOrderPageArray['translations'] = null;
 
-			if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
-				$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
-			}
+				if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
+					$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
+				}
 
-			/** @var OrderPage $orderPage */
-			$orderPage = $ordersPage->createChild($virtualOrderPageArray);
-			$orderPage = $orderPage->changeStatus('listed');
+				/** @var OrderPage $orderPage */
+				$orderPage = $ordersPage->createChild($virtualOrderPageArray);
+				$orderPage = $orderPage->changeStatus('listed');
 
-			// Reset language
-			$kirby->setCurrentLanguage($currentLanguageCode);
+				// Reset language
+				$kirby->setCurrentLanguage($currentLanguageCode);
 
-			$this->cart->delete();
+				$this->cart->delete();
 
-			$kirby->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
+				$kirby->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
+
+				return $orderPage;
+			});
 
 			return $orderPage;
 		} catch (\Exception $ex) {
