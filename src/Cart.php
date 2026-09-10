@@ -72,7 +72,6 @@ class Cart extends ProductList
 		}
 	}
 
-
 	/**
 	 * Removes item from Cart by key
 	 *
@@ -88,7 +87,6 @@ class Cart extends ProductList
 		$kirby->trigger('wagnerwagner.merx.cart.remove:after', ['cart' => $this, 'key' => $key]);
 		return $this;
 	}
-
 
 	/**
 	 * Updates existing item.
@@ -140,7 +138,6 @@ class Cart extends ProductList
 
 		return StripePayment::createStripePaymentIntent($amount, $params, $options);
 	}
-
 
 	/**
 	 * Removes Cart from user’s session.

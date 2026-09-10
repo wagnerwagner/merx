@@ -129,7 +129,7 @@ App::plugin(
 			'taxRules' =>
 				/** Pricing rules as defined in wagnerwagner.merx.taxRules */
 				fn (): TaxRules => Merx::taxRules(),
-		]
+		],
 	],
 	license: function (Plugin $plugin) {
 		return new License($plugin);
