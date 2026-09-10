@@ -1,5 +1,6 @@
 <?php
 
+use Kirby\Exception\InvalidArgumentException;
 use Wagnerwagner\Merx\StripePayment;
 
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
@@ -14,7 +15,13 @@ return [
 			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
-			$payload = @file_get_contents('php://input');
+			$payload = file_get_contents('php://input');
+			if (is_string($payload) === false || $payload === '') {
+				throw new InvalidArgumentException(
+					key: 'merx.stripeWebhook',
+					httpCode: 400,
+				);
+			}
 
 			$event = StripePayment::constructEvent($payload);
 			$this->kirby()->trigger('wagnerwagner.merx.stripe-hooks', [

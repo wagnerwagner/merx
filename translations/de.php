@@ -18,6 +18,8 @@ return [
 	'error.merx.order.changeStatus' => 'Der Status einer vollständigen Bestellung kann nicht geändert werden.',
 	'error.merx.paymentCanceled' => 'Die Bezahlung wurde abgebrochen.',
 	'error.merx.paypalError' => 'PayPal Fehler',
+	'error.merx.stripeError' => 'Stripe Fehler',
+	'error.merx.stripeWebhook' => 'Stripe-Webhook konnte nicht verifiziert werden.',
 	'field.checkout.info' => 'Auf dieser Seite werden die E-Mail und die Lieferadresse des Benutzers erfasst. Der Benutzer wird hier auch die Zahlungsmethode auswählen können.',
 	'field.checkout' => 'Kasse',
 	'field.currency' => 'Währung',

@@ -59,14 +59,15 @@ class Cart extends ProductList
 			if ($ex instanceof Exception) {
 				throw $ex;
 			}
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log($ex, 'error');
+			}
 			throw new Exception(
 				key: 'merx.cart.add',
 				data: [
 					'key' => $data['key'] ?? $data['page'] ?? $data->key ?? (string)$data ?? '',
 				],
-				details: [
-					'previous' => $ex->getMessage(),
-				],
+				details: Merx::exceptionDetails($ex),
 				previous: $ex,
 			);
 		}
@@ -101,16 +102,19 @@ class Cart extends ProductList
 			$kirby->trigger('wagnerwagner.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			return $this;
 		} catch (\Exception $ex) {
-			throw new Exception([
-				'key' => 'merx.cart.update',
-				'details' => [
-					'message' => $ex->getMessage(),
-					'code' => $ex->getCode(),
-					'file' => $ex->getFile(),
-					'line' => $ex->getLine(),
-				],
-				'previous' => $ex,
-			]);
+			// A rejected update (invalid quantity, `maxQuantity`) is a client error and
+			// must keep its own message instead of being hidden behind merx.cart.update.
+			if ($ex instanceof Exception) {
+				throw $ex;
+			}
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log($ex, 'error');
+			}
+			throw new Exception(
+				key: 'merx.cart.update',
+				details: Merx::exceptionDetails($ex),
+				previous: $ex,
+			);
 		}
 	}
 

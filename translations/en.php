@@ -18,6 +18,7 @@ return [
 	'error.merx.order.changeStatus' => 'Status of a complete order cannot be changed.',
 	'error.merx.paymentCanceled' => 'You canceled the payment.',
 	'error.merx.paypalError' => 'Error while completing PayPal payment',
+	'error.merx.stripeWebhook' => 'Stripe webhook could not be verified.',
 	'error.merx.stripeError' => 'Error while completing Stripe payment',
 	'field.checkout.info' => 'On this page, the user’s email and shipping address are collected. The user will also be able to select the payment method here.',
 	'field.checkout' => 'Checkout',

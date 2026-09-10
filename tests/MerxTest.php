@@ -61,4 +61,61 @@ final class MerxTest extends TestCase
 		$this->expectExceptionCode('error.merx.noPaymentGateway');
 		$merx->initializeOrder([]);
 	}
+
+
+	public function testFilterOrderDataKeepsCustomerFields(): void
+	{
+		$data = [
+			'paymentGateway' => 'paypal',
+			'email' => 'customer@example.com',
+			'street' => 'Example Street 1',
+			'note' => 'Please ring twice',
+		];
+
+		$this->assertSame($data, Merx::filterOrderData($data));
+	}
+
+
+	public function testFilterOrderDataRemovesProtectedFields(): void
+	{
+		$data = Merx::filterOrderData([
+			'email' => 'customer@example.com',
+			'paymentComplete' => true,
+			'datePaid' => '2026-01-01T00:00:00+00:00',
+			'paymentDetails' => ['amount' => 1],
+			'orderNumber' => 9999,
+			'dateCreated' => '2026-01-01T00:00:00+00:00',
+			'items' => 'forged cart',
+			'redirect' => 'https://example.com',
+			'stripePaymentIntentId' => 'pi_forged',
+			'payPalOrderId' => 'forged',
+			'uuid' => 'page://forged',
+		]);
+
+		$this->assertSame(['email' => 'customer@example.com'], $data);
+	}
+
+
+	public function testFilterOrderDataIsCaseInsensitive(): void
+	{
+		// Kirby lower cases content keys, so these all address `paymentComplete`.
+		$data = Merx::filterOrderData([
+			'PaymentComplete' => true,
+			'PAYMENTCOMPLETE' => true,
+			'paymentcomplete' => true,
+			'PayPalOrderId' => 'forged',
+			'email' => 'customer@example.com',
+		]);
+
+		$this->assertSame(['email' => 'customer@example.com'], $data);
+	}
+
+
+	public function testExceptionDetailsAreHiddenWithoutDebug(): void
+	{
+		$this->assertSame(
+			[],
+			Merx::exceptionDetails(new \RuntimeException('internal failure'))
+		);
+	}
 }

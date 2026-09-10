@@ -42,6 +42,26 @@ class Merx
 	public static string $sessionTokenParameterName = 'sessionToken';
 
 	/**
+	 * Content fields of an `OrderPage` which Merx sets itself
+	 *
+	 * They are removed from the data handed to `initializeOrder()`, so a client
+	 * cannot mark its own order as paid or rewrite the stored cart. Kirby stores
+	 * content keys in lower case, so these are compared case-insensitively.
+	 */
+	public static array $protectedOrderFields = [
+		'datecreated',
+		'datepaid',
+		'items',
+		'ordernumber',
+		'paymentcomplete',
+		'paymentdetails',
+		'paypalorderid',
+		'redirect',
+		'stripepaymentintentid',
+		'uuid',
+	];
+
+	/**
 	 * Initializes cart and gateways
 	 */
 	public function __construct()
@@ -252,6 +272,10 @@ class Merx
 				return is_string($item) ? Escape::html(Str::trim($item)) : $item;
 			}, $data);
 
+			// Drop fields which Merx sets itself. Without this a client could submit
+			// `paymentComplete` and receive a paid order without paying.
+			$data = static::filterOrderData($data);
+
 			// get cart
 			$cart = $this->cart;
 
@@ -320,12 +344,7 @@ class Merx
 				$ex = new Exception(
 					key: 'merx.initializeOrder',
 					httpCode: 500,
-					details: [
-						'message' => $ex->getMessage(),
-						'code' => $ex->getCode(),
-						'file' => $ex->getFile(),
-						'line' => $ex->getLine(),
-					],
+					details: static::exceptionDetails($ex),
 					previous: $ex,
 				);
 			}
@@ -414,12 +433,7 @@ class Merx
 				$ex = new Exception(
 					key: 'merx.createOrder',
 					httpCode: 500,
-					details: [
-						'message' => $ex->getMessage(),
-						'code' => $ex->getCode(),
-						'file' => $ex->getFile(),
-						'line' => $ex->getLine(),
-					],
+					details: static::exceptionDetails($ex),
 					previous: $ex,
 				);
 			}
@@ -428,6 +442,46 @@ class Merx
 			}
 			throw $ex;
 		}
+	}
+
+	/**
+	 * Removes the fields Merx sets itself from client submitted order data
+	 *
+	 * Kirby stores content keys in lower case, so `paymentComplete`, `PaymentComplete`
+	 * and `paymentcomplete` all address the same field and all have to be removed.
+	 *
+	 * @see \Wagnerwagner\Merx\Merx::$protectedOrderFields
+	 */
+	public static function filterOrderData(array $data): array
+	{
+		return array_filter(
+			$data,
+			fn ($key) => in_array(Str::lower((string)$key), static::$protectedOrderFields, true) === false,
+			ARRAY_FILTER_USE_KEY,
+		);
+	}
+
+	/**
+	 * Diagnostic details of an exception, for use in `Exception::$details`
+	 *
+	 * The API is reachable without authentication, so internals such as the file
+	 * path are only handed out while `debug` is on. The full exception is written
+	 * to the log either way.
+	 *
+	 * @return array Empty array unless Kirby’s `debug` option is enabled
+	 */
+	public static function exceptionDetails(\Throwable $ex): array
+	{
+		if (App::instance()->option('debug') !== true) {
+			return [];
+		}
+
+		return [
+			'message' => $ex->getMessage(),
+			'code' => $ex->getCode(),
+			'file' => $ex->getFile(),
+			'line' => $ex->getLine(),
+		];
 	}
 
 	/**

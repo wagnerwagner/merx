@@ -2,7 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
-use Exception;
+use Kirby\Exception\Exception;
 use Stripe\Event;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
@@ -33,8 +33,14 @@ class StripePayment
 	}
 
 	/**
+	 * Verifies a Stripe webhook request and turns it into an event
+	 *
+	 * The reason a webhook is rejected is only written to the log. It must not
+	 * reach the caller, who is unauthenticated on this endpoint.
+	 *
 	 * @see https://docs.stripe.com/webhooks#verify-official-libraries
 	 * @param string $payload Payload from stripe webhook
+	 * @throws \Kirby\Exception\Exception merx.stripeWebhook when the signing secret is missing, the signature is invalid or the payload cannot be parsed
 	 *
 	 * @return \Stripe\Event
 	 */
@@ -44,26 +50,44 @@ class StripePayment
 
 		$endpoint_secret = option('wagnerwagner.merx.stripe.webhook_signing_secret', false);
 		if ($endpoint_secret === false || empty($endpoint_secret)) {
-			throw new Exception('No Stripe Webhook signing secret');
+			self::logWebhookError('No Stripe webhook signing secret configured.');
+			throw new Exception(
+				key: 'merx.stripeWebhook',
+				httpCode: 500,
+			);
 		}
 
-		$sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
+		$sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? null;
+		if (is_string($sig_header) === false || $sig_header === '') {
+			self::logWebhookError('Missing Stripe-Signature header.');
+			throw new Exception(
+				key: 'merx.stripeWebhook',
+				httpCode: 400,
+			);
+		}
 
 		try {
-			$event = Webhook::constructEvent(
+			return Webhook::constructEvent(
 				$payload, $sig_header, $endpoint_secret
 			);
-			return $event;
-		} catch(\UnexpectedValueException $e) {
-			// Invalid payload
-			http_response_code(400);
-			echo json_encode(['Error parsing payload: ' => $e->getMessage()]);
-			exit();
-		} catch(\Stripe\Exception\SignatureVerificationException $e) {
-			// Invalid signature
-			http_response_code(400);
-			echo json_encode(['Error verifying webhook signature: ' => $e->getMessage()]);
-			exit();
+		} catch (\UnexpectedValueException | \Stripe\Exception\SignatureVerificationException $ex) {
+			// Invalid payload or invalid signature
+			self::logWebhookError($ex->getMessage());
+			throw new Exception(
+				key: 'merx.stripeWebhook',
+				httpCode: 400,
+				previous: $ex,
+			);
+		}
+	}
+
+	/**
+	 * Writes the reason a webhook was rejected to the log
+	 */
+	private static function logWebhookError(string $message): void
+	{
+		if (option('wagnerwagner.merx.logging') === true) {
+			Logger::log('Stripe webhook rejected: ' . $message, 'error');
 		}
 	}
 
