@@ -112,6 +112,9 @@ class PayPalPayment
 		$purchaseUnits = [...$purchaseUnits, ...[
 			[
 				'description' => $siteTitle,
+				// Binds the PayPal order to this order, so a captured payment cannot
+				// be replayed to complete a second one.
+				'custom_id' => (string)$virtualOrderPage->uid(),
 				'amount' => [
 					'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
 					'currency_code' => $currency,
@@ -155,6 +158,31 @@ class PayPalPayment
 	}
 
 	/**
+	 * Get a PayPal order without capturing it
+	 *
+	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_get PayPal REST API Documentation
+	 *
+	 * @param string $payPalOrderId The ID of the PayPal order.
+	 *
+	 * @return array PayPal order details, including `status` and `purchase_units`
+	 */
+	public static function retrievePayPalOrder(string $payPalOrderId): array
+	{
+		$access = self::getAccessToken();
+		$endpoint = '/v2/checkout/orders/' . rawurlencode($payPalOrderId);
+		return self::request(
+			$endpoint,
+			[
+				'method' => 'GET',
+				'headers' => [
+					'Content-Type' => 'application/json',
+					'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
+				],
+			],
+		);
+	}
+
+	/**
 	 * Capture PayPal payment for order
 	 *
 	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_capture PayPal REST API Documentation
@@ -172,7 +200,7 @@ class PayPalPayment
 	public static function executePayPalPayment(string $payPalOrderId): array
 	{
 		$access = self::getAccessToken();
-		$endpoint = '/v2/checkout/orders/' . $payPalOrderId . '/capture';
+		$endpoint = '/v2/checkout/orders/' . rawurlencode($payPalOrderId) . '/capture';
 		$response = self::request(
 			$endpoint,
 			[

@@ -78,4 +78,67 @@ final class GatewaysTest extends TestCase
 			Gateways::validatePayPalCapture(self::payPalResponse('COMPLETED', ['COMPLETED', 'PENDING']))
 		);
 	}
+
+
+	private static function virtualOrderPage(string $uid = 'aaaabbbbccccdddd'): OrderPage
+	{
+		return new OrderPage([
+			'slug' => $uid,
+			'template' => 'order',
+		]);
+	}
+
+	private static function payPalOrder(string $status, ?string $customId = 'aaaabbbbccccdddd'): array
+	{
+		$purchaseUnit = ['amount' => ['value' => '49.99', 'currency_code' => 'EUR']];
+		if ($customId !== null) {
+			$purchaseUnit['custom_id'] = $customId;
+		}
+
+		return [
+			'id' => '5O190127TN364715T',
+			'status' => $status,
+			'purchase_units' => [$purchaseUnit],
+		];
+	}
+
+	public function testApprovedOrderMayBeCaptured(): void
+	{
+		$this->expectNotToPerformAssertions();
+		Gateways::validatePayPalOrderIsUnused(self::payPalOrder('APPROVED'), self::virtualOrderPage());
+	}
+
+	public function testAlreadyCapturedOrderIsRefused(): void
+	{
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalOrderIsUnused(self::payPalOrder('COMPLETED'), self::virtualOrderPage());
+	}
+
+	public function testOrderOfAnotherOrderPageIsRefused(): void
+	{
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalOrderIsUnused(
+			self::payPalOrder('APPROVED', 'someoneelsesorder'),
+			self::virtualOrderPage()
+		);
+	}
+
+	public function testOrderWithoutCustomIdIsAllowed(): void
+	{
+		// Created before `custom_id` was set; the status check still covers it.
+		$this->expectNotToPerformAssertions();
+		Gateways::validatePayPalOrderIsUnused(
+			self::payPalOrder('APPROVED', null),
+			self::virtualOrderPage()
+		);
+	}
+
+	public function testOrderWithoutCustomIdIsStillRefusedWhenCaptured(): void
+	{
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalOrderIsUnused(
+			self::payPalOrder('COMPLETED', null),
+			self::virtualOrderPage()
+		);
+	}
 }

@@ -99,6 +99,46 @@ class Gateways
 	}
 
 	/**
+	 * Makes sure a PayPal order has not been used for another order already
+	 *
+	 * PayPal refuses a second capture itself, but relying on that leaves the
+	 * check with the provider and reports it as an unspecific API error. This
+	 * is the PayPal counterpart of the `order_uid` check in
+	 * `completeStripePayment()`.
+	 *
+	 * @param array $paypalOrder Response of `PayPalPayment::retrievePayPalOrder()`
+	 * @param OrderPage $virtualOrderPage Order the payment is about to complete
+	 * @throws \Kirby\Exception\Exception merx.paypalError when the order was captured before or belongs to another order
+	 */
+	public static function validatePayPalOrderIsUnused(array $paypalOrder, OrderPage $virtualOrderPage): void
+	{
+		// A `COMPLETED` order has been captured already.
+		if (($paypalOrder['status'] ?? null) === 'COMPLETED') {
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 400,
+			);
+		}
+
+		// `custom_id` is set when the PayPal order is created and names the order
+		// it belongs to. Orders created before this existed carry none; those are
+		// covered by the status check above.
+		$customIds = [];
+		foreach ($paypalOrder['purchase_units'] ?? [] as $purchaseUnit) {
+			if (isset($purchaseUnit['custom_id']) === true) {
+				$customIds[] = (string)$purchaseUnit['custom_id'];
+			}
+		}
+
+		if ($customIds !== [] && in_array((string)$virtualOrderPage->uid(), $customIds, true) === false) {
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 400,
+			);
+		}
+	}
+
+	/**
 	 * Checks whether a PayPal capture response actually paid for the order
 	 *
 	 * PayPal answers with HTTP 2xx even when the order was not captured, so the
@@ -180,8 +220,16 @@ Gateways::$gateways['paypal'] = [
 			);
 		}
 
+		$payPalOrderId = (string)$virtualOrderPage->payPalOrderId();
+
+		// Refuse a PayPal order which was already captured for another order
+		Gateways::validatePayPalOrderIsUnused(
+			PayPalPayment::retrievePayPalOrder($payPalOrderId),
+			$virtualOrderPage,
+		);
+
 		// execute payment
-		$paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
+		$paypalResponse = PayPalPayment::executePayPalPayment($payPalOrderId);
 
 		// Store the outcome, even when the capture was not successful
 		$virtualOrderPage->version()->update([
