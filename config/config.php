@@ -7,7 +7,7 @@ return [
 	'ordersPage' => 'orders',
 	'production' => false,
 	'logging' => true,
-	'merxLicense' => '',
+	'license' => '',
 	'api.endpoint' => 'shop',
 	'taxRules' => [
 		'default' => [

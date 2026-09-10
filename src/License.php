@@ -73,6 +73,6 @@ class License extends \Kirby\Plugin\License
 	public function isValid(): bool
 	{
 		$licenseArr = Str::split(Str::after($this->licenseKey(), 'MERX2-'), '-');
-		return self::crossfoot(hexdec($licenseArr[0])) + self::crossfoot(hexdec($licenseArr[1])) === 90;
+		return self::crossfoot(hexdec($licenseArr[0] ?? 0)) + self::crossfoot(hexdec($licenseArr[1] ?? 0)) === 90;
 	}
 }
