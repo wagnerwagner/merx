@@ -17,7 +17,6 @@ use Wagnerwagner\Merx\ProductList;
  * @method \Kirby\Content\Field dateCreated() Date, when the order was created (date('c')).
  * @method \Kirby\Content\Field datePaid() Date, when the order was paid (date('c')).
  * @method \Kirby\Content\Field paymentComplete() True, when payment is complete
- * @method \Kirby\Content\Field paymentDetails() Reconciliation record of the payment, stored as yaml. See \Wagnerwagner\Merx\PaymentDetails::$keys
  * @method \Kirby\Content\Field payPalOrderId()
  * @method \Kirby\Content\Field stripePaymentIntentId()
  * @method \Kirby\Content\Field redirect() URL the user is redirected to
@@ -80,5 +79,53 @@ class OrderPage extends Page
 	public function total(): ?Price
 	{
 		return $this->cart()->total();
+	}
+
+	/**
+	 * Reconciliation record of the payment
+	 *
+	 * @see \Wagnerwagner\Merx\PaymentDetails::$keys
+	 */
+	public function paymentDetails(): array
+	{
+		return $this->content()->get('paymentDetails')->yaml();
+	}
+
+	/**
+	 * Name of the payment provider which processed the order, e.g. `stripe`
+	 */
+	public function paymentProvider(): ?string
+	{
+		$provider = $this->paymentDetails()['provider'] ?? null;
+
+		return is_string($provider) === true ? $provider : null;
+	}
+
+	/**
+	 * Link to this order’s transaction in the provider’s dashboard
+	 *
+	 * Whether the live or the test dashboard is linked follows the `livemode`
+	 * of the stored record. Records written before `livemode` was kept fall
+	 * back to the `production` option.
+	 *
+	 * Returns `null` when Merx cannot build a link: invoices, custom gateways
+	 * and PayPal orders without a capture.
+	 */
+	public function paymentProviderUrl(): ?string
+	{
+		$details = $this->paymentDetails();
+		$livemode = $details['livemode'] ?? (option('wagnerwagner.merx.production') === true);
+
+		return match ($this->paymentProvider()) {
+			// Stripe addresses a payment by its PaymentIntent id
+			'stripe' => isset($details['id'])
+				? 'https://dashboard.stripe.com/' . ($livemode ? '' : 'test/') . 'payments/' . rawurlencode((string)$details['id'])
+				: null,
+			// PayPal’s activity view knows captures, not orders, so `reference` is used
+			'paypal' => isset($details['reference'])
+				? 'https://www.' . ($livemode ? '' : 'sandbox.') . 'paypal.com/activity/payment/' . rawurlencode((string)$details['reference'])
+				: null,
+			default => null,
+		};
 	}
 }

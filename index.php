@@ -50,6 +50,7 @@ App::plugin(
 				'Tax' => include __DIR__ . '/api/models/Tax.php',
 			],
 		],
+		'areas' => include __DIR__ . '/config/areas.php',
 		'options' => include __DIR__ . '/config/config.php',
 		'templates' => [
 			'order' => __DIR__ . '/templates/order.php',

@@ -18,4 +18,10 @@ options:
   duplicate: false
   move: false
 
+buttons:
+  open: true
+  preview: true
+  settings: true
+  paymentProvider: true
+
 extends: layouts/order
