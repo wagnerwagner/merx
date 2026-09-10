@@ -2,6 +2,7 @@ headline: field.orders
 type: pages
 parent: site.ordersPage
 template: order
+flip: true
 layout: table
 create: false
 search: true
