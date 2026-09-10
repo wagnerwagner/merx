@@ -25,74 +25,53 @@ the public API. Methods Merx inherits from Kirby are documented at
 
 ## Running the tests
 
-`composer test` does **not** work in this repository: `vendor/bin/phpunit` is
-missing and `vendor/getkirby/cms` is not installed in full, because
-`extra.kirby-cms-path` is `false` and Kirby is provided by the host project.
-`tests/bootstrap.php` therefore fails with `Class "Kirby\Cms\App" not found`.
-
-Use a phpunit on your `PATH` and a bootstrap that loads the Kirby of the
-surrounding project. Create `tests/bootstrap.local.php` (untracked):
-
-```php
-<?php
-
-error_reporting(0);
-
-// Kirby of the surrounding project; vendor/getkirby/cms is not installed in full
-require_once dirname(__DIR__, 4) . '/kirby/bootstrap.php';
-require_once dirname(__DIR__) . '/index.php';
-
-new Kirby(['roots' => ['index' => __DIR__]]);
-```
-
 ```bash
-phpunit --bootstrap tests/bootstrap.local.php tests
+composer install   # dev dependencies: phpunit, getkirby/cms, psalm
+composer test
 ```
 
-Adjust `dirname(__DIR__, 4)` if the plugin does not sit in
-`<project>/site/plugins/merx`.
+`vendor/` is committed, but **without** dev dependencies, so a fresh clone has
+no `vendor/bin/phpunit` and no `vendor/getkirby/cms/src`. `composer install`
+installs both and `composer test` then runs.
+
+### `composer install` dirties the working tree
+
+Because `vendor/` is tracked, installing dev dependencies leaves around forty
+untracked directories under `vendor/` plus modified `vendor/composer/autoload_*`
+and `installed.php`. **Never stage them** — `git add -A` would commit phpunit,
+psalm and Kirby into the distributed plugin. Stage the files you actually
+changed, by name.
 
 ### The suite is not green
 
-Ten tests fail before you change anything. Establish a baseline before you
-start and compare against it — do not try to fix these as part of unrelated
-work:
+Four tests fail before you change anything, plus one warning and three risky
+tests. Compare against this baseline rather than assuming you broke something:
 
-- `ApiTest::testCartAdd1`, `testCartGet`, `testCartAddWithQuantity`,
-  `testCartPatch`, `testCartDelete` — error with `The site is not accessible`;
-  the fixture roots `tests/kirby/content` and `tests/kirby/site` do not exist
-- `Tests\ProductPageTest::testOrders` — error
 - `ListItemTest::testPriceTotalCalculation`, `MerxTest::testFormatCurrencyDE`,
   `PriceTest::test__toStringReturnsPriceAsString`,
   `TaxRuleTest::testTaxRatePassesKirbyInstance` — locale and calculation
   assertions
 - `CartTest` is empty and reports a warning
+- `Tests\ProductPageTest::testPrice`, `testPrices`, `testOrders` — risky; they
+  leave their own error and exception handlers installed
+
+At the time of writing that is `Tests: 72, Assertions: 151, Failures: 4,
+PHPUnit Warnings: 1, PHPUnit Deprecations: 1, Risky: 3`.
 
 `MerxTest::testinitializeOrderEmpty` additionally depends on test order. It
 passes in a full run because an earlier test fills the session cart, and fails
 under `--filter` with `merx.emptycart`. A filtered run failing there is not a
 regression.
 
-### Running the suite writes into the repository
-
-Kirby resolves its roots from the index root, so a run creates `tests/site/`
-with `sessions/` and `logs/`. That path is **not** in `.gitignore` — only
-`/tests/kirby` is. Delete it after a run, or do not stage it; session files
-from a payment plugin have no business in the repository.
-
-### Do not use `git worktree` to run tests
-
-`vendor/composer/installed.json` is listed in `.gitignore`, so a fresh worktree
-gets an incomplete `vendor/` and phpunit dies with exit 255 part way through.
-This happens on a clean `HEAD` too. Verify changes in the real working copy.
-
 ## Static analysis
 
 ```bash
-psalm            # errorLevel 7, see psalm.xml
+composer analyze:psalm
 ```
 
-`vendor/bin/psalm` is missing as well, so this needs a psalm on your `PATH`.
+Runs at `errorLevel` 7 (see `psalm.xml`) and currently exits 2 with 53
+pre-existing issues, 31 of them `UnusedClosureParam`. Check that your change
+does not add new ones rather than expecting a clean run.
 
 ## Conventions
 
