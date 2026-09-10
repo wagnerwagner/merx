@@ -1,0 +1,16 @@
+# Keep development files out of the composer dist archive.
+# The plugin is installed into site/plugins/merx of a shop, where none of this
+# is used — and AGENTS.md would otherwise be picked up as context by agents
+# working on the shop, where its advice does not apply.
+#
+# Only affects `composer install --prefer-dist` (the default). A --prefer-source
+# install clones the repository and still gets everything.
+
+/.editorconfig      export-ignore
+/.gitattributes     export-ignore
+/.github            export-ignore
+/.gitignore         export-ignore
+/AGENTS.md          export-ignore
+/phpunit.xml        export-ignore
+/psalm.xml          export-ignore
+/tests              export-ignore
