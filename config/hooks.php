@@ -1,9 +1,11 @@
 <?php
 
+use Kirby\Data\Yaml;
 use Stripe\Event;
 use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\OrderPage;
+use Wagnerwagner\Merx\PaymentDetails;
 
 return [
 	'wagnerwagner.merx.stripe-hooks' => function (Event $stripeEvent): void
@@ -21,7 +23,7 @@ return [
 							$kirby = $orderPage->kirby();
 							$orderPage = $kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent): OrderPage {
 								return $orderPage->update([
-									'paymentDetails' => (array)$paymentIntent->toArray(),
+									'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
 									'paymentComplete' => true,
 									'datePaid' => date('c'),
 								]);

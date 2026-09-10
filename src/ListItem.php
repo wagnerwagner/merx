@@ -220,7 +220,6 @@ class ListItem extends Obj
 
 		// remove price definition, when page is present
 		if ($array['page'] instanceof Page) {
-			/** @var Page $page */
 			$page = $array['page'];
 			$array['page'] = (string)$page->uuid() ?? $page->id();
 		}

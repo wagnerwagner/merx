@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Data\Yaml;
 use Kirby\Exception\Exception;
 
 /**
@@ -48,9 +49,9 @@ class Gateways
 			);
 		}
 
-		// Update content of VirtualOrderPage
+		// Store what is known before capturing, so a failed capture leaves a record
 		$virtualOrderPage->version()->update([
-			'paymentDetails' => (array)$paymentIntent->toArray(),
+			'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
 		]);
 
 		// Prepare meta data
@@ -71,20 +72,28 @@ class Gateways
 		}
 
 		if (!in_array($paymentIntent->status, ['succeeded', 'processing'])) {
+			// The full PaymentIntent holds the `client_secret` and the customer’s
+			// details and must not be handed to the caller.
 			throw new Exception(
 				key: 'merx.stripeError',
 				httpCode: 400,
-				details: $paymentIntent->toArray(),
+				details: [
+					'status' => $paymentIntent->status,
+				],
 			);
 		}
 
-		// Update content of VirtualOrderPage
+		// Update content of VirtualOrderPage with the state after the capture
+		$update = [
+			'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
+		];
+
 		if ($paymentIntent->status === 'succeeded') {
-			$virtualOrderPage->version()->update([
-				'paymentComplete' => true,
-				'datePaid' => date('c'),
-			]);
+			$update['paymentComplete'] = true;
+			$update['datePaid'] = date('c');
 		}
+
+		$virtualOrderPage->version()->update($update);
 
 		return $virtualOrderPage;
 	}
@@ -174,9 +183,9 @@ Gateways::$gateways['paypal'] = [
 		// execute payment
 		$paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
 
-		// Store the response, even when the capture was not successful
+		// Store the outcome, even when the capture was not successful
 		$virtualOrderPage->version()->update([
-			'paymentDetails' => (array)$paypalResponse,
+			'paymentDetails' => Yaml::encode(PaymentDetails::fromPayPalOrder($paypalResponse)),
 		]);
 
 		// Mark the order as paid only when PayPal actually captured it.

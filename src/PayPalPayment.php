@@ -40,12 +40,14 @@ class PayPalPayment
 			$params,
 		);
 		if (in_array(substr($response->code(), 0, 1), ['4', '5'])) {
+			// A PayPal response can hold the payer’s name, email and address, so it
+			// goes to the log instead of to the caller.
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log('PayPal request to ' . $endpoint . ' failed: ' . $response->content(), 'error');
+			}
 			throw new Exception(
 				key: 'merx.paypalError',
 				httpCode: $response->code(),
-				details: [
-					'paypalResponse' => $response->json(),
-				],
 			);
 		}
 		return $response->json(true);

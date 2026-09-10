@@ -33,6 +33,7 @@ return [
 	'field.page' => 'Seite',
 	'field.payment' => 'Bezahlung',
 	'field.paymentComplete' => 'Bezahlung vollständig',
+	'field.paymentDetails' => 'Zahlungsdetails',
 	'field.paymentGateway' => 'Bezahlmethode',
 	'field.personalData' => 'Persönliche Daten',
 	'field.price' => 'Preis',

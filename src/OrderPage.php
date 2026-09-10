@@ -17,7 +17,7 @@ use Wagnerwagner\Merx\ProductList;
  * @method \Kirby\Content\Field dateCreated() Date, when the order was created (date('c')).
  * @method \Kirby\Content\Field datePaid() Date, when the order was paid (date('c')).
  * @method \Kirby\Content\Field paymentComplete() True, when payment is complete
- * @method \Kirby\Content\Field paymentDetails() Details from the payment provider. Array stored as yaml
+ * @method \Kirby\Content\Field paymentDetails() Reconciliation record of the payment, stored as yaml. See \Wagnerwagner\Merx\PaymentDetails::$keys
  * @method \Kirby\Content\Field payPalOrderId()
  * @method \Kirby\Content\Field stripePaymentIntentId()
  * @method \Kirby\Content\Field redirect() URL the user is redirected to

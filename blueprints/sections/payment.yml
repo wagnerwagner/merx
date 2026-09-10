@@ -18,3 +18,12 @@ fields:
         en: "Yes"
         de: Ja
     translate: false
+  paymentDetails:
+    label: field.paymentDetails
+    type: textarea
+    font: monospace
+    buttons: false
+    counter: false
+    spellcheck: false
+    disabled: true
+    translate: false
