@@ -4,7 +4,7 @@ Merx is a plugin to create online shops with [Kirby](https://getkirby.com).
 
 ## Documentation
 
-[merx.wagnerwagner.de/docs](https://merx.wagnerwagner.de/docs)
+[merx.wagnerwagner.de/guide](https://merx.wagnerwagner.de/guide)
 
 ## Issues
 

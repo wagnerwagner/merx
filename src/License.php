@@ -30,7 +30,7 @@ class License extends \Kirby\Plugin\License
 				);
 			} else {
 				$this->name = 'Invalid Merx License (' . $this->licenseKey() . ')';
-				$this->link = 'https://merx.wagnerwagner.de/docs/options#license';
+				$this->link = 'https://merx.wagnerwagner.de/reference/options/config-options/license';
 				$this->status = new LicenseStatus(
 					value: 'missing',
 					theme: 'negative',

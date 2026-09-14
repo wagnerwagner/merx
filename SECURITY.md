@@ -4,7 +4,7 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
+| 2.x.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
@@ -16,4 +16,4 @@ If you want to encrypt your message, our GPG key is [B16C 5030 FBBE 4B5F F42
 ## Securing your Merx shop
 
 We have some security advices for using Merx:  
-https://merx.wagnerwagner.de/docs/security
+https://merx.wagnerwagner.de/guide/security
