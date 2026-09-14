@@ -11,6 +11,7 @@ return [
 		'auth' => false,
 		'method' => 'POST',
 		/**
+		 * @see https://merx.wagnerwagner.de/guide/configuration/stripe-webhooks
 		 * @return array Array with the `type` of the received Stripe event.
 		 */
 		'action' => function (): array

@@ -11,6 +11,7 @@ return [
 		 * `paymentGateway` or `paymentgateway` or `payment-gateway`
 		 * and all fields required by the order blueprint
 		 *
+		 * @see https://merx.wagnerwagner.de/guide/getting-started/create-checkout
 		 * @return array Array with redirect url when json is the preferred mime type, otherwise redirects with code 303.
 		 */
 		'action' => function (): array

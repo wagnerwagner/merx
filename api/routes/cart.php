@@ -45,6 +45,7 @@ return [
 		'auth' => false,
 		'method' => 'GET',
 		/**
+		 * @see https://merx.wagnerwagner.de/guide/getting-started/showing-the-cart
 		 * @return Cart The visitor’s current cart.
 		 */
 		'action' => function (): Cart
@@ -62,6 +63,7 @@ return [
 		'auth' => false,
 		'method' => 'POST',
 		/**
+		 * @see https://merx.wagnerwagner.de/guide/getting-started/adding-products
 		 * @return Cart The cart including the added item.
 		 */
 		'action' => function () use ($cartRequestData): Cart

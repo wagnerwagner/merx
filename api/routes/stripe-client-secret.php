@@ -7,6 +7,7 @@ return [
 		'pattern' => $endpoint . '/stripe-client-secret',
 		'auth' => false,
 		/**
+		 * @see https://merx.wagnerwagner.de/guide/payment-gateways/stripe-elements#submit-the-payment-to-stripe__retrieve-the-client-secret
 		 * @return array Array with the `clientSecret` of the cart’s Stripe PaymentIntent.
 		 */
 		'action' => function (): array
