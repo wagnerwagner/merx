@@ -178,7 +178,10 @@ class ListItem extends Obj
 	 */
 	public function total(): ?Price
 	{
-		$taxIncluded = $this->price?->pricingRule?->taxIncluded;
+		// A price without a pricing rule includes its tax, the same way `Price`
+		// itself treats it. Without the fallback the total would be built from the
+		// net price while the item’s own price is a gross one.
+		$taxIncluded = $this->price?->pricingRule?->taxIncluded ?? true;
 		$pricePerItem = $taxIncluded ? $this->price?->price : $this->price?->priceNet;
 
 		if (!is_float($pricePerItem)) {

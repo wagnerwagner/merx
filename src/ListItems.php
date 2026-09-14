@@ -72,7 +72,9 @@ class ListItems extends Collection
 		$tax = new Tax(priceNet: $priceNet, rate: $taxRate, currency: $currency);
 
 		return new Price(
-			price: $pricingRule?->taxIncluded ? $price : $priceNet,
+			// As in `ListItem::total()`, a list without a pricing rule adds up the
+			// gross prices, which is what `Price` expects to be handed.
+			price: ($pricingRule?->taxIncluded ?? true) ? $price : $priceNet,
 			tax: $tax,
 			currency: $currency,
 			pricingRule: $pricingRule,
