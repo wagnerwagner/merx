@@ -7,30 +7,30 @@ namespace Composer\Autoload;
 class ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d
 {
     public static $prefixLengthsPsr4 = array (
-        'W' => 
+        'W' =>
         array (
             'Wagnerwagner\\Merx\\' => 18,
         ),
-        'S' => 
+        'S' =>
         array (
             'Stripe\\' => 7,
         ),
-        'K' => 
+        'K' =>
         array (
             'Kirby\\' => 6,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Wagnerwagner\\Merx\\' => 
+        'Wagnerwagner\\Merx\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
-        'Stripe\\' => 
+        'Stripe\\' =>
         array (
             0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
         ),
-        'Kirby\\' => 
+        'Kirby\\' =>
         array (
             0 => __DIR__ . '/..' . '/getkirby/composer-installer/src',
         ),
@@ -423,6 +423,7 @@ class ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d
         'Wagnerwagner\\Merx\\OrderPage' => __DIR__ . '/../..' . '/src/OrderPage.php',
         'Wagnerwagner\\Merx\\OrdersPage' => __DIR__ . '/../..' . '/src/OrdersPage.php',
         'Wagnerwagner\\Merx\\PayPalPayment' => __DIR__ . '/../..' . '/src/PayPalPayment.php',
+        'Wagnerwagner\\Merx\\PaymentDetails' => __DIR__ . '/../..' . '/src/PaymentDetails.php',
         'Wagnerwagner\\Merx\\Price' => __DIR__ . '/../..' . '/src/Price.php',
         'Wagnerwagner\\Merx\\PricingRule' => __DIR__ . '/../..' . '/src/PricingRule.php',
         'Wagnerwagner\\Merx\\PricingRules' => __DIR__ . '/../..' . '/src/PricingRules.php',
