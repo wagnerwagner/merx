@@ -19,3 +19,4 @@
 /vendor/getkirby/composer-installer
 .DS_Store
 /tests/kirby
+/.phpunit.cache

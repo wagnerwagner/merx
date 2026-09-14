@@ -15,6 +15,10 @@ class ProductPageTest extends TestCase
 
 	public function setUp(): void
 	{
+		// Kirby installs Whoops’ error and exception handlers with every instance
+		// and leaves them behind, which PHPUnit reports as a risky test.
+		App::$enableWhoops = false;
+
 		$this->kirby = new App([
 			'options' => [
 				'wagnerwagner.merx.pricingRules' => [
@@ -69,6 +73,11 @@ class ProductPageTest extends TestCase
 		if (!$this->product instanceof ProductPage) {
 			throw new \RuntimeException('Failed to create ProductPage instance');
 		}
+	}
+
+	public function tearDown(): void
+	{
+		App::$enableWhoops = true;
 	}
 
 	public function testPrice(): void

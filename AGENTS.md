@@ -55,27 +55,17 @@ leaves composer believing the packages are still installed. The next
 which does not appear to be a file nor a folder`. Delete the named package
 directory so composer extracts it again, or use `--no-dev` to clean up.
 
-### The suite is not green
+### The suite is green
 
-Four tests fail before you change anything, plus one warning and three risky
-tests. Compare against this baseline rather than assuming you broke something:
+`OK (98 tests, 196 assertions)` at the time of writing. A failure is yours.
 
-- `ListItemTest::testPriceTotalCalculation`, `MerxTest::testFormatCurrencyDE`,
-  `PriceTest::test__toStringReturnsPriceAsString`,
-  `TaxRuleTest::testTaxRatePassesKirbyInstance` — locale and calculation
-  assertions
-- `Tests\ProductPageTest::testPrice`, `testPrices`, `testOrders` — risky; they
-  leave their own error and exception handlers installed. A test which creates
-  its own `App` avoids that with `App::$enableWhoops = false`
-- `CartTest` is empty and reports a warning
+A test which builds its own `App` has to set `App::$enableWhoops = false`
+first. Kirby installs Whoops’ error and exception handlers with every instance
+and leaves them behind, which PHPUnit reports as a risky test.
 
-At the time of writing that is `Tests: 86, Assertions: 164, Failures: 4,
-PHPUnit Warnings: 1, PHPUnit Deprecations: 1, Risky: 3`.
-
-`MerxTest::testinitializeOrderEmpty` additionally depends on test order. It
-passes in a full run because an earlier test fills the session cart, and fails
-under `--filter` with `merx.emptycart`. A filtered run failing there is not a
-regression.
+`MerxTest::testinitializeOrderEmpty` depends on test order. It passes in a full
+run because an earlier test fills the session cart, and fails under `--filter`
+with `merx.emptycart`. A filtered run failing there is not a regression.
 
 ## Static analysis
 
@@ -83,7 +73,7 @@ regression.
 composer analyze:psalm
 ```
 
-Runs at `errorLevel` 7 (see `psalm.xml`) and currently exits 2 with 53
+Runs at `errorLevel` 7 (see `psalm.xml`) and currently exits 2 with 51
 pre-existing issues, 31 of them `UnusedClosureParam`. Check that your change
 does not add new ones rather than expecting a clean run.
 
