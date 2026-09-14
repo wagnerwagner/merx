@@ -86,6 +86,52 @@ class PayPalPayment
 	}
 
 	/**
+	 * Purchase units of a PayPal order
+	 *
+	 * The `wagnerwagner.merx.paypal.purchaseUnits` option replaces Merx’ own
+	 * purchase unit. PayPal charges the sum of all purchase units, so an option
+	 * which returns a complete unit — `Cart::payPalPurchaseUnits()` does — would
+	 * otherwise have the payer approve the cart total twice.
+	 *
+	 * @param \Wagnerwagner\Merx\OrderPage $virtualOrderPage
+	 * @param string $currency ISO currency code
+	 *
+	 * @return array List of PayPal’s purchase_unit_request
+	 */
+	public static function purchaseUnits(OrderPage $virtualOrderPage, string $currency): array
+	{
+		$purchaseUnits = [];
+		if (is_callable(option('wagnerwagner.merx.paypal.purchaseUnits'))) {
+			$purchaseUnits = option('wagnerwagner.merx.paypal.purchaseUnits')();
+		}
+
+		if (is_array($purchaseUnits) === false || count($purchaseUnits) === 0) {
+			$purchaseUnits = [
+				[
+					'description' => (string)site()->title(),
+					'amount' => [
+						'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
+						'currency_code' => $currency,
+					],
+				],
+			];
+		}
+
+		// Binds the PayPal order to this order, so a captured payment cannot be
+		// replayed to complete a second one. A PayPal order has no field of its own
+		// for this — `custom_id` belongs to the purchase unit — and
+		// `Gateways::validatePayPalOrderIsUnused()` checks it when the payer returns,
+		// so Merx sets it on every purchase unit, including those from the option.
+		return array_map(
+			fn (array $purchaseUnit): array => [
+				...$purchaseUnit,
+				'custom_id' => (string)$virtualOrderPage->uid(),
+			],
+			$purchaseUnits,
+		);
+	}
+
+	/**
 	 * Create PayPal order from OrderPage
 	 *
 	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_create PayPal REST API Documentation
@@ -104,23 +150,7 @@ class PayPalPayment
 		$siteTitle = (string)site()->title();
 		$access = self::getAccessToken();
 
-		$purchaseUnits = [];
-		if (is_callable(option('wagnerwagner.merx.paypal.purchaseUnits'))) {
-			$purchaseUnits = option('wagnerwagner.merx.paypal.purchaseUnits')();
-		}
-
-		$purchaseUnits = [...$purchaseUnits, ...[
-			[
-				'description' => $siteTitle,
-				// Binds the PayPal order to this order, so a captured payment cannot
-				// be replayed to complete a second one.
-				'custom_id' => (string)$virtualOrderPage->uid(),
-				'amount' => [
-					'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
-					'currency_code' => $currency,
-				],
-			],
-		]];
+		$purchaseUnits = self::purchaseUnits($virtualOrderPage, $currency);
 
 		$returnUrl = Merx::returnUrl();
 

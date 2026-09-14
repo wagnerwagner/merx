@@ -5,7 +5,6 @@ namespace Wagnerwagner\Merx;
 use Kirby\Cms\App;
 use Wagnerwagner\Merx\ProductList;
 use Kirby\Exception\Exception;
-use stdClass;
 
 /**
  * Storage for cart items
@@ -169,7 +168,16 @@ class Cart extends ProductList
 	}
 
 	/**
-	 * Could be used for wagnerwagner.merx.paypal.purchaseUnits
+	 * Cart as PayPal purchase unit
+	 *
+	 * Could be used for wagnerwagner.merx.paypal.purchaseUnits. The option
+	 * replaces Merx’ own purchase unit, so the returned unit carries the total
+	 * of the whole cart.
+	 *
+	 * Items without a price and discounts (items with a negative price) are not
+	 * listed as items. PayPal adds the items up itself and rejects an order
+	 * whose numbers do not match, so discounts are settled through the
+	 * `discount` of the breakdown.
 	 *
 	 * @since 1.3.0
 	 *
@@ -177,50 +185,67 @@ class Cart extends ProductList
 	 */
 	public function payPalPurchaseUnits(): array
 	{
-		$siteTitle = site()->title();
-		$total = $this->total()->toFloat();
 		$currencyCode = $this->currency();
-		$discount = 0;
-		foreach ($this->values() as $cartItem) {
-			if ($cartItem['price'] <= 0) {
-				$discount += $cartItem['sum'];
-			}
-		}
-		$discount = $discount * -1;
-		$itemTotal = $total + $discount;
-		$items = array_filter($this->values(), function ($cartItem) {
-			return $cartItem['price'] > 0;
-		});
-		return [
-			[
-				'description' => (string)$siteTitle,
-				'amount' => [
-					'value' => number_format($total, 2, '.', ''),
-					'currency_code' => $currencyCode,
-					'breakdown' => [
-						'item_total' => [
-							'value' => number_format($itemTotal, 2, '.', ''),
-							'currency_code' => $currencyCode,
-						],
-						'discount' => [
-							'value' => number_format($discount, 2, '.', ''),
-							'currency_code' => $currencyCode,
-						],
-					],
-				],
-				'items' => array_map(function ($cartItem) use ($currencyCode) {
-					$cartUnitAmount = new stdClass;
-					$cartUnitAmount->value = number_format($cartItem['price'], 2, '.', '');
-					$cartUnitAmount->currency_code = $currencyCode;
+		$total = $this->total()?->toFloat() ?? 0.0;
 
-					return [
-						'name' => $cartItem['title'] ?? $cartItem['id'],
-						'unit_amount' => $cartUnitAmount,
-						'quantity' => $cartItem['quantity'],
-					];
-				}, $items),
+		$items = [];
+		$itemTotal = 0.0;
+
+		foreach ($this->values() as $listItem) {
+			/** @var ListItem $listItem */
+			$unitAmount = $listItem->price?->toFloat();
+
+			if ($unitAmount === null || $unitAmount <= 0) {
+				continue;
+			}
+
+			// PayPal only accepts whole quantities.
+			$quantity = (int)$listItem->quantity;
+
+			$items[] = [
+				'name' => $listItem->title ?? $listItem->key,
+				'unit_amount' => [
+					'value' => number_format($unitAmount, 2, '.', ''),
+					'currency_code' => $currencyCode,
+				],
+				'quantity' => (string)$quantity,
+			];
+
+			// PayPal recalculates the item total from the rounded unit amount and
+			// the quantity, so Merx has to add it up the same way.
+			$itemTotal += round($unitAmount, 2) * $quantity;
+		}
+
+		$purchaseUnit = [
+			'description' => (string)site()->title(),
+			'amount' => [
+				'value' => number_format($total, 2, '.', ''),
+				'currency_code' => $currencyCode,
 			],
 		];
+
+		$discount = round($itemTotal - $total, 2);
+
+		// The breakdown has to add up to the amount which is charged, and a
+		// discount can not be negative. A cart PayPal can not express as items —
+		// fractional quantities, for example — is sent as its total alone.
+		if (count($items) === 0 || $discount < 0) {
+			return [$purchaseUnit];
+		}
+
+		$purchaseUnit['amount']['breakdown'] = [
+			'item_total' => [
+				'value' => number_format($itemTotal, 2, '.', ''),
+				'currency_code' => $currencyCode,
+			],
+			'discount' => [
+				'value' => number_format($discount, 2, '.', ''),
+				'currency_code' => $currencyCode,
+			],
+		];
+		$purchaseUnit['items'] = $items;
+
+		return [$purchaseUnit];
 	}
 
 	/**
