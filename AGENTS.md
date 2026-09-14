@@ -42,6 +42,19 @@ and `installed.php`. **Never stage them** — `git add -A` would commit phpunit,
 psalm and Kirby into the distributed plugin. Stage the files you actually
 changed, by name.
 
+`composer install --no-dev` removes them again and restores the `vendor/` the
+plugin ships — run it once you are done testing. It rewrites the tracked files
+under `vendor/composer/` the way your composer version generates them, so check
+`git diff vendor/composer` afterwards and discard what is only generated-code
+churn (whitespace, `platform_check.php`).
+
+Never clean `vendor/` with `git clean -fd`. It removes the packages’ `.php`
+files but keeps their `LICENSE`, `*.md` and `*.json` (those are ignored), which
+leaves composer believing the packages are still installed. The next
+`composer install` then dies with `Could not scan for classes inside …/lib/
+which does not appear to be a file nor a folder`. Delete the named package
+directory so composer extracts it again, or use `--no-dev` to clean up.
+
 ### The suite is not green
 
 Four tests fail before you change anything, plus one warning and three risky
@@ -51,11 +64,12 @@ tests. Compare against this baseline rather than assuming you broke something:
   `PriceTest::test__toStringReturnsPriceAsString`,
   `TaxRuleTest::testTaxRatePassesKirbyInstance` — locale and calculation
   assertions
-- `CartTest` is empty and reports a warning
 - `Tests\ProductPageTest::testPrice`, `testPrices`, `testOrders` — risky; they
-  leave their own error and exception handlers installed
+  leave their own error and exception handlers installed. A test which creates
+  its own `App` avoids that with `App::$enableWhoops = false`
+- `CartTest` is empty and reports a warning
 
-At the time of writing that is `Tests: 72, Assertions: 151, Failures: 4,
+At the time of writing that is `Tests: 86, Assertions: 164, Failures: 4,
 PHPUnit Warnings: 1, PHPUnit Deprecations: 1, Risky: 3`.
 
 `MerxTest::testinitializeOrderEmpty` additionally depends on test order. It
@@ -96,6 +110,33 @@ does not add new ones rather than expecting a clean run.
 - **Payment records go through `PaymentDetails`.** Never write a raw provider
   response into `paymentDetails`; use `PaymentDetails::create()` or one of its
   provider methods, and encode the result as YAML.
+
+## Design
+
+Merx is a small plugin on top of a framework that already does most of this.
+Prefer the boring solution; the burden of proof is on the abstraction.
+
+- **No interfaces, abstract classes or traits in `src/`.** There are currently
+  none, on purpose. Two payment providers do not need a `PaymentInterface` —
+  `StripePayment` and `PayPalPayment` are plain classes and `Gateways` picks
+  between them.
+- **Wait for the third case.** Do not factor out a shared base or a strategy
+  until three real callers need it. Two similar blocks are cheaper to read than
+  one indirection.
+- **Use Kirby before writing your own.** `Str`, `Obj`, `Collection`, `Yaml`,
+  `Remote`, `A`, field methods, the page and version API. If a helper looks
+  generic, it probably exists in `Kirby\Toolkit`.
+- **No new dependencies.** The only non-Kirby runtime dependency is
+  `stripe/stripe-php`, and `vendor/` ships with the plugin, so every addition
+  becomes our download size and our CVE. PayPal talks HTTP through
+  `Remote::request()`.
+- **No new config options.** The options in `config/config.php` are credentials
+  and hooks into shop-specific logic, not switches. Pick a sensible default
+  instead of adding one; every option is a supported combination forever.
+- **New code goes in an existing class** unless it clearly owns new state. A
+  method on `Cart` beats a `CartQuantityValidator`.
+- **Delete instead of deprecating.** v2 is a breaking release; it is the moment
+  to remove things, not to carry a compatibility shim forever.
 
 ## Gotchas
 
