@@ -44,12 +44,19 @@ class ListItems extends Collection
 
 	/**
 	 * Total price of the ListItems
+	 *
+	 * The tax of the total keeps the tax rate the items share. Items with
+	 * different tax rates have no rate in common: `tax->rate` is `null` then and
+	 * `tax->price` the sum of their tax amounts. Use `taxRates()` for the
+	 * breakdown of such a list.
 	 */
 	public function total(): ?Price
 	{
 		$price = 0.0;
 		$priceNet = 0.0;
-		$taxRate = 0.0;
+		$taxPrice = 0.0;
+		$taxRate = null;
+		$mixedTaxRates = false;
 		$currency = null;
 		$pricingRule = null;
 		foreach ($this as $listItem) {
@@ -61,15 +68,25 @@ class ListItems extends Collection
 			}
 
 			$tax = $listItemTotal?->tax ?? null;
+			// An item without a tax is an item taxed at 0 %. A list of taxed and
+			// untaxed items does not share a rate either.
+			$listItemTaxRate = (float)$tax?->rate;
 
 			$price += (float)$listItemTotal?->price;
 			$priceNet += (float)$listItemTotal?->priceNet;
-			$taxRate += (float)$tax?->rate;
+			$taxPrice += (float)$tax?->price;
+			$mixedTaxRates = $mixedTaxRates || ($taxRate !== null && $taxRate !== $listItemTaxRate);
+			$taxRate ??= $listItemTaxRate;
 			$currency = $currency ?? $listItemTotal?->currency;
 			$pricingRule = $pricingRule ?? $listItemTotal?->pricingRule;
 		}
 
-		$tax = new Tax(priceNet: $priceNet, rate: $taxRate, currency: $currency);
+		// A shared rate is handed to `Price` as a rate, which derives the net price
+		// from it, the same way a single item’s price is built. Mixed rates are
+		// handed over as the sum of the items’ tax amounts instead.
+		$tax = $mixedTaxRates === true
+			? new Tax(priceNet: $priceNet, rate: null, currency: $currency, price: $taxPrice)
+			: $taxRate ?? 0.0;
 
 		return new Price(
 			// As in `ListItem::total()`, a list without a pricing rule adds up the
@@ -111,28 +128,31 @@ class ListItems extends Collection
 	/**
 	 * List of Tax items
 	 *
-	 * @return Wagnerwagner\Merx\Tax[]	List of `Tax` items sorted by tax rate with the total price for each tax rate.
+	 * @return Wagnerwagner\Merx\Tax[]	List of `Tax` items sorted by tax rate, lowest first, with the total tax amount for each tax rate.
 	 */
 	public function taxRates(): array
 	{
 		/** @var Tax[] $taxRates */
 		$taxRates = [];
-		/** @var Price[] $prices */
-		$prices = array_unique($this->pluck('total'));
 
-		foreach ($prices as $price) {
-			$tax = $price?->tax ?? null;
-			if ($tax !== null) {
-				$rate = (string)$tax->rate;
-				if (isset($taxRates[$rate])) {
-					$taxRates[$rate]->price += $price->price;
-				} else {
-					$taxRates[$rate] = $tax;
-				}
+		foreach ($this as $listItem) {
+			/** @var ListItem $listItem */
+			$tax = $listItem->total()?->tax ?? null;
+			if ($tax === null || $tax->rate === null) {
+				continue;
+			}
+
+			$rate = (string)$tax->rate;
+			if (isset($taxRates[$rate])) {
+				// `ListItem::total()` builds its `Tax` on every call, so the tax
+				// added up here is never an item’s own one.
+				$taxRates[$rate]->price = round($taxRates[$rate]->price + $tax->price, Price::roundingPrecision);
+			} else {
+				$taxRates[$rate] = $tax;
 			}
 		}
 
-		uasort($taxRates, fn (Tax $a, Tax $b) => $a->rate < $b->rate);
+		uasort($taxRates, fn (Tax $a, Tax $b) => $a->rate <=> $b->rate);
 
 		return $taxRates;
 	}

@@ -78,6 +78,16 @@ class Price extends Obj
 				$this->priceNet = $this->price;
 				$this->price = round($this->priceNet * (1 + $taxRate), $roundingPrecision);
 			}
+		} else if ($tax instanceof Tax && $tax->rate === null && $tax->price !== 0.0) {
+			// A tax amount without a rate belongs to the total of a list whose items
+			// carry different tax rates. There is no rate to divide by, so gross and
+			// net are what the amount sits between.
+			if ($taxIncluded === true) {
+				$this->priceNet = round($this->price - $tax->price, $roundingPrecision);
+			} else {
+				$this->priceNet = $this->price;
+				$this->price = round($this->priceNet + $tax->price, $roundingPrecision);
+			}
 		}
 
 		if (is_float($tax)) {

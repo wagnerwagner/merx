@@ -48,6 +48,49 @@ final class ProductListTest extends TestCase
 	}
 
 
+	public function testTotalOfItemsWithTheSameTaxRate(): void
+	{
+		$productList = new ProductList([
+			['key' => 'nice-shoes', 'price' => new Price(119.0, 0.19, 'default', 'EUR')],
+			['key' => 'nice-socks', 'price' => new Price(119.0, 0.19, 'default', 'EUR')],
+		]);
+
+		$total = $productList->total();
+
+		$this->assertEquals(238.0, $total->price);
+		$this->assertEquals(200.0, $total->priceNet);
+		$this->assertEquals(0.19, $total->tax->rate);
+		$this->assertEquals(38.0, $total->tax->price);
+
+		$taxRates = $productList->taxRates();
+		$this->assertCount(1, $taxRates);
+		$this->assertEquals(38.0, $taxRates['0.19']->price);
+	}
+
+
+	public function testTotalOfItemsWithDifferentTaxRates(): void
+	{
+		$productList = new ProductList([
+			['key' => 'nice-shoes', 'price' => new Price(119.0, 0.19, 'default', 'EUR')],
+			['key' => 'nice-socks', 'price' => new Price(107.0, 0.07, 'default', 'EUR')],
+		]);
+
+		$total = $productList->total();
+
+		$this->assertEquals(226.0, $total->price);
+		$this->assertEquals(200.0, $total->priceNet);
+		// The list has no tax rate of its own, `taxRates()` breaks it down
+		$this->assertNull($total->tax->rate);
+		$this->assertEquals(26.0, $total->tax->price);
+
+		$taxRates = $productList->taxRates();
+		$this->assertCount(2, $taxRates);
+		$this->assertSame(['0.07', '0.19'], array_keys($taxRates));
+		$this->assertEquals(19.0, $taxRates['0.19']->price);
+		$this->assertEquals(7.0, $taxRates['0.07']->price);
+	}
+
+
 	public function testAddRejectsNegativeQuantity(): void
 	{
 		$productList = new ProductList();

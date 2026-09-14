@@ -24,14 +24,16 @@ class Tax extends Obj
 	/**
 	 * Creates a new tax
 	 *
+	 * @param float $priceNet Net price the tax is calculated from
 	 * @param null|float $rate E.g. 0.19 (for 19 %)
 	 * @param null|string $currency Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
+	 * @param null|float $price Tax amount, when it does not follow from a single rate. E.g. the tax of a list whose items carry different tax rates. $priceNet is unused then.
 	 */
-	public function __construct(float $priceNet, ?float $rate = null, null|string $currency = null)
+	public function __construct(float $priceNet, ?float $rate = null, null|string $currency = null, ?float $price = null)
 	{
 		$this->currency = $currency;
 
-		$this->price = round($priceNet * ($rate ?? 0), Price::roundingPrecision);
+		$this->price = round($price ?? $priceNet * ($rate ?? 0), Price::roundingPrecision);
 
 		$this->rate = $rate;
 	}
@@ -39,10 +41,14 @@ class Tax extends Obj
 	/**
 	 * Converts the tax rate to a formatted string
 	 *
-	 * E.g. 19 %
+	 * E.g. 19 %. Empty when the tax has no single rate.
 	 */
 	public function rate(): string
 	{
+		if ($this->rate === null) {
+			return '';
+		}
+
 		return Merx::formatPercent($this->rate, maxFractionDigits: 1);
 	}
 
