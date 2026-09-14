@@ -6,6 +6,9 @@ return [
 	[
 		'pattern' => $endpoint . '/stripe-client-secret',
 		'auth' => false,
+		/**
+		 * @return array Array with the `clientSecret` of the cart’s Stripe PaymentIntent.
+		 */
 		'action' => function (): array
 		{
 				/** @var \Kirby\Api\Api $this */

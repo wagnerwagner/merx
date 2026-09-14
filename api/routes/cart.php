@@ -44,6 +44,9 @@ return [
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
 		'method' => 'GET',
+		/**
+		 * @return Cart The visitor’s current cart.
+		 */
 		'action' => function (): Cart
 		{
 			/** @var \Kirby\Api\Api $this */
@@ -58,6 +61,9 @@ return [
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
 		'method' => 'POST',
+		/**
+		 * @return Cart The cart including the added item.
+		 */
 		'action' => function () use ($cartRequestData): Cart
 		{
 			/** @var \Kirby\Api\Api $this */
@@ -76,6 +82,9 @@ return [
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
 		'method' => 'PATCH',
+		/**
+		 * @return Cart The cart including the updated item.
+		 */
 		'action' => function () use ($cartRequestData): Cart
 		{
 			/** @var \Kirby\Api\Api $this */
@@ -97,6 +106,9 @@ return [
 		'pattern' => $endpoint . '/cart',
 		'auth' => false,
 		'method' => 'DELETE',
+		/**
+		 * @return Cart The cart without the removed item.
+		 */
 		'action' => function (): Cart
 		{
 			/** @var \Kirby\Api\Api $this */

@@ -7,6 +7,9 @@ return [
 		'pattern' => $endpoint . '/success',
 		'auth' => false,
 		'method' => 'GET',
+		/**
+		 * @return void Redirects to the order page, or back to the checkout page when the order could not be completed.
+		 */
 		'action' => function ()
 		{
 			/** @var \Kirby\Api\Api $this */

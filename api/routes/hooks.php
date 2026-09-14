@@ -10,6 +10,9 @@ return [
 		'pattern' => $endpoint . '/hooks/stripe',
 		'auth' => false,
 		'method' => 'POST',
+		/**
+		 * @return array Array with the `type` of the received Stripe event.
+		 */
 		'action' => function (): array
 		{
 			/** @var \Kirby\Api\Api $this */
