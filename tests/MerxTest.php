@@ -111,6 +111,59 @@ final class MerxTest extends TestCase
 	}
 
 
+	public function testReturnUrlCarriesASessionTokenAndANonce(): void
+	{
+		$query = [];
+		parse_str(parse_url(Merx::returnUrl(), PHP_URL_QUERY) ?? '', $query);
+
+		$this->assertArrayHasKey(Merx::$sessionTokenParameterName, $query);
+		$this->assertArrayHasKey(Merx::$returnNonceParameterName, $query);
+		$this->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $query[Merx::$returnNonceParameterName]);
+	}
+
+
+	public function testReturnUrlKeepsTheNonceWithinOneCheckout(): void
+	{
+		// `returnUrl()` is called more than once while a payment is set up
+		$this->assertSame(
+			parse_url(Merx::returnUrl(), PHP_URL_QUERY),
+			parse_url(Merx::returnUrl(), PHP_URL_QUERY)
+		);
+	}
+
+
+	public function testCreateOrderRefusesAReturnWithoutTheNonce(): void
+	{
+		$kirby = kirby();
+		$kirby->session()->set(Merx::$returnNonceSessionKey, 'a1b2c3');
+		$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', [
+			'slug' => 'probe-order',
+			'template' => 'order',
+			'content' => ['paymentGateway' => 'invoice'],
+		]);
+
+		$merx = new Merx();
+		$this->expectExceptionCode('error.merx.invalidReturn');
+		$merx->createOrder(['PayerID' => 'forged']);
+	}
+
+
+	public function testCreateOrderRefusesAReturnWithTheWrongNonce(): void
+	{
+		$kirby = kirby();
+		$kirby->session()->set(Merx::$returnNonceSessionKey, 'a1b2c3');
+		$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', [
+			'slug' => 'probe-order',
+			'template' => 'order',
+			'content' => ['paymentGateway' => 'invoice'],
+		]);
+
+		$merx = new Merx();
+		$this->expectExceptionCode('error.merx.invalidReturn');
+		$merx->createOrder([Merx::$returnNonceParameterName => 'wrong']);
+	}
+
+
 	public function testExceptionDetailsAreHiddenWithoutDebug(): void
 	{
 		$this->assertSame(

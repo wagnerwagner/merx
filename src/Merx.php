@@ -10,6 +10,7 @@ use Kirby\Toolkit\Str;
 use Kirby\Toolkit\Escape;
 use Kirby\Exception\Exception;
 use Kirby\Http\Url;
+use Kirby\Session\Session;
 use Kirby\Toolkit\Locale;
 
 /**
@@ -40,6 +41,14 @@ class Merx
 	protected PricingRules $pricingRules;
 
 	public static string $sessionTokenParameterName = 'sessionToken';
+
+	public static string $returnNonceParameterName = 'nonce';
+
+	/**
+	 * Session key of the one-time nonce which ties a return from the payment
+	 * provider to the checkout that started it
+	 */
+	public static string $returnNonceSessionKey = 'wagnerwagner.merx.returnNonce';
 
 	/**
 	 * Content fields of an `OrderPage` which Merx sets itself
@@ -74,7 +83,8 @@ class Merx
 	/**
 	 * Url to be used to complete the payment
 	 *
-	 * Includes the session token and language code (for multilang pages)
+	 * Includes the session token, a one-time nonce and the language code (for
+	 * multilang pages)
 	 *
 	 * @return string e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6&language=de
 	 */
@@ -82,13 +92,69 @@ class Merx
 	{
 		$kirby = App::instance();
 		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('wagnerwagner.merx.api.endpoint', 'shop') . '/success';
+		// Creating the nonce writes to the session, which starts it. Without that
+		// `token()` below is null until something else has written to it.
+		$nonce = static::returnNonce();
+
 		$url = Url::build([
 			'query' => [
 				Merx::$sessionTokenParameterName => $kirby->session()->token(),
+				Merx::$returnNonceParameterName => $nonce,
 				'language' => $kirby->multilang() ? $kirby->currentLanguage()->code() : null,
 			]
 		], $apiEndpint);
 		return $url;
+	}
+
+	/**
+	 * One-time nonce for the return url, created once per checkout
+	 *
+	 * `returnUrl()` is called more than once while a payment is set up, so the
+	 * nonce is kept in the session and reused until `initializeOrder()` starts
+	 * the next checkout.
+	 */
+	protected static function returnNonce(): string
+	{
+		$kirby = App::instance();
+		$nonce = $kirby->session()->get(static::$returnNonceSessionKey);
+
+		if (is_string($nonce) === false || $nonce === '') {
+			$nonce = bin2hex(random_bytes(16));
+			$kirby->session()->set(static::$returnNonceSessionKey, $nonce);
+		}
+
+		return $nonce;
+	}
+
+	/**
+	 * Makes sure a return actually belongs to the checkout stored in $session
+	 *
+	 * `/api/shop/success` completes the payment on a GET request, and session
+	 * cookies are sent with a top-level GET even across sites. Without this a
+	 * link on any page could complete a pending payment of a visitor who
+	 * approved it at the provider but never returned.
+	 *
+	 * @throws Exception merx.invalidReturn when the nonce is missing or does not match
+	 */
+	protected static function validateReturnNonce(Session $session, array $data): void
+	{
+		$nonce = $session->get(static::$returnNonceSessionKey);
+
+		// Checkouts started before the nonce existed carry none
+		if (is_string($nonce) === false || $nonce === '') {
+			return;
+		}
+
+		$given = $data[static::$returnNonceParameterName] ?? null;
+
+		if (is_string($given) === false || hash_equals($nonce, $given) === false) {
+			throw new Exception(
+				key: 'merx.invalidReturn',
+				httpCode: 400,
+			);
+		}
+
+		$session->remove(static::$returnNonceSessionKey);
 	}
 
 
@@ -216,17 +282,33 @@ class Merx
 		return $this->cart;
 	}
 
-	private function getVirtualOrderPageFromSession(): OrderPage
+	private function getVirtualOrderPageFromSession(array $data = []): OrderPage
 	{
 		$kirby = App::instance();
-		$orderPageFromSession = $kirby->session()->pull('wagnerwagner.merx.virtualOrderPage');
+		$session = $kirby->session();
+		$orderPageFromSession = $session->get('wagnerwagner.merx.virtualOrderPage');
+
 		if (!$orderPageFromSession) {
-			$orderPageFromSession = $kirby->sessionHandler()->getManually($_GET[static::$sessionTokenParameterName])->pull('wagnerwagner.merx.virtualOrderPage');
+			// The visitor may return in a different browser, where the session
+			// cookie is not available. The session token names the session then.
+			$sessionToken = $data[static::$sessionTokenParameterName] ?? $_GET[static::$sessionTokenParameterName] ?? null;
+
+			if (is_string($sessionToken) === false || $sessionToken === '') {
+				throw new \Exception('Session "wagnerwagner.merx.virtualOrderPage" does not exist.');
+			}
+
+			$session = $kirby->sessionHandler()->getManually($sessionToken);
+			$orderPageFromSession = $session->get('wagnerwagner.merx.virtualOrderPage');
 
 			if (!$orderPageFromSession) {
 				throw new \Exception('Session "wagnerwagner.merx.virtualOrderPage" does not exist.');
 			}
 		}
+
+		// The nonce lives in the same session as the order it belongs to
+		static::validateReturnNonce($session, $data);
+
+		$session->remove('wagnerwagner.merx.virtualOrderPage');
 
 		$orderPageFromSession['parent'] = $kirby->site()->ordersPage();
 
@@ -264,8 +346,13 @@ class Merx
 	public function initializeOrder(array $data): string
 	{
 		try {
-			$redirect = $this->returnUrl();
 			$kirby = App::instance();
+
+			// Start a new nonce for this checkout, so a return url handed out
+			// earlier cannot complete this order.
+			$kirby->session()->remove(static::$returnNonceSessionKey);
+
+			$redirect = $this->returnUrl();
 
 			// cleaning up and secure post data
 			$data = array_map(function ($item) {
@@ -369,7 +456,7 @@ class Merx
 		$kirby = App::instance();
 
 		try {
-			$virtualOrderPage = $this->getVirtualOrderPageFromSession();
+			$virtualOrderPage = $this->getVirtualOrderPageFromSession($data);
 			$gateway = $this->getGateway($virtualOrderPage->paymentGateway()->toString());
 
 			$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
