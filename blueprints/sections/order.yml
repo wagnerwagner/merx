@@ -26,12 +26,12 @@ fields:
     width: 1/3
     text:
       en: >
-        Invoice Number: {{ page.invoiceNumber }}<br>
+        Invoice Number: {{ page.orderNumber }}<br>
         Total: {{ page.total.toString }}<br>
         Invoice Date: {{ page.dateCreated }}<br>
         Paid Date: {{ page.datePaid }}<br>
       de: >
-        Rechnungsnummer: {{ page.invoiceNumber }}<br>
+        Rechnungsnummer: {{ page.orderNumber }}<br>
         Summe: {{ page.total.toString }}<br>
         Rechnungsdatum: {{ page.dateCreated }}<br>
         Bezahldatum: {{ page.datePaid }}<br>
