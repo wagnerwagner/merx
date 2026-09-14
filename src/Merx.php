@@ -38,6 +38,11 @@ class Merx
 	 */
 	protected static array $percentFormatters = [];
 
+	/**
+	 * Cache of `NumberFormatter` objects by locale
+	 */
+	protected static array $decimalFormatters = [];
+
 	protected PricingRules $pricingRules;
 
 	public static string $sessionTokenParameterName = 'sessionToken';
@@ -172,10 +177,22 @@ class Merx
 		int|null $maxFractionDigits = null,
 	): string {
 		$locale ??= Locale::get(LC_NUMERIC);
-		$formatter = static::currencyNumberFormatter($locale);
+
+		// Without a currency code there is no symbol to place. `formatCurrency()`
+		// would use the generic currency sign (¤), so the number is formatted on
+		// its own instead.
+		$formatter = $currency === null
+			? static::decimalNumberFormatter($locale)
+			: static::currencyNumberFormatter($locale);
+
 		if (is_int($maxFractionDigits)) {
-			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
+			$formatter?->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
 		}
+
+		if ($currency === null) {
+			return (string)($formatter?->format($number) ?? $number);
+		}
+
 		$number = $formatter?->formatCurrency($number, $currency) ?? $number;
 		return (string)$number;
 	}
@@ -271,6 +288,33 @@ class Merx
 		}
 
 		return static::$percentFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::PERCENT);
+	}
+
+	/**
+	 * Returns (and creates) a decimal number formatter for a given locale
+	 *
+	 * Used for prices without a currency. It keeps the two fraction digits of a
+	 * price, where `NumberFormatter::DECIMAL` would print 10.20 as `10.2`.
+	 */
+	protected static function decimalNumberFormatter(
+		string $locale
+	): NumberFormatter|null {
+		if ($formatter = static::$decimalFormatters[$locale] ?? null) {
+			return $formatter;
+		}
+
+		if (
+			extension_loaded('intl') !== true ||
+			class_exists('NumberFormatter') !== true
+		) {
+			return null; // @codeCoverageIgnore
+		}
+
+		$formatter = new NumberFormatter($locale, NumberFormatter::DECIMAL);
+		$formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, Price::roundingPrecision);
+		$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, Price::roundingPrecision);
+
+		return static::$decimalFormatters[$locale] = $formatter;
 	}
 
 	/**
