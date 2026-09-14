@@ -162,6 +162,8 @@ class Merx
 	 * Formats a currency number
 	 * E.g. 1045.12 → € 1,045.12
 	 * Similar to I18n::formatNumber()
+	 *
+	 * @see https://merx.wagnerwagner.de/guide/configuration/localization
 	 */
 	public static function formatCurrency(
 		int|float $number,
@@ -183,6 +185,8 @@ class Merx
 	 * Formats a float to percent
 	 * E.g. 0.19 → 19 %
 	 * Similar to I18n::formatNumber()
+	 *
+	 * @see https://merx.wagnerwagner.de/guide/configuration/localization
 	 */
 	public static function formatPercent(
 		int|float $number,
