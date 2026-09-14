@@ -18,10 +18,10 @@ return [
 				go($orderPage->url());
 			} catch (Exception $exception) {
 				// Only throw exception for json requests, otherwise redirect to checkout page.
-				if ($this->kirby()->visitor()->acceptedMimeType()->type() === 'application/json') {
+				if ($this->kirby()->visitor()->acceptedMimeType()?->type() === 'application/json') {
 					throw $exception;
 				}
-				go($this->site()->checkoutPage());
+				go(site()->checkoutPage());
 			}
 		},
 	],

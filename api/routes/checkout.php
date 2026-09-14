@@ -11,7 +11,7 @@ return [
 		 * `paymentGateway` or `paymentgateway` or `payment-gateway`
 		 * and all fields required by the order blueprint
 		 *
-		 * @return array Array with redirect url when request header accepts json, otherwise redirects with code 303.
+		 * @return array Array with redirect url when json is the preferred mime type, otherwise redirects with code 303.
 		 */
 		'action' => function (): array
 		{
@@ -26,7 +26,9 @@ return [
 
 			$redirectUrl = $merx->initializeOrder($data);
 
-			if ($this->kirby()->visitor()->acceptsMimeType('application/json')) {
+			// The preferred type, not acceptsMimeType(): a browser's `*/*` fallback
+			// accepts json too, which would answer a plain form post with json.
+			if ($this->kirby()->visitor()->acceptedMimeType()?->type() === 'application/json') {
 				return [
 					'status' => 'redirect',
 					'message' => 'redirect',
