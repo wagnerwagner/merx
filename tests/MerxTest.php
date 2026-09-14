@@ -15,9 +15,12 @@ final class MerxTest extends TestCase
 	}
 	public function testFormatCurrencyDE(): void
 	{
-		setlocale(LC_ALL, 'de_DE');
+		if (setlocale(LC_ALL, 'de_DE') === false) {
+			$this->markTestSkipped('The de_DE locale is not installed.');
+		}
+		// German writes the symbol last, separated by a no-break space
 		$this->assertEquals(
-			'€10.20',
+			"10,20\u{00A0}€",
 			Merx::formatCurrency(10.20, 'EUR')
 		);
 	}

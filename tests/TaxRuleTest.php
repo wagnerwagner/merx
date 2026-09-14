@@ -37,7 +37,7 @@ class TaxRuleTest extends TestCase
 		$kirby = $this->createMock(App::class);
 		$rule = new TaxRule('vat', null, function ($passedKirby) use ($kirby) {
 			$this->assertSame($kirby, $passedKirby);
-			return 7;
+			return 0.07;
 		});
 		$this->assertEquals(0.07, $rule->taxRate($kirby));
 	}
