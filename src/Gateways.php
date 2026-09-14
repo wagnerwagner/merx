@@ -49,6 +49,9 @@ class Gateways
 			);
 		}
 
+		// The payment has to cover the order before anything is captured
+		static::validatePaymentAmount($paymentIntent->amount, $paymentIntent->currency, $virtualOrderPage);
+
 		// Store what is known before capturing, so a failed capture leaves a record
 		$virtualOrderPage->version()->update([
 			'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
@@ -99,6 +102,43 @@ class Gateways
 	}
 
 	/**
+	 * Makes sure a payment actually covers the order it is about to complete
+	 *
+	 * A Stripe PaymentIntent is created when the client secret is fetched and
+	 * keeps the cart total of that moment. The cart stays editable until the
+	 * checkout, so both can drift apart: the order would list goods the payment
+	 * does not pay for. Correcting the amount is the frontend’s job — it has to
+	 * fetch a new client secret when the cart changes — so this only refuses.
+	 *
+	 * @param int $amount Amount of the payment in the currency’s minor unit
+	 * @param string|null $currency Three-letter ISO currency code of the payment
+	 * @throws \Kirby\Exception\Exception merx.amountMismatch when amount or currency do not match the cart
+	 */
+	public static function validatePaymentAmount(int $amount, string|null $currency, OrderPage $virtualOrderPage): void
+	{
+		$total = $virtualOrderPage->cart()->total();
+
+		// Same factor `StripePayment::createStripePaymentIntent()` uses
+		if ($amount !== (int)round($total->toFloat() * 100)) {
+			throw new Exception(
+				key: 'merx.amountMismatch',
+				httpCode: 400,
+			);
+		}
+
+		if (
+			is_string($currency) === true &&
+			is_string($total->currency) === true &&
+			strtoupper($currency) !== strtoupper($total->currency)
+		) {
+			throw new Exception(
+				key: 'merx.amountMismatch',
+				httpCode: 400,
+			);
+		}
+	}
+
+	/**
 	 * Makes sure a PayPal order has not been used for another order already
 	 *
 	 * PayPal refuses a second capture itself, but relying on that leaves the
@@ -121,8 +161,7 @@ class Gateways
 		}
 
 		// `custom_id` is set when the PayPal order is created and names the order
-		// it belongs to. Orders created before this existed carry none; those are
-		// covered by the status check above.
+		// it belongs to.
 		$customIds = [];
 		foreach ($paypalOrder['purchase_units'] ?? [] as $purchaseUnit) {
 			if (isset($purchaseUnit['custom_id']) === true) {

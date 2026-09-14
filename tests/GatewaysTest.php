@@ -80,6 +80,53 @@ final class GatewaysTest extends TestCase
 	}
 
 
+	private static function orderPageWithCart(float $price, string $currency = 'EUR'): OrderPage
+	{
+		$listItems = new ListItems([
+			'nice-shoes' => new ListItem(
+				key: 'nice-shoes',
+				price: new Price(price: $price, currency: $currency),
+			),
+		]);
+
+		return new OrderPage([
+			'slug' => 'probe-order',
+			'template' => 'order',
+			'content' => ['items' => $listItems->toYaml()],
+		]);
+	}
+
+	public function testMatchingAmountPasses(): void
+	{
+		$this->expectNotToPerformAssertions();
+		Gateways::validatePaymentAmount(4999, 'eur', self::orderPageWithCart(49.99));
+	}
+
+	public function testTooLowAmountIsRefused(): void
+	{
+		// Cart grew after the client secret was fetched
+		$this->expectException(Exception::class);
+		Gateways::validatePaymentAmount(1000, 'eur', self::orderPageWithCart(110.00));
+	}
+
+	public function testTooHighAmountIsRefused(): void
+	{
+		$this->expectException(Exception::class);
+		Gateways::validatePaymentAmount(11000, 'eur', self::orderPageWithCart(49.99));
+	}
+
+	public function testOffByOneCentIsRefused(): void
+	{
+		$this->expectException(Exception::class);
+		Gateways::validatePaymentAmount(4998, 'eur', self::orderPageWithCart(49.99));
+	}
+
+	public function testCurrencyMismatchIsRefused(): void
+	{
+		$this->expectException(Exception::class);
+		Gateways::validatePaymentAmount(4999, 'usd', self::orderPageWithCart(49.99, 'EUR'));
+	}
+
 	private static function virtualOrderPage(string $uid = 'aaaabbbbccccdddd'): OrderPage
 	{
 		return new OrderPage([

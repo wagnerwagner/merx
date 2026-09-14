@@ -1,6 +1,7 @@
 <?php
 
 return [
+	'error.merx.amountMismatch' => 'The payment does not match the cart. Please start the checkout again.',
 	'error.merx.cart.add' => 'Item “{key}” could not be added to cart.',
 	'error.merx.cart.update' => 'Cart items could not be updated.',
 	'error.merx.cart.maxQuantity' => 'There are only {maxQuantity} of “{title}” left.',

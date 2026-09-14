@@ -1,6 +1,7 @@
 <?php
 
 return [
+	'error.merx.amountMismatch' => 'Die Zahlung passt nicht zum Warenkorb. Bitte starte die Kasse erneut.',
 	'error.merx.cart.add' => 'Produkt „{key}“ konnte nicht zum Warenkorb hinzugefügt werden.',
 	'error.merx.cart.update' => 'Produkte konnten nicht aktualisiert werden.',
 	'error.merx.cart.maxQuantity' => 'Von „{title}“ sind nur noch {maxQuantity} verfügbar.',
