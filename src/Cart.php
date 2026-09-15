@@ -11,6 +11,8 @@ use Kirby\Exception\Exception;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ *
+ * @extends \Wagnerwagner\Merx\ProductList<ListItem>
  */
 class Cart extends ProductList
 {
