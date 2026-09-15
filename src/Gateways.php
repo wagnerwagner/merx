@@ -139,6 +139,43 @@ class Gateways
 	}
 
 	/**
+	 * Makes sure a PayPal order charges what the order costs
+	 *
+	 * The amount is fixed when the PayPal order is created. The default purchase
+	 * unit takes it from the cart, but `paypal.purchaseUnits` lets a shop build
+	 * its own — a mistake there would charge the wrong amount while the order is
+	 * still marked as paid.
+	 *
+	 * Checked on the retrieved order rather than on the one Merx sent, and before
+	 * the capture, so no money moves on a mismatch. The create response cannot be
+	 * used: PayPal answers it minimally and leaves the purchase units out.
+	 *
+	 * @param array $paypalOrder Response of `PayPalPayment::retrievePayPalOrder()`
+	 * @throws \Kirby\Exception\Exception merx.amountMismatch
+	 */
+	public static function validatePayPalOrderAmount(array $paypalOrder, OrderPage $virtualOrderPage): void
+	{
+		$amount = 0.0;
+		$currency = null;
+
+		foreach ($paypalOrder['purchase_units'] ?? [] as $purchaseUnit) {
+			$value = $purchaseUnit['amount']['value'] ?? null;
+
+			if ($value !== null) {
+				// PayPal charges the sum of the purchase units
+				$amount += (float)$value;
+				$currency ??= $purchaseUnit['amount']['currency_code'] ?? null;
+			}
+		}
+
+		static::validatePaymentAmount(
+			(int)round($amount * 100),
+			is_string($currency) === true ? $currency : null,
+			$virtualOrderPage,
+		);
+	}
+
+	/**
 	 * Makes sure a PayPal order has not been used for another order already
 	 *
 	 * PayPal refuses a second capture itself, but relying on that leaves the
@@ -261,11 +298,13 @@ Gateways::$gateways['paypal'] = [
 
 		$payPalOrderId = (string)$virtualOrderPage->payPalOrderId();
 
+		$payPalOrder = PayPalPayment::retrievePayPalOrder($payPalOrderId);
+
 		// Refuse a PayPal order which was already captured for another order
-		Gateways::validatePayPalOrderIsUnused(
-			PayPalPayment::retrievePayPalOrder($payPalOrderId),
-			$virtualOrderPage,
-		);
+		Gateways::validatePayPalOrderIsUnused($payPalOrder, $virtualOrderPage);
+
+		// The payment has to cover the order before anything is captured
+		Gateways::validatePayPalOrderAmount($payPalOrder, $virtualOrderPage);
 
 		// execute payment
 		$paypalResponse = PayPalPayment::executePayPalPayment($payPalOrderId);

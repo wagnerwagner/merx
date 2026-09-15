@@ -127,6 +127,66 @@ final class GatewaysTest extends TestCase
 		Gateways::validatePaymentAmount(4999, 'usd', self::orderPageWithCart(49.99, 'EUR'));
 	}
 
+	private static function payPalOrderWithUnits(array ...$units): array
+	{
+		return [
+			'id' => '5O190127TN364715T',
+			'status' => 'APPROVED',
+			'purchase_units' => array_map(
+				fn (array $u): array => ['amount' => ['value' => $u[0], 'currency_code' => $u[1] ?? 'EUR']],
+				$units,
+			),
+		];
+	}
+
+	public function testPayPalOrderCoveringTheCartPasses(): void
+	{
+		$this->expectNotToPerformAssertions();
+		Gateways::validatePayPalOrderAmount(
+			self::payPalOrderWithUnits(['49.99']),
+			self::orderPageWithCart(49.99)
+		);
+	}
+
+	public function testPayPalOrderChargingTooLittleIsRefused(): void
+	{
+		// A `paypal.purchaseUnits` callback which does not match the cart
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalOrderAmount(
+			self::payPalOrderWithUnits(['10.00']),
+			self::orderPageWithCart(110.00)
+		);
+	}
+
+	public function testPayPalPurchaseUnitsAreAddedUp(): void
+	{
+		// PayPal charges the sum, so the sum is what has to match
+		$this->expectNotToPerformAssertions();
+		Gateways::validatePayPalOrderAmount(
+			self::payPalOrderWithUnits(['40.00'], ['9.99']),
+			self::orderPageWithCart(49.99)
+		);
+	}
+
+	public function testPayPalCurrencyMismatchIsRefused(): void
+	{
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalOrderAmount(
+			self::payPalOrderWithUnits(['49.99', 'USD']),
+			self::orderPageWithCart(49.99, 'EUR')
+		);
+	}
+
+	public function testPayPalOrderWithoutPurchaseUnitsIsRefused(): void
+	{
+		// Fail closed rather than capturing an order Merx cannot read
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalOrderAmount(
+			['id' => '5O190127TN364715T', 'status' => 'APPROVED'],
+			self::orderPageWithCart(49.99)
+		);
+	}
+
 	private static function virtualOrderPage(string $uid = 'aaaabbbbccccdddd'): OrderPage
 	{
 		return new OrderPage([
