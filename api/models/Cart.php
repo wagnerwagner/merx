@@ -12,6 +12,7 @@ return [
 	'views' => array_merge_recursive($productList['views'], [
 		'default' => [
 			'checkout' => [
+				'title',
 				'url',
 			],
 		]
