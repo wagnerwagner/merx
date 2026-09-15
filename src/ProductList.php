@@ -56,6 +56,7 @@ class ProductList extends ListItems
 		if ($listItem === null) {
 			throw new Exception(
 				key: 'merx.cart.missingItem',
+				httpCode: 400,
 				data: [
 					'key' => $key,
 				],
@@ -109,6 +110,7 @@ class ProductList extends ListItems
 		if (is_finite($listItem->quantity) === false || $listItem->quantity < 0) {
 			throw new Exception(
 				key: 'merx.cart.quantity',
+				httpCode: 400,
 				data: [
 					'title' => $listItem->title,
 				],
@@ -119,6 +121,7 @@ class ProductList extends ListItems
 		if (is_float($maxQuantity) && $listItem->quantity > $maxQuantity) {
 			throw new Exception(
 				key: 'merx.cart.maxQuantity',
+				httpCode: 400,
 				data: [
 					'title' => $listItem->title,
 					'maxQuantity' => $maxQuantity,

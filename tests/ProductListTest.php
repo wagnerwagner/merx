@@ -164,4 +164,34 @@ final class ProductListTest extends TestCase
 		$this->expectException(Exception::class);
 		$productList->updateItem('does-not-exist', ['quantity' => 1.0]);
 	}
+
+	/**
+	 * Bad input from the API is a client error. Without an explicit code Kirby
+	 * answers 500, which tells the frontend the server broke.
+	 */
+	public function testRejectedInputIsReportedAsAClientError(): void
+	{
+		$productList = new ProductList();
+		$productList->add([
+			'key' => 'nice-shoes',
+			'price' => 99.99,
+			'data' => ['maxQuantity' => 2.0],
+		]);
+
+		$cases = [
+			'merx.cart.quantity' => fn () => $productList->updateItem('nice-shoes', ['quantity' => -1.0]),
+			'merx.cart.maxQuantity' => fn () => $productList->updateItem('nice-shoes', ['quantity' => 3.0]),
+			'merx.cart.missingItem' => fn () => $productList->updateItem('does-not-exist', ['quantity' => 1.0]),
+		];
+
+		foreach ($cases as $key => $case) {
+			try {
+				$case();
+				$this->fail($key . ' was not thrown.');
+			} catch (Exception $exception) {
+				$this->assertSame('error.' . $key, $exception->getCode());
+				$this->assertSame(400, $exception->getHttpCode());
+			}
+		}
+	}
 }
