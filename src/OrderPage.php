@@ -6,6 +6,7 @@ use Kirby\Cms\Page;
 use Kirby\Content\Field;
 use Kirby\Content\VersionId;
 use Wagnerwagner\Merx\ListItem;
+use Wagnerwagner\Merx\Logger;
 use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
 
@@ -50,7 +51,38 @@ class OrderPage extends Page
 		$response->header('Referrer-Policy', 'same-origin');
 		$response->header('X-Robots-Tag', 'noindex, nofollow');
 
+		$this->logRender();
+
 		return parent::render($data, $contentType, $versionId);
+	}
+
+	/**
+	 * Records that this order was looked at
+	 *
+	 * The url is the only thing protecting an order, and it never expires. A
+	 * log is what turns “someone may have the link” into something that can be
+	 * answered afterwards.
+	 *
+	 * The visitor’s ip is hashed: enough to tell one visitor from another, not
+	 * enough to identify them. Follows the `wagnerwagner.merx.logging` option.
+	 */
+	protected function logRender(): void
+	{
+		if (option('wagnerwagner.merx.logging') !== true) {
+			return;
+		}
+
+		$kirby = $this->kirby();
+
+		Logger::log([
+			'event' => 'orderPage.render',
+			'order' => $this->slug(),
+			'orderNumber' => $this->orderNumber()->value(),
+			// Panel users are named, so an order opened from the Panel can be
+			// told apart from one opened with the link alone
+			'user' => $kirby->user()?->id(),
+			'visitor' => $kirby->visitor()->ip(hash: true),
+		]);
 	}
 
 	/**

@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx\Tests;
 
 use Kirby\Cms\App;
 use Kirby\Filesystem\Dir;
+use Kirby\Filesystem\F;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\OrderPage;
 
@@ -30,6 +31,10 @@ final class OrderPageHeadersTest extends TestCase
 				'index' => $this->root,
 				'content' => $this->root . '/content',
 				'site' => $this->root . '/site',
+				'logs' => $this->root . '/logs',
+			],
+			'options' => [
+				'wagnerwagner.merx.logging' => true,
 			],
 		]);
 	}
@@ -82,5 +87,44 @@ final class OrderPageHeadersTest extends TestCase
 		$this->kirby->response()->header('Referrer-Policy', 'no-referrer');
 
 		$this->assertSame('no-referrer', $this->kirby->response()->headers()['Referrer-Policy'] ?? null);
+	}
+
+	protected function log(): string
+	{
+		$file = $this->root . '/logs/' . date('Y-m-d') . '-merx.log';
+		return F::exists($file) ? F::read($file) : '';
+	}
+
+	public function testRenderIsLogged(): void
+	{
+		$orderPage = $this->orderPage();
+		$this->assertSame('', $this->log());
+
+		$orderPage->render();
+		$log = $this->log();
+
+		$this->assertStringContainsString('orderPage.render', $log);
+		$this->assertStringContainsString('aaaabbbbccccdddd', $log);
+	}
+
+	public function testTheVisitorIsLoggedHashedOnly(): void
+	{
+		$ip = '203.0.113.9';
+		$this->kirby->visitor()->ip($ip);
+
+		$this->orderPage()->render();
+		$log = $this->log();
+
+		// The raw address must not be in there, a hash of it may
+		$this->assertStringNotContainsString($ip, $log);
+		$this->assertStringContainsString(substr(hash('sha256', $ip), 0, 50), $log);
+	}
+
+	public function testNothingIsLoggedWhenLoggingIsOff(): void
+	{
+		$this->kirby = $this->kirby->clone(['options' => ['wagnerwagner.merx.logging' => false]]);
+		$this->orderPage()->render();
+
+		$this->assertSame('', $this->log());
 	}
 }
