@@ -29,7 +29,8 @@ class License extends \Kirby\Plugin\License
 					icon: 'check'
 				);
 			} else {
-				$this->name = 'Invalid Merx License (' . $this->licenseKey() . ')';
+				// Masked: the Panel shows this to every user who can see plugins
+				$this->name = 'Invalid Merx License (' . $this->privateLicense() . ')';
 				$this->link = 'https://merx.wagnerwagner.de/reference/options/config-options/license';
 				$this->status = new LicenseStatus(
 					value: 'missing',
