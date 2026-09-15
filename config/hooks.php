@@ -4,6 +4,7 @@ use Kirby\Data\Yaml;
 use Stripe\Event;
 use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\ListItem;
+use Wagnerwagner\Merx\Logger;
 use Wagnerwagner\Merx\OrderPage;
 use Wagnerwagner\Merx\PaymentDetails;
 
@@ -14,22 +15,47 @@ return [
 			case 'payment_intent.succeeded':
 				/** @var \Stripe\PaymentIntent $paymentIntent */
 				$paymentIntent = $stripeEvent->data->object;
-				$orderUid = $paymentIntent->metadata->order_uid;
-				if ($orderUid) {
-					try {
-						/** @var ?OrderPage $orderPage */
-						$orderPage = page(option('wagnerwagner.merx.ordersPage'). '/' . $orderUid);
-						if ($orderPage) {
-							$kirby = $orderPage->kirby();
-							$orderPage = $kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent): OrderPage {
-								return $orderPage->update([
-									'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
-									'paymentComplete' => true,
-									'datePaid' => date('c'),
-								]);
-							});
-						}
-					} catch(Exception) {}
+
+				// Set by `Gateways::completeStripePayment()` when it captures
+				$orderUid = $paymentIntent->metadata->order_uid ?? null;
+				if (!$orderUid) {
+					break;
+				}
+
+				$fail = function (string $reason) use ($orderUid): void {
+					// This is the only path which completes payments the customer’s
+					// browser never confirms, e.g. SEPA debit. Failing here silently
+					// leaves an order unpaid with nobody knowing.
+					if (option('wagnerwagner.merx.logging') === true) {
+						Logger::log('Stripe webhook for order "' . $orderUid . '" ignored: ' . $reason, 'error');
+					}
+				};
+
+				try {
+					$orderPage = page(option('wagnerwagner.merx.ordersPage'). '/' . $orderUid);
+
+					// `page()` resolves any page at that path, not necessarily an order
+					if ($orderPage instanceof OrderPage === false) {
+						$fail($orderPage === null ? 'no such order' : 'not an order page');
+						break;
+					}
+
+					// The event has to be about the payment this order was created for
+					if ($orderPage->stripePaymentIntentId()->value() !== $paymentIntent->id) {
+						$fail('payment intent does not belong to it');
+						break;
+					}
+
+					$kirby = $orderPage->kirby();
+					$kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent): OrderPage {
+						return $orderPage->update([
+							'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
+							'paymentComplete' => true,
+							'datePaid' => date('c'),
+						]);
+					});
+				} catch (Throwable $ex) {
+					$fail($ex->getMessage());
 				}
 				break;
 		}
