@@ -146,6 +146,7 @@ class Price extends Obj
 	 *
 	 * @param float $price New gross price (including tax)
 	 * @return self
+	 * @see https://merx.wagnerwagner.de/cookbook/volume-based-pricing
 	 */
 	public function updatePrice(float $price): self
 	{
@@ -197,6 +198,7 @@ class Price extends Obj
 	 *
 	 * @param string $key Use `priceNet` to get net price as formatted currency. When not set, `price` or `priceNet` is used, depending on tax inclusion of pricing rule.
 	 * @return string	Formatted price as string, e.g. "119,00 €"
+	 * @see https://merx.wagnerwagner.de/guide/configuration/localization#number-formatting
 	 */
 	public function toString(?string $key = null): string
 	{

@@ -100,6 +100,7 @@ App::plugin(
 			 *
 			 * @param \Kirby\Content\Field $field Field
 			 * @param ?string $currency Three-letter ISO currency code. When null, currency from pricing rule is used
+			 * @see https://merx.wagnerwagner.de/guide/configuration/localization#number-formatting
 			 */
 			function (Field $field, string|null $currency = null): string
 			{
