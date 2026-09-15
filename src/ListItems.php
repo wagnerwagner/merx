@@ -48,7 +48,8 @@ class ListItems extends Collection
 	 * The tax of the total keeps the tax rate the items share. Items with
 	 * different tax rates have no rate in common: `tax->rate` is `null` then and
 	 * `tax->price` the sum of their tax amounts. Use `taxRates()` for the
-	 * breakdown of such a list.
+	 * breakdown of such a list. A list whose items all come without a tax has no
+	 * tax either: `tax` is `null`.
 	 */
 	public function total(): ?Price
 	{
@@ -56,6 +57,7 @@ class ListItems extends Collection
 		$priceNet = 0.0;
 		$taxPrice = 0.0;
 		$taxRate = null;
+		$hasTax = false;
 		$mixedTaxRates = false;
 		$currency = null;
 		$pricingRule = null;
@@ -75,6 +77,7 @@ class ListItems extends Collection
 			$price += (float)$listItemTotal?->price;
 			$priceNet += (float)$listItemTotal?->priceNet;
 			$taxPrice += (float)$tax?->price;
+			$hasTax = $hasTax || $tax !== null;
 			$mixedTaxRates = $mixedTaxRates || ($taxRate !== null && $taxRate !== $listItemTaxRate);
 			$taxRate ??= $listItemTaxRate;
 			$currency = $currency ?? $listItemTotal?->currency;
@@ -83,10 +86,13 @@ class ListItems extends Collection
 
 		// A shared rate is handed to `Price` as a rate, which derives the net price
 		// from it, the same way a single item’s price is built. Mixed rates are
-		// handed over as the sum of the items’ tax amounts instead.
-		$tax = $mixedTaxRates === true
-			? new Tax(priceNet: $priceNet, rate: null, currency: $currency, price: $taxPrice)
-			: $taxRate ?? 0.0;
+		// handed over as the sum of the items’ tax amounts instead. Items which all
+		// come without a tax add up to no tax, not to a tax of 0 %.
+		$tax = match (true) {
+			$hasTax === false => null,
+			$mixedTaxRates === true => new Tax(priceNet: $priceNet, rate: null, currency: $currency, price: $taxPrice),
+			default => $taxRate,
+		};
 
 		return new Price(
 			// As in `ListItem::total()`, a list without a pricing rule adds up the

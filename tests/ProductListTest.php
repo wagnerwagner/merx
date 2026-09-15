@@ -91,6 +91,38 @@ final class ProductListTest extends TestCase
 	}
 
 
+	public function testTotalOfItemsWithoutTax(): void
+	{
+		$productList = new ProductList([
+			['key' => 'nice-shoes', 'price' => new Price(10.0, null, 'default', 'EUR')],
+			['key' => 'nice-socks', 'price' => new Price(20.0, null, 'default', 'EUR')],
+		]);
+
+		$total = $productList->total();
+
+		$this->assertEquals(30.0, $total->price);
+		$this->assertEquals(30.0, $total->priceNet);
+		// Items without a tax add up to no tax, not to a tax of 0 %
+		$this->assertNull($total->tax);
+		$this->assertCount(0, $productList->taxRates());
+	}
+
+
+	public function testTotalKeepsATaxRateOfZero(): void
+	{
+		$productList = new ProductList([
+			['key' => 'nice-shoes', 'price' => new Price(10.0, 0.0, 'default', 'EUR')],
+		]);
+
+		$total = $productList->total();
+
+		// An item taxed at 0 % has a tax, unlike an item without one
+		$this->assertInstanceOf(Tax::class, $total->tax);
+		$this->assertEquals(0.0, $total->tax->rate);
+		$this->assertEquals(0.0, $total->tax->price);
+	}
+
+
 	public function testAddRejectsNegativeQuantity(): void
 	{
 		$productList = new ProductList();
