@@ -17,4 +17,4 @@ sections:
       city: true
       date:
         label: Date
-        value: "{{ page.invoiceDate.toDate('c') }}"
+        value: "{{ page.dateCreated }}"
