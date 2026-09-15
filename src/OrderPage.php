@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
+use Kirby\Content\VersionId;
 use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductList;
@@ -28,6 +29,30 @@ use Wagnerwagner\Merx\ProductList;
  */
 class OrderPage extends Page
 {
+	/**
+	 * Renders the order page
+	 *
+	 * An order is reachable by its url alone — the slug is the only secret —
+	 * and it shows the customer’s name, address and what they bought. The
+	 * headers keep that page out of shared caches, out of search engines, and
+	 * keep its url from travelling to other sites in a referrer.
+	 *
+	 * They are set before the template runs, so a shop can still override any
+	 * of them.
+	 */
+	public function render(
+		array $data = [],
+		$contentType = 'html',
+		VersionId|string|null $versionId = null
+	): string {
+		$response = $this->kirby()->response();
+		$response->header('Cache-Control', 'private, no-store');
+		$response->header('Referrer-Policy', 'same-origin');
+		$response->header('X-Robots-Tag', 'noindex, nofollow');
+
+		return parent::render($data, $contentType, $versionId);
+	}
+
 	/**
 	 * Returns order number
 	 */
