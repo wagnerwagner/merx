@@ -3,10 +3,32 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
+use Kirby\Cms\App;
 use PHPUnit\Framework\TestCase;
 
 final class GatewaysTest extends TestCase
 {
+	protected App $app;
+
+	/**
+	 * Some tests clone the App to set options. `clone()` makes the clone the
+	 * global instance, so it has to be put back — a leftover clone with
+	 * `production` on sends later tests at the live payment APIs. Kirby also
+	 * installs Whoops’ handlers with every instance and leaves them behind,
+	 * which PHPUnit reports as risky.
+	 */
+	public function setUp(): void
+	{
+		App::$enableWhoops = false;
+		$this->app = App::instance();
+	}
+
+	public function tearDown(): void
+	{
+		App::instance($this->app);
+		App::$enableWhoops = true;
+	}
+
 	private static function payPalResponse(string $status, array $captureStatus = ['COMPLETED']): array
 	{
 		return [
@@ -125,6 +147,65 @@ final class GatewaysTest extends TestCase
 	{
 		$this->expectException(Exception::class);
 		Gateways::validatePaymentAmount(4999, 'usd', self::orderPageWithCart(49.99, 'EUR'));
+	}
+
+	public function testConfiguredPayPalCredentialsPass(): void
+	{
+		$this->app->clone(['options' => [
+			'wagnerwagner.merx.production' => false,
+			'wagnerwagner.merx.paypal.sandbox.clientID' => 'id',
+			'wagnerwagner.merx.paypal.sandbox.secret' => 'secret',
+		]]);
+
+		$this->expectNotToPerformAssertions();
+		Gateways::validatePayPalCredentials();
+	}
+
+	public function testAMissingPayPalSecretIsRefused(): void
+	{
+		// One key alone is not enough — the old check only complained about both
+		$this->app->clone(['options' => [
+			'wagnerwagner.merx.production' => false,
+			'wagnerwagner.merx.paypal.sandbox.clientID' => 'id',
+			'wagnerwagner.merx.paypal.sandbox.secret' => '',
+		]]);
+
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalCredentials();
+	}
+
+	public function testAMissingPayPalClientIdIsRefused(): void
+	{
+		$this->app->clone(['options' => [
+			'wagnerwagner.merx.production' => false,
+			'wagnerwagner.merx.paypal.sandbox.clientID' => '',
+			'wagnerwagner.merx.paypal.sandbox.secret' => 'secret',
+		]]);
+
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalCredentials();
+	}
+
+	public function testTheDefaultEmptyKeysAreRefused(): void
+	{
+		// Merx defaults both to '', which the old `=== null` check never caught
+		$this->app->clone(['options' => ['wagnerwagner.merx.production' => false]]);
+
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalCredentials();
+	}
+
+	public function testProductionChecksTheLiveKeys(): void
+	{
+		// Sandbox configured, live not — production must still complain
+		$this->app->clone(['options' => [
+			'wagnerwagner.merx.production' => true,
+			'wagnerwagner.merx.paypal.sandbox.clientID' => 'id',
+			'wagnerwagner.merx.paypal.sandbox.secret' => 'secret',
+		]]);
+
+		$this->expectException(Exception::class);
+		Gateways::validatePayPalCredentials();
 	}
 
 	private static function payPalOrderWithUnits(array ...$units): array

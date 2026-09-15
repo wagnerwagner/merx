@@ -139,6 +139,38 @@ class Gateways
 	}
 
 	/**
+	 * Makes sure PayPal is configured before a payment is started
+	 *
+	 * Both keys are needed, so either one missing is a problem. Merx defaults
+	 * them to empty strings rather than null, which is why emptiness is what is
+	 * checked — comparing against null never matched.
+	 *
+	 * Which key is missing goes to the log. The caller is an unauthenticated
+	 * visitor and has no business learning how the shop is configured.
+	 *
+	 * @throws \Kirby\Exception\Exception merx.paypalError
+	 */
+	public static function validatePayPalCredentials(): void
+	{
+		$environment = option('wagnerwagner.merx.production') === true ? 'live' : 'sandbox';
+
+		foreach (['clientID', 'secret'] as $key) {
+			if (empty(option('wagnerwagner.merx.paypal.' . $environment . '.' . $key)) === false) {
+				continue;
+			}
+
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log('Missing PayPal ' . $environment . ' ' . $key, 'error');
+			}
+
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 500,
+			);
+		}
+	}
+
+	/**
 	 * Makes sure a PayPal order charges what the order costs
 	 *
 	 * The amount is fixed when the PayPal order is created. The default purchase
@@ -270,15 +302,7 @@ Gateways::$gateways['invoice'] = true;
  */
 Gateways::$gateways['paypal'] = [
 	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-		if (option('wagnerwagner.merx.production') === true) {
-			if (option('wagnerwagner.merx.paypal.live.clientID') === null && option('wagnerwagner.merx.paypal.live.secret') === null) {
-				throw new Exception('Missing PayPal live keys');
-			}
-		} else {
-			if (option('wagnerwagner.merx.paypal.sandbox.clientID') === null && option('wagnerwagner.merx.paypal.sandbox.secret') === null) {
-				throw new Exception('Missing PayPal sandbox keys');
-			}
-		}
+		Gateways::validatePayPalCredentials();
 		$currency = $virtualOrderPage->cart()->currency();
 		$response = PayPalPayment::createPayPalPayment($virtualOrderPage, $currency);
 		$virtualOrderPage->version()->update([
