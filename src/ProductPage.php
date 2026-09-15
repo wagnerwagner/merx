@@ -11,9 +11,7 @@ use Kirby\Cms\Structure;
  *
  * Used in Cart, ProductList and ListItems.
  *
- * @method \Kirby\Content\Field prices()
- * @method \Kirby\Content\Field taxRule()
- * @method \Kirby\Content\Field stock()
+ * @method \Kirby\Content\Field taxRule() Content field: Key of the tax rule that applies to this product
  *
  * @see https://merx.wagnerwagner.de/guide/getting-started/adding-products
  * @author Tobias Wolf

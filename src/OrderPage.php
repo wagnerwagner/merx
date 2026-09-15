@@ -15,14 +15,14 @@ use Wagnerwagner\Merx\ProductList;
  *
  * This model is used to store and validate order data.
  *
- * @method \Kirby\Content\Field email() User’s email address
- * @method \Kirby\Content\Field dateCreated() Date, when the order was created (date('c')).
- * @method \Kirby\Content\Field datePaid() Date, when the order was paid (date('c')).
- * @method \Kirby\Content\Field paymentComplete() True, when payment is complete
- * @method \Kirby\Content\Field payPalOrderId()
- * @method \Kirby\Content\Field stripePaymentIntentId()
- * @method \Kirby\Content\Field redirect() URL the user is redirected to
- * @method \Kirby\Content\Field orderNumber() Sequential number for each order. Can be customized with wagnerwagner.merx.orderNumber option.
+ * @method \Kirby\Content\Field email() Content field: User’s email address
+ * @method \Kirby\Content\Field dateCreated() Content field: Date, when the order was created (date('c')).
+ * @method \Kirby\Content\Field datePaid() Content field: Date, when the order was paid (date('c')).
+ * @method \Kirby\Content\Field paymentComplete() Content field: True, when payment is complete
+ * @method \Kirby\Content\Field payPalOrderId() Content field: Id of the PayPal order, used to complete the payment when the customer returns
+ * @method \Kirby\Content\Field stripePaymentIntentId() Content field: Id of the Stripe PaymentIntent, used to complete the payment when the customer returns
+ * @method \Kirby\Content\Field redirect() Content field: URL the user is redirected to
+ * @method \Kirby\Content\Field orderNumber() Content field: Sequential number for each order. Can be customized with wagnerwagner.merx.orderNumber option.
  *
  * @see https://merx.wagnerwagner.de/guide/getting-started/displaying-order
  * @author Tobias Wolf
