@@ -57,11 +57,24 @@ directory so composer extracts it again, or use `--no-dev` to clean up.
 
 ### The suite is green
 
-`OK (98 tests, 196 assertions)` at the time of writing. A failure is yours.
+`OK (122 tests, 240 assertions)` at the time of writing. A failure is yours.
 
 A test which builds its own `App` has to set `App::$enableWhoops = false`
 first. Kirby installs Whoops’ error and exception handlers with every instance
 and leaves them behind, which PHPUnit reports as a risky test.
+
+It also has to put the previous instance back:
+
+```php
+public function setUp(): void { $this->app = App::instance(); }
+public function tearDown(): void { App::instance($this->app); }
+```
+
+`App::clone()` makes the clone the global instance, and `option()` reads from
+that. A test which clones to set an option therefore leaves its options behind
+for every test after it. This is not only untidy: a leftover clone with
+`wagnerwagner.merx.production` set sends later tests at the **live** payment
+APIs, where the suite stops looking failed and starts looking hung.
 
 `MerxTest::testinitializeOrderEmpty` depends on test order. It passes in a full
 run because an earlier test fills the session cart, and fails under `--filter`
