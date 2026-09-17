@@ -11,6 +11,7 @@ use Kirby\Toolkit\Str;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ * @see https://merx.wagnerwagner.de/guide/configuration/currencies
  */
 class PricingRule extends Obj {
 	public string $key;

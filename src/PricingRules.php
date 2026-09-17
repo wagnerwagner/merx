@@ -10,6 +10,7 @@ use Kirby\Cms\Collection;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ * @see https://merx.wagnerwagner.de/guide/configuration/currencies
  *
  * @extends \Kirby\Cms\Collection<PricingRule>
  */
