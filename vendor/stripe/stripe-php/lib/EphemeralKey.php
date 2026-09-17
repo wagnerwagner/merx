@@ -5,11 +5,16 @@
 namespace Stripe;
 
 /**
+ * Ephemeral keys give the SDKs (like Stripe's mobile SDKs and Issuing Elements) temporary, scoped access to a specific
+ * resource, such as a Customer, Issuing Card, or Identity VerificationSession, without exposing your secret API key.
+ *
+ * Related guides: <a href="https://docs.stripe.com/issuing/elements">Using Issuing Elements</a>.
+ *
  * @property string $id Unique identifier for the object.
  * @property string $object String representing the object's type. Objects of the same type share the same value.
  * @property int $created Time at which the object was created. Measured in seconds since the Unix epoch.
  * @property int $expires Time at which the key will expire. Measured in seconds since the Unix epoch.
- * @property bool $livemode Has the value <code>true</code> if the object exists in live mode or the value <code>false</code> if the object exists in test mode.
+ * @property bool $livemode If the object exists in live mode, the value is <code>true</code>. If the object exists in test mode, the value is <code>false</code>.
  * @property null|string $secret The key's secret. You can use this value to make authorized requests to the Stripe API.
  */
 class EphemeralKey extends ApiResource
@@ -19,12 +24,12 @@ class EphemeralKey extends ApiResource
     /**
      * Invalidates a short-lived API key for a given resource.
      *
-     * @param null|array $params
+     * @param null|array{expand?: string[]} $params
      * @param null|array|string $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return EphemeralKey the deleted resource
      *
-     * @return \Stripe\EphemeralKey the deleted resource
+     * @throws Exception\ApiErrorException if the request fails
      */
     public function delete($params = null, $opts = null)
     {
@@ -45,10 +50,10 @@ class EphemeralKey extends ApiResource
      * @param null|array $params
      * @param null|array|string $opts
      *
-     * @throws \Stripe\Exception\InvalidArgumentException if stripe_version is missing
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return EphemeralKey the created key
      *
-     * @return \Stripe\EphemeralKey the created key
+     * @throws Exception\InvalidArgumentException if stripe_version is missing
+     * @throws Exception\ApiErrorException if the request fails
      */
     public static function create($params = null, $opts = null)
     {

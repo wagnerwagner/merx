@@ -133,8 +133,8 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
     {
         if (static::getPermanentAttributes()->includes($k)) {
             throw new Exception\InvalidArgumentException(
-                "Cannot set {$k} on this object. HINT: you can't set: " .
-                \implode(', ', static::getPermanentAttributes()->toArray())
+                "Cannot set {$k} on this object. HINT: you can't set: "
+                . \implode(', ', static::getPermanentAttributes()->toArray())
             );
         }
 
@@ -296,6 +296,16 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
             $values = $values->toArray();
         }
 
+        // Apply int64_string response coercion on raw values before hydration.
+        // V2 resource classes declare fieldEncodings() with metadata about which
+        // fields are int64_string (wire format: JSON string, SDK type: PHP int).
+        if (\method_exists(static::class, 'fieldEncodings')) {
+            $encodings = static::fieldEncodings();
+            if (!empty($encodings)) {
+                $values = Util\Int64::coerceResponseValues($values, $encodings);
+            }
+        }
+
         // Wipe old state before setting new.  This is useful for e.g. updating a
         // customer, where there is no persistent card parameter.  Mark those values
         // which don't persist as transient
@@ -331,7 +341,8 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
             // This is necessary in case metadata is empty, as PHP arrays do
             // not differentiate between lists and hashes, and we consider
             // empty arrays to be lists.
-            if (('metadata' === $k) && (\is_array($v))) {
+            // The same applies to the previous_attributes attribute.
+            if (('metadata' === $k || 'previous_attributes' === $k) && \is_array($v)) {
                 $this->_values[$k] = StripeObject::constructFrom($v, $opts, $apiMode);
             } else {
                 $this->_values[$k] = Util\Util::convertToStripeObject($v, $opts, $apiMode);
@@ -379,7 +390,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
         // value that we shouldn't appear in the serialized form of the object
         return \array_filter(
             $updateParams,
-            function ($v) {
+            static function ($v) {
                 return null !== $v;
             }
         );
@@ -421,9 +432,9 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
             }
 
             throw new Exception\InvalidArgumentException(
-                "Cannot save property `{$key}` containing an API resource of type " .
-                \get_class($value) . ". It doesn't appear to be persisted and is " .
-                'not marked as `saveWithParent`.'
+                "Cannot save property `{$key}` containing an API resource of type "
+                . \get_class($value) . ". It doesn't appear to be persisted and is "
+                . 'not marked as `saveWithParent`.'
             );
         }
         if (\is_array($value)) {
@@ -470,7 +481,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      */
     public function toArray()
     {
-        $maybeToArray = function ($value) {
+        $maybeToArray = static function ($value) {
             if (null === $value) {
                 return null;
             }

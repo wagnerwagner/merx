@@ -14,10 +14,10 @@ namespace Stripe\TestHelpers;
  * @property int $created Time at which the object was created. Measured in seconds since the Unix epoch.
  * @property int $deletes_after Time at which this clock is scheduled to auto delete.
  * @property int $frozen_time Time at which all objects belonging to this clock are frozen.
- * @property bool $livemode Has the value <code>true</code> if the object exists in live mode or the value <code>false</code> if the object exists in test mode.
+ * @property bool $livemode If the object exists in live mode, the value is <code>true</code>. If the object exists in test mode, the value is <code>false</code>.
  * @property null|string $name The custom name supplied at creation.
  * @property string $status The status of the Test Clock.
- * @property \Stripe\StripeObject $status_details
+ * @property (object{advancing?: (object{target_frozen_time: int}&\Stripe\StripeObject)}&\Stripe\StripeObject) $status_details
  */
 class TestClock extends \Stripe\ApiResource
 {
@@ -30,12 +30,12 @@ class TestClock extends \Stripe\ApiResource
     /**
      * Creates a new test clock that can be attached to new customers and quotes.
      *
-     * @param null|array $params
+     * @param null|array{customer?: string, expand?: string[], frozen_time: int, name?: string} $params
      * @param null|array|string $options
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return TestClock the created resource
      *
-     * @return \Stripe\TestHelpers\TestClock the created resource
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
      */
     public static function create($params = null, $options = null)
     {
@@ -55,9 +55,9 @@ class TestClock extends \Stripe\ApiResource
      * @param null|array $params
      * @param null|array|string $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return TestClock the deleted resource
      *
-     * @return \Stripe\TestHelpers\TestClock the deleted resource
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
      */
     public function delete($params = null, $opts = null)
     {
@@ -73,12 +73,12 @@ class TestClock extends \Stripe\ApiResource
     /**
      * Returns a list of your test clocks.
      *
-     * @param null|array $params
+     * @param null|array{ending_before?: string, expand?: string[], limit?: int, starting_after?: string} $params
      * @param null|array|string $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return \Stripe\Collection<TestClock> of ApiResources
      *
-     * @return \Stripe\Collection<\Stripe\TestHelpers\TestClock> of ApiResources
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
      */
     public static function all($params = null, $opts = null)
     {
@@ -93,9 +93,9 @@ class TestClock extends \Stripe\ApiResource
      * @param array|string $id the ID of the API resource to retrieve, or an options array containing an `id` key
      * @param null|array|string $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return TestClock
      *
-     * @return \Stripe\TestHelpers\TestClock
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
      */
     public static function retrieve($id, $opts = null)
     {
@@ -110,9 +110,9 @@ class TestClock extends \Stripe\ApiResource
      * @param null|array $params
      * @param null|array|string $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return TestClock the advanced test clock
      *
-     * @return \Stripe\TestHelpers\TestClock the advanced test clock
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
      */
     public function advance($params = null, $opts = null)
     {

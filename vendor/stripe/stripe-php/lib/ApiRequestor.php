@@ -122,17 +122,19 @@ class ApiRequestor
      * @param null|array $headers
      * @param 'v1'|'v2' $apiMode
      * @param string[] $usage
-     *
-     * @throws Exception\ApiErrorException
+     * @param null|int $maxNetworkRetries
      *
      * @return array tuple containing (ApiReponse, API key)
+     *
+     * @throws Exception\ApiErrorException
      */
-    public function request($method, $url, $params = null, $headers = null, $apiMode = 'v1', $usage = [])
+    public function request($method, $url, $params = null, $headers = null, $apiMode = 'v1', $usage = [], $maxNetworkRetries = null)
     {
         $params = $params ?: [];
         $headers = $headers ?: [];
-        list($rbody, $rcode, $rheaders, $myApiKey) =
-            $this->_requestRaw($method, $url, $params, $headers, $apiMode, $usage);
+        list($rbody, $rcode, $rheaders, $myApiKey)
+            = $this->_requestRaw($method, $url, $params, $headers, $apiMode, $usage, $maxNetworkRetries);
+        $this->_maybeEmitStripeNotice($rheaders);
         $json = $this->_interpretResponse($rbody, $rcode, $rheaders, $apiMode);
         $resp = new ApiResponse($rbody, $rcode, $rheaders, $json);
 
@@ -147,15 +149,17 @@ class ApiRequestor
      * @param null|array $headers
      * @param 'v1'|'v2' $apiMode
      * @param string[] $usage
+     * @param null|int $maxNetworkRetries
      *
      * @throws Exception\ApiErrorException
      */
-    public function requestStream($method, $url, $readBodyChunkCallable, $params = null, $headers = null, $apiMode = 'v1', $usage = [])
+    public function requestStream($method, $url, $readBodyChunkCallable, $params = null, $headers = null, $apiMode = 'v1', $usage = [], $maxNetworkRetries = null)
     {
         $params = $params ?: [];
         $headers = $headers ?: [];
-        list($rbody, $rcode, $rheaders, $myApiKey) =
-            $this->_requestRawStreaming($method, $url, $params, $headers, $apiMode, $usage, $readBodyChunkCallable);
+        list($rbody, $rcode, $rheaders, $myApiKey)
+            = $this->_requestRawStreaming($method, $url, $params, $headers, $apiMode, $usage, $readBodyChunkCallable, $maxNetworkRetries);
+        $this->_maybeEmitStripeNotice($rheaders);
         if ($rcode >= 300) {
             $this->_interpretResponse($rbody, $rcode, $rheaders, $apiMode);
         }
@@ -224,8 +228,8 @@ class ApiRequestor
                     return Exception\IdempotencyException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code);
                 }
 
-            // fall through in generic 400 or 404, returns InvalidRequestException by default
-            // no break
+                // fall through in generic 400 or 404, returns InvalidRequestException by default
+                // no break
             case 404:
                 return Exception\InvalidRequestException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code, $param);
 
@@ -266,7 +270,18 @@ class ApiRequestor
         switch ($type) {
             case 'idempotency_error':
                 return Exception\IdempotencyException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code);
-            // The beginning of the section generated from our OpenAPI spec
+
+                // switchCases: The beginning of the section generated from our OpenAPI spec
+            case 'rate_limit':
+                return Exception\RateLimitException::factory(
+                    $msg,
+                    $rcode,
+                    $rbody,
+                    $resp,
+                    $rheaders,
+                    $code
+                );
+
             case 'temporary_session_expired':
                 return Exception\TemporarySessionExpiredException::factory(
                     $msg,
@@ -277,7 +292,7 @@ class ApiRequestor
                     $code
                 );
 
-            // The end of the section generated from our OpenAPI spec
+                // switchCases: The end of the section generated from our OpenAPI spec
             default:
                 return self::_specificV1APIError($rbody, $rcode, $rheaders, $resp, $errorData);
         }
@@ -369,6 +384,42 @@ class ApiRequestor
     /**
      * @static
      *
+     * @return string the detected AI agent slug, or empty string if none detected
+     */
+    const AI_AGENTS = [
+        // aiAgents: The beginning of the section generated from our OpenAPI spec
+        ['ANTIGRAVITY_CLI_ALIAS', 'antigravity'],
+        ['CLAUDECODE', 'claude_code'],
+        ['CLINE_ACTIVE', 'cline'],
+        ['CODEX_SANDBOX', 'codex_cli'],
+        ['CODEX_THREAD_ID', 'codex_cli'],
+        ['CODEX_SANDBOX_NETWORK_DISABLED', 'codex_cli'],
+        ['CODEX_CI', 'codex_cli'],
+        ['CURSOR_AGENT', 'cursor'],
+        ['GEMINI_CLI', 'gemini_cli'],
+        ['OPENCLAW_SHELL', 'openclaw'],
+        ['OPENCODE', 'open_code'],
+        // aiAgents: The end of the section generated from our OpenAPI spec
+    ];
+
+    private static function _detectAIAgent($getEnv = null)
+    {
+        if (null === $getEnv) {
+            $getEnv = '\getenv';
+        }
+        foreach (self::AI_AGENTS as $agent) {
+            $val = $getEnv($agent[0]);
+            if (false !== $val && '' !== $val) {
+                return $agent[1];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @static
+     *
      * @param string     $apiKey the Stripe API key, to be used in regular API requests
      * @param null       $clientInfo client user agent information
      * @param null       $appInfo information to identify a plugin that integrates Stripe using this library
@@ -381,24 +432,38 @@ class ApiRequestor
         $uaString = "Stripe/{$apiMode} PhpBindings/" . Stripe::VERSION;
 
         $langVersion = \PHP_VERSION;
-        $uname_disabled = self::_isDisabled(\ini_get('disable_functions'), 'php_uname');
-        $uname = $uname_disabled ? '(disabled)' : \php_uname();
 
         // Fallback to global configuration to maintain backwards compatibility.
         $appInfo = $appInfo ?: Stripe::getAppInfo();
+
         $ua = [
             'bindings_version' => Stripe::VERSION,
             'lang' => 'php',
             'lang_version' => $langVersion,
-            'publisher' => 'stripe',
-            'uname' => $uname,
         ];
+        if (Stripe::getEnableTelemetry()) {
+            $telemetryId = TelemetryId::get();
+            if (null !== $telemetryId) {
+                $ua['telemetry_id'] = $telemetryId;
+            }
+            $uname_disabled = self::_isDisabled(\ini_get('disable_functions'), 'php_uname');
+            $ua['platform'] = $uname_disabled
+                ? '(disabled)'
+                // only get general platform information, e.g. `Darwin 25.3.0 arm64`
+                : \php_uname('s') . ' ' . \php_uname('r') . ' ' . \php_uname('m');
+        }
         if ($clientInfo) {
             $ua = \array_merge($clientInfo, $ua);
         }
         if (null !== $appInfo) {
             $uaString .= ' ' . self::_formatAppInfo($appInfo);
             $ua['application'] = $appInfo;
+        }
+
+        $aiAgent = self::_detectAIAgent();
+        if ('' !== $aiAgent) {
+            $uaString .= ' AIAgent/' . $aiAgent;
+            $ua['ai_agent'] = $aiAgent;
         }
 
         return [
@@ -410,6 +475,71 @@ class ApiRequestor
     }
 
     /**
+     * Asserts that a request path is origin-relative: that it begins with a
+     * single "/" and carries no scheme, authority or userinfo.
+     *
+     * The absolute URL is built by concatenating the API base onto this path,
+     * and no base URL ends in a slash. A path like "@evil.example/v1/x" or
+     * ".evil.example/v1/x" would modify the resulting host and direct the
+     * request (including the API key) to a non-Stripe host.
+     *
+     * Because some relative urls arrive from potentially untrusted sources (like
+     * webhook bodies), we have to be a little defensive.
+     *
+     * So, we require that a path starts with a leading slash and that
+     * parse_url() finds no scheme or authority in it.
+     *
+     * @param string $url
+     *
+     * @throws Exception\InvalidArgumentException
+     */
+    private static function validatePath($url)
+    {
+        if (!\is_string($url) || '/' !== \substr($url, 0, 1) || '//' === \substr($url, 0, 2)) {
+            throw new Exception\InvalidArgumentException(
+                'Request path must be a string beginning with a single "/".'
+            );
+        }
+
+        $parts = \parse_url($url);
+        if (false === $parts || isset($parts['scheme']) || isset($parts['host']) || isset($parts['user'])) {
+            throw new Exception\InvalidArgumentException(
+                'Request path may not contain a scheme or authority.'
+            );
+        }
+    }
+
+    /**
+     * Rejects CR, LF and NUL in a header name or value.
+     *
+     * Header lines are assembled by concatenation, so a newline in either half
+     * would let the remainder be parsed as additional headers. Some of these
+     * values originate in remote data - fetchRelatedObject() sets Stripe-Context
+     * and Stripe-Request-Trigger from the webhook body - and a per-request
+     * api_key reaches the Authorization value without the whitespace check that
+     * Stripe::setApiKey() applies.
+     *
+     * @param string $header
+     * @param mixed  $value
+     *
+     * @throws Exception\InvalidArgumentException
+     */
+    private static function assertNoHeaderInjection($header, $value)
+    {
+        foreach ([$header, $value] as $part) {
+            if (!\is_string($part)) {
+                continue;
+            }
+
+            if (false !== \strpbrk($part, "\r\n") || false !== \strpos($part, "\0")) {
+                throw new Exception\InvalidArgumentException(
+                    'Header names and values may not contain CR, LF or NUL characters.'
+                );
+            }
+        }
+    }
+
+    /**
      * @param 'delete'|'get'|'post' $method
      * @param string $url
      * @param array $params
@@ -418,6 +548,8 @@ class ApiRequestor
      */
     private function _prepareRequest($method, $url, $params, $headers, $apiMode)
     {
+        Util\AgentPluginHint::maybeEmit();
+
         $myApiKey = $this->_apiKey;
         if (!$myApiKey) {
             $myApiKey = Stripe::$apiKey;
@@ -443,7 +575,7 @@ class ApiRequestor
         if ($params && \is_array($params)) {
             $optionKeysInParams = \array_filter(
                 self::$OPTIONS_KEYS,
-                function ($key) use ($params) {
+                static function ($key) use ($params) {
                     return \array_key_exists($key, $params);
                 }
             );
@@ -455,6 +587,7 @@ class ApiRequestor
             }
         }
 
+        self::validatePath($url);
         $absUrl = $this->_apiBase . $url;
         if ('v1' === $apiMode) {
             $params = self::_encodeObjects($params);
@@ -493,10 +626,18 @@ class ApiRequestor
         $rawHeaders = [];
 
         foreach ($combinedHeaders as $header => $value) {
+            self::assertNoHeaderInjection($header, $value);
             $rawHeaders[] = $header . ': ' . $value;
         }
 
         return [$absUrl, $rawHeaders, $params, $hasFile, $myApiKey];
+    }
+
+    private function _maybeEmitStripeNotice($rheaders)
+    {
+        if (isset($rheaders['stripe-notice']) && \is_string($rheaders['stripe-notice'])) {
+            \trigger_error($rheaders['stripe-notice'], \E_USER_WARNING);
+        }
     }
 
     /**
@@ -506,13 +647,14 @@ class ApiRequestor
      * @param array $headers
      * @param 'v1'|'v2' $apiMode
      * @param string[] $usage
+     * @param null|int $maxNetworkRetries
+     *
+     * @return array
      *
      * @throws Exception\AuthenticationException
      * @throws Exception\ApiConnectionException
-     *
-     * @return array
      */
-    private function _requestRaw($method, $url, $params, $headers, $apiMode, $usage)
+    private function _requestRaw($method, $url, $params, $headers, $apiMode, $usage, $maxNetworkRetries)
     {
         list($absUrl, $rawHeaders, $params, $hasFile, $myApiKey) = $this->_prepareRequest($method, $url, $params, $headers, $apiMode);
 
@@ -530,7 +672,8 @@ class ApiRequestor
             $rawHeaders,
             $params,
             $hasFile,
-            $apiMode
+            $apiMode,
+            $maxNetworkRetries
         );
 
         if (
@@ -556,13 +699,14 @@ class ApiRequestor
      * @param string[] $usage
      * @param callable $readBodyChunkCallable
      * @param 'v1'|'v2' $apiMode
+     * @param int $maxNetworkRetries
+     *
+     * @return array
      *
      * @throws Exception\AuthenticationException
      * @throws Exception\ApiConnectionException
-     *
-     * @return array
      */
-    private function _requestRawStreaming($method, $url, $params, $headers, $apiMode, $usage, $readBodyChunkCallable)
+    private function _requestRawStreaming($method, $url, $params, $headers, $apiMode, $usage, $readBodyChunkCallable, $maxNetworkRetries)
     {
         list($absUrl, $rawHeaders, $params, $hasFile, $myApiKey) = $this->_prepareRequest($method, $url, $params, $headers, $apiMode);
 
@@ -574,7 +718,8 @@ class ApiRequestor
             $rawHeaders,
             $params,
             $hasFile,
-            $readBodyChunkCallable
+            $readBodyChunkCallable,
+            $maxNetworkRetries
         );
 
         if (
@@ -594,9 +739,9 @@ class ApiRequestor
     /**
      * @param resource $resource
      *
-     * @throws Exception\InvalidArgumentException
-     *
      * @return \CURLFile|string
+     *
+     * @throws Exception\InvalidArgumentException
      */
     private function _processResourceParam($resource)
     {
@@ -623,10 +768,10 @@ class ApiRequestor
      * @param array  $rheaders
      * @param 'v1'|'v2'  $apiMode
      *
+     * @return array
+     *
      * @throws Exception\UnexpectedValueException
      * @throws Exception\ApiErrorException
-     *
-     * @return array
      */
     private function _interpretResponse($rbody, $rcode, $rheaders, $apiMode)
     {
