@@ -16,7 +16,7 @@ return [
 		 */
 		'action' => function (): array
 		{
-			/** @var \Kirby\Api\Api $this */
+			/** @var \Kirby\Cms\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
 			$data = $this->requestBody();
