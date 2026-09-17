@@ -16,11 +16,12 @@ abstract class WebhookSignature
      *  Stripe
      * @param string $secret secret used to generate the signature
      * @param int $tolerance maximum difference allowed between the header's
-     *  timestamp and the current time
-     *
-     * @throws Exception\SignatureVerificationException if the verification fails
+     * timestamp and the current time, in seconds. If null or 0, timestamp validation
+     * is skipped
      *
      * @return bool
+     *
+     * @throws Exception\SignatureVerificationException if the verification fails
      */
     public static function verifyHeader($payload, $header, $secret, $tolerance = null)
     {
@@ -37,6 +38,13 @@ abstract class WebhookSignature
         if (empty($signatures)) {
             throw Exception\SignatureVerificationException::factory(
                 'No signatures found with expected scheme',
+                $payload,
+                $header
+            );
+        }
+        if (empty($secret)) {
+            throw Exception\SignatureVerificationException::factory(
+                'No webhook secret value was provided. It should start with `whsec_`',
                 $payload,
                 $header
             );
@@ -93,7 +101,7 @@ abstract class WebhookSignature
                     return -1;
                 }
 
-                return (int) ($itemParts[1]);
+                return (int) $itemParts[1];
             }
         }
 
@@ -121,6 +129,27 @@ abstract class WebhookSignature
         }
 
         return $signatures;
+    }
+
+    /**
+     * Compute the `Stripe-Signature` header for a given webhook body & secret. Useful for signing payloads in unit tests.
+     *
+     * @param string $payload the webhook body to sign
+     * @param string $secret the webhook endpoint's signing secret
+     * @param null|int $timestamp unix timestamp to use (defaults to current time)
+     *
+     * @return string the full `Stripe-Signature` header value
+     */
+    public static function generateSignatureHeader($payload, $secret, $timestamp = null)
+    {
+        if (null === $timestamp) {
+            $timestamp = \time();
+        }
+        $scheme = self::EXPECTED_SCHEME;
+        $signedPayload = "{$timestamp}.{$payload}";
+        $signature = self::computeSignature($signedPayload, $secret);
+
+        return "t={$timestamp},{$scheme}={$signature}";
     }
 
     /**

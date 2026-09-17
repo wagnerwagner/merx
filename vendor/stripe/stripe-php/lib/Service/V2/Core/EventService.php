@@ -6,6 +6,7 @@ namespace Stripe\Service\V2\Core;
 
 /**
  * @phpstan-import-type RequestOptionsArray from \Stripe\Util\RequestOptions
+ *
  * @psalm-import-type RequestOptionsArray from \Stripe\Util\RequestOptions
  */
 class EventService extends \Stripe\Service\AbstractService
@@ -13,12 +14,12 @@ class EventService extends \Stripe\Service\AbstractService
     /**
      * List events, going back up to 30 days.
      *
-     * @param null|array $params
+     * @param null|array{created?: array{gt?: string, gte?: string, lt?: string, lte?: string}, limit?: int, object_id?: string, types?: string[]} $params
      * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return \Stripe\V2\Collection<\Stripe\V2\Core\Event>
      *
-     * @return \Stripe\V2\Collection<\Stripe\V2\Event>
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
      */
     public function all($params = null, $opts = null)
     {
@@ -26,15 +27,17 @@ class EventService extends \Stripe\Service\AbstractService
     }
 
     /**
-     * Retrieves the details of an event.
+     * Retrieves the details of an event if it was created in the last 30 days. Supply
+     * the unique identifier of the event, which might have been delivered to your
+     * event destination.
      *
      * @param string $id
      * @param null|array $params
      * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return \Stripe\V2\Core\Event
      *
-     * @return \Stripe\V2\Event
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
      */
     public function retrieve($id, $params = null, $opts = null)
     {
