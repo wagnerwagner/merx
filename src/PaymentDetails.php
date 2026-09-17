@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Toolkit\Str;
 use Stripe\PaymentIntent;
+use Stripe\PaymentMethod;
 
 /**
  * Builds the record stored in an order’s `paymentDetails` field
@@ -21,14 +22,16 @@ class PaymentDetails
 	/**
 	 * Keys of the stored record, in the order they are written
 	 *
-	 * - `provider`  Name of the payment provider, e.g. `stripe`
-	 * - `id`        Id of the transaction at the provider
-	 * - `status`    Status as reported by the provider
-	 * - `amount`    Amount the provider processed, in the currency’s major unit
-	 * - `currency`  Three-letter ISO currency code, in uppercase
-	 * - `created`   Date of the transaction as ISO 8601 string
+	 * - `provider` Name of the payment provider, e.g. `stripe`
+	 * - `id` Id of the transaction at the provider
+	 * - `status` Status as reported by the provider
+	 * - `amount` Amount the provider processed, in the currency’s major unit
+	 * - `currency` Three-letter ISO currency code, in uppercase
+	 * - `created` Date of the transaction as ISO 8601 string
 	 * - `reference` Secondary id, e.g. Stripe’s charge or PayPal’s capture
-	 * - `livemode`  Whether the transaction was made against the live API
+	 * - `payment_method` Which payment method is used (via Stripe). E.g. card or ideal
+	 * - `card_brand` Card brand
+	 * - `livemode` Whether the transaction was made against the live API
 	 */
 	public static array $keys = [
 		'provider',
@@ -38,6 +41,8 @@ class PaymentDetails
 		'currency',
 		'created',
 		'reference',
+		'payment_method',
+		'card_brand',
 		'livemode',
 	];
 
@@ -85,6 +90,7 @@ class PaymentDetails
 	{
 		$data = $paymentIntent->toArray();
 		$latestCharge = $data['latest_charge'] ?? null;
+		$payment_method = PaymentMethod::retrieve($data['payment_method']);
 
 		return static::create([
 			'provider' => 'stripe',
@@ -94,6 +100,8 @@ class PaymentDetails
 			'currency' => isset($data['currency']) ? Str::upper((string)$data['currency']) : null,
 			'created' => isset($data['created']) ? date('c', (int)$data['created']) : null,
 			'reference' => is_array($latestCharge) ? ($latestCharge['id'] ?? null) : $latestCharge,
+			'payment_method' => $payment_method['type'],
+			'card_brand' => $payment_method->card?->brand ?? null,
 			'livemode' => $data['livemode'] ?? null,
 		]);
 	}
