@@ -10,6 +10,7 @@ use Kirby\Toolkit\Obj;
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ * @see https://merx.wagnerwagner.de/guide/configuration/taxes
  */
 class TaxRule extends Obj {
 	/** Unique key */
