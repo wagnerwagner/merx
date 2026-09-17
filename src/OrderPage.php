@@ -23,6 +23,7 @@ use Wagnerwagner\Merx\ProductList;
  * @method \Kirby\Content\Field stripePaymentIntentId() Content field: Id of the Stripe PaymentIntent, used to complete the payment when the customer returns
  * @method \Kirby\Content\Field redirect() Content field: URL the user is redirected to
  * @method \Kirby\Content\Field orderNumber() Content field: Sequential number for each order. Can be customized with wagnerwagner.merx.orderNumber option.
+ * @method \Kirby\Content\Field items() Content field: Cart items as YAML
  *
  * @see https://merx.wagnerwagner.de/guide/getting-started/displaying-order
  * @author Tobias Wolf
@@ -100,8 +101,11 @@ class OrderPage extends Page
 	{
 		$data = $this->items()->yaml();
 		$data = array_map(function (mixed $item) {
-			$page = is_string($item['page']) ? $item['page'] : $item['page'][0] ?? null;
-			$price = $item['price'] ? new Price(price: $item['price'], currency: $item['currency'] ?? null, tax: $item['taxrate'] ?? null) : null;
+			$page = $item['page'] ?? null;
+			$page = is_string($page) ? $page : ($page[0] ?? null);
+			$page = $page === '' ? null : $page;
+			$price = $item['price'] ?? null;
+			$price = $price ? new Price(price: $price, currency: $item['currency'] ?? null, tax: $item['taxrate'] ?? null) : null;
 			return new ListItem(
 				key: $item['key'],
 				title: $item['title'] ?? null,
