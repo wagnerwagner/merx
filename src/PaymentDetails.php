@@ -31,6 +31,7 @@ class PaymentDetails
 	 * - `reference` Secondary id, e.g. Stripe’s charge or PayPal’s capture
 	 * - `payment_method` Which payment method is used (via Stripe). E.g. card or ideal
 	 * - `card_brand` Card brand
+	 * - `card_wallet` Card wallet
 	 * - `livemode` Whether the transaction was made against the live API
 	 */
 	public static array $keys = [
@@ -43,6 +44,7 @@ class PaymentDetails
 		'reference',
 		'payment_method',
 		'card_brand',
+		'card_wallet',
 		'livemode',
 	];
 
@@ -102,6 +104,7 @@ class PaymentDetails
 			'reference' => is_array($latestCharge) ? ($latestCharge['id'] ?? null) : $latestCharge,
 			'payment_method' => $payment_method['type'],
 			'card_brand' => $payment_method->card?->brand ?? null,
+			'card_wallet' => $payment_method->card?->wallet?->type ?? null,
 			'livemode' => $data['livemode'] ?? null,
 		]);
 	}
