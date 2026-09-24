@@ -28,11 +28,14 @@ class TaxRules extends Collection
 			$rule = new TaxRule(
 				key: 'default',
 			);
-			$this->append($rule);
+			$this->append('default', $rule);
 		}
 
 		foreach ($options as $key => $option) {
-			$name = is_callable($option['name']) ? call_user_func($option['name'], App::instance()) : $option['name'] ?? $key;
+			$name = $option['name'] ?? null;
+			if (is_callable($name)) {
+				$name = call_user_func($name, App::instance());
+			}
 			$this->append($key, new TaxRule(
 				key: $key,
 				name: $name,

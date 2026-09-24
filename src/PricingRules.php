@@ -24,7 +24,7 @@ class PricingRules extends Collection
 	 * @param array $options
 	 * Key of the array is the key of the pricing rule.
 	 * Value of the array is an array with the following keys:
-	 * - `name`: The name of the pricing rule.
+	 * - `name`: The name of the pricing rule. Defaults to the key.
 	 * - `rule`: The rule to apply to the pricing rule.
 	 *	 It is passed the Kirby instance as first argument. It must return true when the rule applies, or false when it does not.
 	 * - `currency`: Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
@@ -41,13 +41,16 @@ class PricingRules extends Collection
 		}
 
 		foreach ($options as $key => $option) {
-			$name = is_callable($option['name']) ? call_user_func($option['name'], App::instance()) : $option['name'] ?? $key;
+			$name = $option['name'] ?? null;
+			if (is_callable($name)) {
+				$name = call_user_func($name, App::instance());
+			}
 			$this->append($key, new PricingRule(
 				key: $key,
 				name: $name,
 				rule: $option['rule'] ?? null,
 				currency: $option['currency'] ?? null,
-				taxIncluded: $option['taxIncluded'] ?? null,
+				taxIncluded: $option['taxIncluded'] ?? true,
 			));
 		}
 	}
@@ -67,13 +70,21 @@ class PricingRules extends Collection
 	 * Finds the pricing rule that applies to the current context
 	 *
 	 * Pricing rules are defined in the config and are checked in the order they are defined.
+	 * The `default` rule is the fallback and is always checked last, wherever it is defined.
 	 * The first rule that returns true for `$rule->checkRule()` is returned.
 	 */
 	public function findRule(): ?PricingRule
 	{
 		$kirby = App::instance();
 
-		foreach ($this->data as $rule) {
+		// Kirby merges the user’s options into the plugin’s and keeps the
+		// plugin’s key order, so `default` would otherwise always come first.
+		$rules = $this->not('default')->values();
+		if ($default = $this->get('default')) {
+			$rules[] = $default;
+		}
+
+		foreach ($rules as $rule) {
 			if ($rule->checkRule($kirby) === true) {
 				return $rule;
 			}
