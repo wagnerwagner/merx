@@ -78,36 +78,23 @@ return [
 	'wagnerwagner.merx.paymentCompleted' => function (OrderPage $orderPage):void {},
 
 	/**
-	 * Orders which are paid when they are created
-	 *
-	 * `Merx::createOrder()` writes the order page with the content the gateway’s
-	 * `completePayment` left on the virtual order page, so every gateway which
-	 * completes the payment right away — PayPal, Stripe Elements — creates an
-	 * order which is already paid.
-	 *
-	 * @internal
-	 */
-	'page.create:after' => function (Kirby\Cms\Page $page) {
-		if ($page instanceof OrderPage) {
-			if ($page->paymentComplete()->toBool() === true) {
-				$page->kirby()->trigger('wagnerwagner.merx.paymentCompleted', ['orderPage' => $page]);
-			}
-		}
-	},
-
-	/**
 	 * Orders which are paid after they have been created
 	 *
 	 * Gateways which are completed by the payment provider at a later point, e.g.
-	 * the Stripe webhook. An order which was created paid does not pass here a
-	 * second time, because its `paymentComplete` was already true before.
+	 * the Stripe webhook. Orders which are paid when they are created are
+	 * reported by `Merx::createOrder()`, and do not pass here a second time,
+	 * because their `paymentComplete` was already true before.
+	 *
+	 * `apply()` rather than `trigger()`, for the same reason as in
+	 * `Merx::createOrder()`: every hook gets the current order. Returning it
+	 * makes `update()` return the order with what the hooks wrote.
 	 *
 	 * @internal
 	 */
 	'page.update:after' => function (Kirby\Cms\Page $newPage, Kirby\Cms\Page $oldPage) {
 		if ($newPage instanceof OrderPage && $oldPage instanceof OrderPage) {
 			if ($newPage->paymentComplete()->toBool() === true && $oldPage->paymentComplete()->toBool() === false) {
-				$newPage->kirby()->trigger('wagnerwagner.merx.paymentCompleted', ['orderPage' => $newPage]);
+				return $newPage->kirby()->apply('wagnerwagner.merx.paymentCompleted', ['orderPage' => $newPage], 'orderPage');
 			}
 		}
 	},

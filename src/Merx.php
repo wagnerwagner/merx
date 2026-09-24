@@ -2,7 +2,10 @@
 
 namespace Wagnerwagner\Merx;
 
+use Closure;
+use DateTimeImmutable;
 use Kirby\Cms\App;
+use Kirby\Cms\Page;
 use NumberFormatter;
 use Wagnerwagner\Merx\Gateways;
 use Wagnerwagner\Merx\Cart;
@@ -71,6 +74,7 @@ class Merx
 		'paymentdetails',
 		'paypalorderid',
 		'redirect',
+		'sortingnumber',
 		'stripepaymentintentid',
 		'uuid',
 	];
@@ -541,25 +545,51 @@ class Merx
 				$virtualOrderPageArray['template'] = 'order';
 				$virtualOrderPageArray['model'] = 'order';
 				$virtualOrderPageArray['draft'] = false;
-				$virtualOrderPageArray['content']['dateCreated'] = date('c');
 				$virtualOrderPageArray['translations'] = null;
 
-				if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
-					$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
-				}
+				/** @var \Wagnerwagner\Merx\OrderPage $orderPage */
+				$orderPage = static::lockOrders($ordersPage, function () use ($ordersPage, $virtualOrderPage, $virtualOrderPageArray): OrderPage {
+					// `orderNumber` reads the orders through the virtual order page’s parent.
+					// They may have been read before the lock was taken, and another
+					// checkout may have written one since.
+					$virtualOrderPage->parentModel()->purge();
 
-				/** @var OrderPage $orderPage */
-				$orderPage = $ordersPage->createChild($virtualOrderPageArray);
-				$orderPage = $orderPage->changeStatus('listed');
+					// Taken inside the lock, so the orders sort in the order they got their number
+					$now = new DateTimeImmutable();
+					$virtualOrderPageArray['content']['dateCreated'] = $now->format('c');
+					// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
+					$virtualOrderPageArray['content']['sortingNumber'] = (string)OrderPage::sortingNumberFromDate($now);
+
+					if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
+						$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
+					}
+
+					/** @var OrderPage $orderPage */
+					$orderPage = $ordersPage->createChild($virtualOrderPageArray);
+					return $orderPage->changeStatus('listed');
+				});
+
+				// Gateways which complete the payment right away — PayPal, Stripe
+				// Elements — create an order which is already paid. This is reported
+				// here rather than from `page.create:after`, where the hooks would run
+				// while the lock above holds back every other checkout.
+				//
+				// `apply()` rather than `trigger()`: a hook which updates the order
+				// leaves the object it was given behind as an outdated copy. Updating
+				// that copy again throws, and Kirby removes the order’s content from
+				// disk while it does. `apply()` hands every hook, and Merx, the current one.
+				if ($orderPage->paymentComplete()->toBool() === true) {
+					$orderPage = $kirby->apply('wagnerwagner.merx.paymentCompleted', ['orderPage' => $orderPage], 'orderPage');
+				}
 
 				// Reset language
 				$kirby->setCurrentLanguage($currentLanguageCode);
 
 				$this->cart->delete();
 
-				$kirby->trigger('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage]);
-
-				return $orderPage;
+				// `apply()`, like `paymentCompleted` above, so a caller gets the order
+				// with what the hooks wrote, not an outdated copy of it
+				return $kirby->apply('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage], 'orderPage');
 			});
 
 			return $orderPage;
@@ -576,6 +606,36 @@ class Merx
 				Logger::log($ex, 'error');
 			}
 			throw $ex;
+		}
+	}
+
+	/**
+	 * Runs $callback while no other checkout can write an order
+	 *
+	 * The default `orderNumber` counts on from the last order, so two checkouts
+	 * completing at the same moment would both read the same one. The lock is a
+	 * file in the orders page’s folder; Kirby ignores files with a leading dot.
+	 *
+	 * The payment has gone through by the time an order is written. When the
+	 * lock cannot be taken, the order is written anyway and the failure logged.
+	 */
+	protected static function lockOrders(Page $ordersPage, Closure $callback): OrderPage
+	{
+		$lockFile = $ordersPage->root() . '/.merx-orders.lock';
+		$handle = @fopen($lockFile, 'c');
+		$locked = $handle !== false && flock($handle, LOCK_EX);
+
+		if ($locked === false && option('wagnerwagner.merx.logging') === true) {
+			Logger::log('Could not lock ' . $lockFile . '. The order was written without a lock.', 'error');
+		}
+
+		try {
+			return $callback();
+		} finally {
+			if ($handle !== false) {
+				flock($handle, LOCK_UN);
+				fclose($handle);
+			}
 		}
 	}
 

@@ -5,6 +5,7 @@ namespace Wagnerwagner\Merx\Tests;
 use Kirby\Cms\App;
 use Kirby\Filesystem\Dir;
 use PHPUnit\Framework\TestCase;
+use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
 
 /**
@@ -15,15 +16,22 @@ use Wagnerwagner\Merx\OrderPage;
  */
 final class PaymentCompletedTest extends TestCase
 {
+	protected App $app;
+
 	protected App $kirby;
 
 	protected string $root;
 
-	/** Slugs of the orders the hook was triggered for */
+	/** Orders the hook was triggered for, with their status at that moment */
 	public array $triggered = [];
+
+	/** Whether the hooks write to the order they are given */
+	public bool $hooksUpdateOrder = false;
 
 	public function setUp(): void
 	{
+		$this->app = App::instance();
+
 		// Kirby installs Whoops’ error and exception handlers with every instance
 		// and leaves them behind, which PHPUnit reports as a risky test.
 		App::$enableWhoops = false;
@@ -34,6 +42,7 @@ final class PaymentCompletedTest extends TestCase
 		Dir::make($this->root . '/content');
 
 		$this->triggered = [];
+		$this->hooksUpdateOrder = false;
 		$test = $this;
 
 		$this->kirby = new App([
@@ -42,9 +51,42 @@ final class PaymentCompletedTest extends TestCase
 				'content' => $this->root . '/content',
 				'site' => $this->root . '/site',
 			],
+			'options' => [
+				'wagnerwagner.merx.logging' => false,
+				'wagnerwagner.merx.gateways' => [
+					// Completes the payment before the order page is written, the way
+					// PayPal and Stripe Elements do
+					'paid-right-away' => [
+						'completePayment' => function (OrderPage $virtualOrderPage): OrderPage {
+							$virtualOrderPage->version()->update([
+								'paymentComplete' => true,
+								'datePaid' => date('c'),
+							]);
+							return $virtualOrderPage;
+						},
+					],
+				],
+			],
 			'hooks' => [
-				'wagnerwagner.merx.paymentCompleted' => function (OrderPage $orderPage) use ($test): void {
-					$test->triggered[] = $orderPage->slug();
+				'wagnerwagner.merx.paymentCompleted' => [
+					function (OrderPage $orderPage) use ($test): void {
+						$test->triggered[] = $orderPage->status();
+					},
+					function (OrderPage $orderPage) use ($test): void {
+						if ($test->hooksUpdateOrder === true) {
+							$orderPage->update(['invoiceNumber' => 'R-1']);
+						}
+					},
+					function (OrderPage $orderPage) use ($test): void {
+						if ($test->hooksUpdateOrder === true) {
+							$orderPage->update(['stockReduced' => 'true']);
+						}
+					},
+				],
+				'wagnerwagner.merx.createOrder:after' => function (OrderPage $orderPage) use ($test): void {
+					if ($test->hooksUpdateOrder === true) {
+						$orderPage->update(['mailSent' => 'true']);
+					}
 				},
 			],
 		]);
@@ -52,59 +94,42 @@ final class PaymentCompletedTest extends TestCase
 
 	public function tearDown(): void
 	{
+		// The cart lives in the session, which Kirby would otherwise write to the
+		// removed folder once the test is over
+		$this->kirby->session()->destroy();
+
 		App::$enableWhoops = true;
 		Dir::remove($this->root);
+		App::instance($this->app);
 	}
 
 	/**
-	 * Writes an order page the way `Merx::createOrder()` does
+	 * Runs a whole checkout, the way `/api/shop/success` completes it
 	 */
-	protected function createOrder(string $slug, array $content): OrderPage
+	protected function checkout(string $paymentGateway): OrderPage
 	{
-		return $this->kirby->impersonate('kirby', function () use ($slug, $content): OrderPage {
-			$ordersPage = $this->kirby->site()->ordersPage() ?? $this->kirby->site()->createChild([
-				'slug' => 'orders',
-				'template' => 'orders',
-				'draft' => false,
-				'content' => ['title' => 'Orders'],
-			]);
+		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
 
-			/** @var OrderPage $orderPage */
-			$orderPage = $ordersPage->createChild([
-				'slug' => $slug,
-				'template' => 'order',
-				'model' => 'order',
-				'draft' => false,
-				'content' => [
-					'dateCreated' => date('c'),
-					...$content,
-				],
-			]);
+		$merx = merx();
+		$merx->initializeOrder(['paymentGateway' => $paymentGateway, 'email' => 'customer@example.com']);
 
-			return $orderPage->changeStatus('listed');
-		});
+		return $merx->createOrder([
+			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
+		]);
 	}
 
 	public function testFiresForOrderWhichIsPaidOnCreation(): void
 	{
-		// PayPal and Stripe Elements complete the payment before the order page
-		// is written, so the order is created as a paid one.
-		$this->createOrder('paid-on-creation', [
-			'paymentGateway' => 'paypal',
-			'paymentComplete' => true,
-			'datePaid' => date('c'),
-		]);
+		$this->checkout('paid-right-away');
 
-		$this->assertSame(['paid-on-creation'], $this->triggered);
+		// The order is listed by then: the hook runs after the order is written,
+		// not while other checkouts wait for it
+		$this->assertSame(['listed'], $this->triggered);
 	}
 
 	public function testFiresOnceForOrderWhichIsPaidOnCreation(): void
 	{
-		$orderPage = $this->createOrder('paid-on-creation', [
-			'paymentGateway' => 'stripe-elements',
-			'paymentComplete' => true,
-			'datePaid' => date('c'),
-		]);
+		$orderPage = $this->checkout('paid-right-away');
 
 		// A Stripe webhook for a payment which was already completed updates the
 		// order a second time. It must not be reported as a second payment.
@@ -113,14 +138,12 @@ final class PaymentCompletedTest extends TestCase
 			'datePaid' => date('c'),
 		]));
 
-		$this->assertSame(['paid-on-creation'], $this->triggered);
+		$this->assertSame(['listed'], $this->triggered);
 	}
 
 	public function testFiresForOrderWhichIsPaidLater(): void
 	{
-		$orderPage = $this->createOrder('paid-later', [
-			'paymentGateway' => 'invoice',
-		]);
+		$orderPage = $this->checkout('invoice');
 
 		$this->assertSame([], $this->triggered);
 
@@ -129,6 +152,70 @@ final class PaymentCompletedTest extends TestCase
 			'datePaid' => date('c'),
 		]));
 
-		$this->assertSame(['paid-later'], $this->triggered);
+		$this->assertSame(['listed'], $this->triggered);
+	}
+
+	public function testKeepsOrderWhichTheHooksUpdate(): void
+	{
+		// Each hook updates the order it is given. When a hook is handed a copy
+		// which an earlier hook has already updated, Kirby throws and removes the
+		// order’s content from disk while it does.
+		$this->hooksUpdateOrder = true;
+
+		$orderPage = $this->checkout('paid-right-away');
+
+		$this->assertFileExists($orderPage->root() . '/order.txt');
+
+		$content = file_get_contents($orderPage->root() . '/order.txt');
+		$this->assertStringContainsString('Invoicenumber: R-1', $content);
+		$this->assertStringContainsString('Stockreduced: true', $content);
+		$this->assertStringContainsString('Mailsent: true', $content);
+
+		$this->assertSame(['listed'], $this->triggered);
+	}
+
+	public function testCreateOrderReturnsTheOrderWhichTheHooksUpdated(): void
+	{
+		$this->hooksUpdateOrder = true;
+
+		$orderPage = $this->checkout('paid-right-away');
+
+		$this->assertSame('true', $orderPage->content()->get('mailSent')->value());
+
+		// Updating an outdated copy would remove the order from disk
+		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
+			'shipped' => 'true',
+		]));
+
+		$this->assertFileExists($orderPage->root() . '/order.txt');
+		$this->assertStringContainsString('Shipped: true', file_get_contents($orderPage->root() . '/order.txt'));
+	}
+
+	public function testKeepsOrderWhichTheHooksUpdateWhenPaidLater(): void
+	{
+		$this->hooksUpdateOrder = true;
+
+		$orderPage = $this->checkout('invoice');
+
+		// The Stripe webhook reports the payment in a request of its own, which
+		// reads the order from disk
+		$this->kirby->site()->purge();
+		$orderPage = $this->kirby->page($orderPage->id());
+
+		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
+			'paymentComplete' => true,
+			'datePaid' => date('c'),
+		]));
+
+		$this->assertFileExists($orderPage->root() . '/order.txt');
+
+		$content = file_get_contents($orderPage->root() . '/order.txt');
+		$this->assertStringContainsString('Invoicenumber: R-1', $content);
+		$this->assertStringContainsString('Stockreduced: true', $content);
+
+		// `update()` returns the order with what the hooks wrote
+		$this->assertSame('R-1', $orderPage->content()->get('invoiceNumber')->value());
+
+		$this->assertSame(['listed'], $this->triggered);
 	}
 }

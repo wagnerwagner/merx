@@ -2,6 +2,8 @@
 
 namespace Wagnerwagner\Merx;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
 use Kirby\Content\VersionId;
@@ -92,6 +94,44 @@ class OrderPage extends Page
 	public function title(): Field
 	{
 		return new Field($this, 'title', $this->orderNumber());
+	}
+
+	/**
+	 * Sorting number of the order: the time it was created, to the millisecond
+	 *
+	 * The order blueprint uses it as `num`, so the order folders sort in the order
+	 * the orders were created, and the default `orderNumber` can count on from
+	 * the last one. With seconds, two orders created in the same second would
+	 * sort by their random slug instead.
+	 *
+	 * `Merx::createOrder()` stores it in its own field, because Kirby runs
+	 * `dateCreated` through the date field, which keeps whole seconds only.
+	 * Orders without that field fall back to `dateCreated`.
+	 *
+	 * @return int E.g. 20260923150808123
+	 */
+	public function sortingNumber(): int
+	{
+		$sortingNumber = $this->content()->get('sortingNumber');
+
+		if ($sortingNumber->isNotEmpty()) {
+			return $sortingNumber->toInt();
+		}
+
+		return static::sortingNumberFromDate(new DateTimeImmutable((string)$this->dateCreated()->value()));
+	}
+
+	/**
+	 * Sorting number for an order created at $date
+	 *
+	 * The time is in UTC, so the hour that repeats when daylight saving time
+	 * ends cannot sort a later order before an earlier one.
+	 *
+	 * @return int E.g. 20260923150808123
+	 */
+	public static function sortingNumberFromDate(DateTimeImmutable $date): int
+	{
+		return (int)$date->setTimezone(new DateTimeZone('UTC'))->format('YmdHisv');
 	}
 
 	/**
