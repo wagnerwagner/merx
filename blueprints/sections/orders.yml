@@ -15,4 +15,4 @@ columns:
   total:
     value: "{{ page.total }}"
   payment:
-    value: "{{ page.paymentMethod }}"
+    value: "{{ page.paymentGateway }}"
