@@ -2,11 +2,85 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Cms\App;
 use PHPUnit\Framework\TestCase;
+use Stripe\ApiRequestor;
+use Stripe\HttpClient\ClientInterface;
 use Stripe\PaymentIntent;
+use Stripe\Stripe;
 
 final class PaymentDetailsTest extends TestCase
 {
+	private App $app;
+
+	private ClientInterface $httpClient;
+
+	private string|null $apiKey;
+
+	/**
+	 * Stands in for the Stripe API. `$this->stripe->requests` lists what was sent
+	 */
+	private ClientInterface $stripe;
+
+	public function setUp(): void
+	{
+		App::$enableWhoops = false;
+		$this->app = App::instance();
+		$this->httpClient = ApiRequestor::httpClient();
+		$this->apiKey = Stripe::getApiKey();
+
+		// Nothing in here may reach the API. A test which expects a request answers it
+		$this->stubStripe(500, ['error' => ['message' => 'Unexpected request']]);
+	}
+
+	public function tearDown(): void
+	{
+		App::instance($this->app);
+		App::$enableWhoops = true;
+		ApiRequestor::setHttpClient($this->httpClient);
+		Stripe::setApiKey($this->apiKey);
+	}
+
+	/**
+	 * Answers every Stripe request with $body instead of sending it
+	 */
+	private function stubStripe(int $code, array $body): void
+	{
+		$this->stripe = new class ($code, $body) implements ClientInterface {
+			public array $requests = [];
+
+			public function __construct(private int $code, private array $body) {}
+
+			public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null)
+			{
+				$this->requests[] = $method . ' ' . $absUrl;
+				return [json_encode($this->body), $this->code, []];
+			}
+		};
+
+		ApiRequestor::setHttpClient($this->stripe);
+		Stripe::setApiKey('sk_test_stub');
+	}
+
+	private static function stripeCardPaymentMethod(): array
+	{
+		return [
+			'id' => 'pm_1ABCdef',
+			'object' => 'payment_method',
+			'type' => 'card',
+			'card' => [
+				'brand' => 'visa',
+				'last4' => '4242',
+				'wallet' => ['type' => 'apple_pay'],
+			],
+			// Everything below must never be stored
+			'billing_details' => [
+				'email' => 'customer@example.com',
+				'name' => 'Erika Mustermann',
+			],
+		];
+	}
+
 	private static function stripePaymentIntent(array $overrides = []): PaymentIntent
 	{
 		return PaymentIntent::constructFrom(array_merge([
@@ -101,6 +175,79 @@ final class PaymentDetailsTest extends TestCase
 		);
 
 		$this->assertSame('ch_expanded', $details['reference']);
+	}
+
+	public function testStripeRecordTakesMethodFromExpandedPaymentMethod(): void
+	{
+		$details = PaymentDetails::fromStripePaymentIntent(
+			self::stripePaymentIntent(['payment_method' => self::stripeCardPaymentMethod()])
+		);
+
+		$this->assertSame([], $this->stripe->requests);
+		$this->assertSame('card', $details['payment_method']);
+		$this->assertSame('visa', $details['card_brand']);
+		$this->assertSame('apple_pay', $details['card_wallet']);
+	}
+
+	public function testStripeRecordDropsPaymentMethodPersonalData(): void
+	{
+		$details = PaymentDetails::fromStripePaymentIntent(
+			self::stripePaymentIntent(['payment_method' => self::stripeCardPaymentMethod()])
+		);
+		$serialized = json_encode($details);
+
+		$this->assertStringNotContainsString('4242', $serialized);
+		$this->assertStringNotContainsString('customer@example.com', $serialized);
+		$this->assertStringNotContainsString('Mustermann', $serialized);
+	}
+
+	public function testStripeRecordHasNoCardDetailsForOtherMethods(): void
+	{
+		$details = PaymentDetails::fromStripePaymentIntent(self::stripePaymentIntent([
+			'payment_method' => ['id' => 'pm_2ABCdef', 'object' => 'payment_method', 'type' => 'sepa_debit'],
+		]));
+
+		$this->assertSame('sepa_debit', $details['payment_method']);
+		$this->assertArrayNotHasKey('card_brand', $details);
+		$this->assertArrayNotHasKey('card_wallet', $details);
+	}
+
+	public function testStripeRecordRetrievesPaymentMethodById(): void
+	{
+		$this->stubStripe(200, self::stripeCardPaymentMethod());
+
+		$details = PaymentDetails::fromStripePaymentIntent(
+			self::stripePaymentIntent(['payment_method' => 'pm_1ABCdef'])
+		);
+
+		$this->assertSame(['get https://api.stripe.com/v1/payment_methods/pm_1ABCdef'], $this->stripe->requests);
+		$this->assertSame('card', $details['payment_method']);
+		$this->assertSame('visa', $details['card_brand']);
+		$this->assertSame('apple_pay', $details['card_wallet']);
+	}
+
+	/**
+	 * The webhook and the checkout write the record once the payment went
+	 * through, so a Stripe error here must not throw
+	 */
+	public function testStripeRecordSurvivesAPaymentMethodWhichCannotBeRetrieved(): void
+	{
+		// The warning would go to the logs root of whichever App an earlier test
+		// left behind, which may be inside vendor/
+		$this->app->clone(['options' => ['wagnerwagner.merx.logging' => false]]);
+
+		$this->stubStripe(404, ['error' => [
+			'type' => 'invalid_request_error',
+			'message' => 'No such PaymentMethod: \'pm_1ABCdef\'',
+		]]);
+
+		$details = PaymentDetails::fromStripePaymentIntent(
+			self::stripePaymentIntent(['payment_method' => 'pm_1ABCdef'])
+		);
+
+		$this->assertSame('pi_3ABCdef', $details['id']);
+		$this->assertArrayNotHasKey('payment_method', $details);
+		$this->assertArrayNotHasKey('card_brand', $details);
 	}
 
 	public function testPayPalRecordDropsPersonalData(): void

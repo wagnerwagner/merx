@@ -3,6 +3,7 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Toolkit\Str;
+use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentIntent;
 use Stripe\PaymentMethod;
 
@@ -87,12 +88,19 @@ class PaymentDetails
 	 * Stripe reports the amount in the currency’s minor unit. It is converted
 	 * back with the same factor `StripePayment::createStripePaymentIntent()`
 	 * uses to create the intent.
+	 *
+	 * The intent holds its PaymentMethod only as an id unless it was requested
+	 * with `expand: ['payment_method']`, so the method is retrieved from Stripe.
 	 */
 	public static function fromStripePaymentIntent(PaymentIntent $paymentIntent): array
 	{
 		$data = $paymentIntent->toArray();
 		$latestCharge = $data['latest_charge'] ?? null;
-		$payment_method = PaymentMethod::retrieve($data['payment_method']);
+
+		$paymentMethod = $data['payment_method'] ?? null;
+		if (is_string($paymentMethod) === true) {
+			$paymentMethod = static::retrieveStripePaymentMethod($paymentMethod);
+		}
 
 		return static::create([
 			'provider' => 'stripe',
@@ -102,11 +110,30 @@ class PaymentDetails
 			'currency' => isset($data['currency']) ? Str::upper((string)$data['currency']) : null,
 			'created' => isset($data['created']) ? date('c', (int)$data['created']) : null,
 			'reference' => is_array($latestCharge) ? ($latestCharge['id'] ?? null) : $latestCharge,
-			'payment_method' => $payment_method['type'],
-			'card_brand' => $payment_method->card?->brand ?? null,
-			'card_wallet' => $payment_method->card?->wallet?->type ?? null,
+			'payment_method' => $paymentMethod['type'] ?? null,
+			'card_brand' => $paymentMethod['card']['brand'] ?? null,
+			'card_wallet' => $paymentMethod['card']['wallet']['type'] ?? null,
 			'livemode' => $data['livemode'] ?? null,
 		]);
+	}
+
+	/**
+	 * Retrieves a PaymentMethod, or returns null when the request fails
+	 *
+	 * The method is a detail of the record, not a condition of the payment. The
+	 * record is written after the payment is captured and by the webhook, where
+	 * throwing would lose the order or leave it unpaid.
+	 */
+	private static function retrieveStripePaymentMethod(string $id): array|null
+	{
+		try {
+			return PaymentMethod::retrieve($id)->toArray();
+		} catch (ApiErrorException $ex) {
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log('Stripe PaymentMethod "' . $id . '" not retrieved: ' . $ex->getMessage(), 'warning');
+			}
+			return null;
+		}
 	}
 
 	/**
