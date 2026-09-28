@@ -363,8 +363,10 @@ class Merx
 		$session->remove('wagnerwagner.merx.virtualOrderPage');
 
 		$orderPageFromSession['parent'] = $kirby->site()->ordersPage();
+		// The session holds no model, see `initializeOrder()`
+		$orderPageFromSession['model'] = 'order';
 
-		return new OrderPage((array)$orderPageFromSession);
+		return OrderPage::factory((array)$orderPageFromSession);
 	}
 
 
@@ -443,10 +445,13 @@ class Merx
 			// add cart to content
 			$data['items'] = $cart->toYaml();
 
-			// create virtual order page
-			$virtualOrderPage = new OrderPage([
+			// create virtual order page. Through the model registry rather than
+			// `new OrderPage()`, so the shop’s own `/site/models/order.php`
+			// validates the order and is what the gateway and the hooks get.
+			$virtualOrderPage = OrderPage::factory([
 				'slug' => Str::random(16),
 				'template' => 'order',
+				'model' => 'order',
 				'content' => $data,
 				'parent' => $kirby->site()->ordersPage(),
 			]);
