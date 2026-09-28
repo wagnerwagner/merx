@@ -3,3 +3,5 @@ fields:
   email:
     type: email
     required: true
+    disabled: true
+    translate: false

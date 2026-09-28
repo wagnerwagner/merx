@@ -36,7 +36,7 @@ return [
 	'field.payment' => 'Bezahlung',
 	'field.paymentComplete' => 'Bezahlung vollständig',
 	'field.paymentDetails' => 'Zahlungsdetails',
-	'field.paymentGateway' => 'Bezahlmethode',
+	'field.paymentGateway' => 'Zahlungsgateway',
 	'field.personalData' => 'Persönliche Daten',
 	'field.price' => 'Preis',
 	'field.priceNet' => 'Preis (netto)',

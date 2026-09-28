@@ -7,22 +7,22 @@ navigation:
 
 status:
   draft: page.status.error
-  unlisted: page.status.incomplete
   listed: page.status.complete
 
 options:
   changeSlug: false
+  changeStatus: false
   changeTemplate: false
   changeTitle: false
-  sort: false
   delete: false
   duplicate: false
   move: false
+  sort: false
 
 buttons:
   open: true
-  preview: true
-  settings: true
+  preview: false
+  settings: false
   paymentProvider: true
 
 extends: layouts/order

@@ -5,6 +5,7 @@ fields:
     type: text
     required: true
     width: 1/2
+    disabled: true
     translate: false
   paymentComplete:
     label: field.paymentComplete

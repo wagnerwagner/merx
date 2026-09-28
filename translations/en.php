@@ -36,7 +36,7 @@ return [
 	'field.payment' => 'Payment',
 	'field.paymentComplete' => 'Payment complete',
 	'field.paymentDetails' => 'Payment details',
-	'field.paymentGateway' => 'Payment method',
+	'field.paymentGateway' => 'Payment gateway',
 	'field.personalData' => 'Personal Data',
 	'field.price' => 'Price',
 	'field.priceNet' => 'Price (net)',
