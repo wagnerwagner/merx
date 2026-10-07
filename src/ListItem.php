@@ -15,7 +15,7 @@ use Kirby\Toolkit\Obj;
  */
 class ListItem extends Obj
 {
-	static $allowedTypes = [
+	public static $allowedTypes = [
 		'credit',
 		'custom',
 		'discount',
@@ -24,43 +24,36 @@ class ListItem extends Obj
 		'shipping',
 	];
 
-	public string $key;
-
-	public float $quantity = 1.0;
-
-	public ?float $quantifier = null;
-
-	public ?string $title = null;
-
-	public Page|ProductPage|null $page = null;
-
-	public Price|null $price = null;
-
-	public string $type = 'product';
-
 	public array|null $data = null;
+	public string $key;
+	public Page|ProductPage|null $page = null;
+	public Price|null $price = null;
+	public float|null $quantifier = null;
+	public float $quantity = 1.0;
+	public string|null $title = null;
+	public string $type = 'product';
 
 	/**
 	 * Create a new ListItem
 	 *
-	 * @param null|string $title Will be overwritten by $page’s title
-	 * @param null|string|\Kirby\Cms\Page $page Page object or page slug
-	 * @param null|float|\Wagnerwagner\Merx\Price $price Will be overwritten by $page’s price when $price is float or null
-	 * @param float $quantity Quantity of the ListItem. E.g. 3.0 for 3 items.
-	 * @param null|float $quantifier Multiplier for the price. Could be used when the item has a price per meter.
-	 * @param null|string $type Type of ListItem. See ListItem::$allowedTypes for allowed types.
-	 * @param null|array $data Additional data for the ListItem. Could be used to store additional information about the ListItem, e.g. a color variant.
-	 * @param bool $priceUpdate Will update prices and tax with recent prices and tax from page when $priceUpdate is true.
+	 * @param $title Will be overwritten by $page’s title
+	 * @param $page Page object or page slug
+	 * @param $price Will be overwritten by $page’s price when $price is float or null
+	 * @param $quantity Quantity of the ListItem. E.g. 3.0 for 3 items.
+	 * @param $quantifier Multiplier for the price. Could be used when the item has a price per meter.
+	 * @param $type Type of ListItem. See ListItem::$allowedTypes for allowed types.
+	 * @param $data Additional data for the ListItem. Could be used to store additional information about the ListItem, e.g. a color variant.
+	 * @param $priceUpdate Will update prices and tax with recent prices and tax from page when $priceUpdate is true.
 	 * @throws InvalidArgumentException when $type is not in ListItem::$allowedTypes.
 	 */
 	public function __construct(
 		string $key,
-		null|string $title = null,
-		null|string|Page $page = null,
-		null|float|Price $price = null,
+		string|null $title = null,
+		string|Page|null $page = null,
+		float|Price|null $price = null,
 		float $quantity = 1.0,
-		null|float $quantifier = null,
-		null|string $type = 'product',
+		float|null $quantifier = null,
+		string|null $type = 'product',
 		array|null $data = null,
 		bool $priceUpdate = true,
 	) {
@@ -101,7 +94,7 @@ class ListItem extends Obj
 				$this->page->title() instanceof Field &&
 				$this->page->title()->isNotEmpty()
 			) {
-				$this->title = (string) $this->page->title();
+				$this->title = (string)$this->page->title();
 			}
 		}
 
@@ -115,7 +108,7 @@ class ListItem extends Obj
 		}
 
 		// Set type
-		$type = $type ?? (string) $this->page?->type();
+		$type ??= (string)$this->page?->type();
 		if (is_string($type)) {
 			if (!in_array($type, static::$allowedTypes)) {
 				throw new InvalidArgumentException(
@@ -133,7 +126,7 @@ class ListItem extends Obj
 	/**
 	 * Convert mixed $data to ListItem
 	 */
-	static function factory(string|array|ListItem $data): ListItem
+	public static function factory(string|array|ListItem $data): ListItem
 	{
 		if (is_string($data)) {
 			$listItem = new ListItem(key: $data);
@@ -152,66 +145,11 @@ class ListItem extends Obj
 	}
 
 	/**
-	 * Updates the price according to the page’s price definition
-	 *
-	 * @return self
-	 */
-	public function updatePrice(): self
-	{
-		if ($this->page instanceof ProductPage) {
-			$this->price = $this->page->price(pricingRule: $this->price->pricingRule, quantity: $this->quantity);
-		}
-		return $this;
-	}
-
-	/**
 	 * Price per item
 	 */
-	public function price(): ?Price
+	public function price(): Price|null
 	{
 		return $this->price;
-	}
-
-	/**
-	 * Total price
-	 * Price per item × quantity
-	 */
-	public function total(): ?Price
-	{
-		// A price without a pricing rule includes its tax, the same way `Price`
-		// itself treats it. Without the fallback the total would be built from the
-		// net price while the item’s own price is a gross one.
-		$taxIncluded = $this->price?->pricingRule?->taxIncluded ?? true;
-		$pricePerItem = $taxIncluded ? $this->price?->price : $this->price?->priceNet;
-
-		if (!is_float($pricePerItem)) {
-			return null;
-		}
-
-		$tax = $this->price?->tax ?? null;
-
-		return new Price(
-			price: $pricePerItem * $this->quantity,
-			tax: $tax?->toFloat(),
-			currency: $this->price?->currency,
-			pricingRule: $this->price?->pricingRule,
-		);
-	}
-
-	/**
-	 * Convert ListItem to session array
-	 */
-	public function toSessionArray(): array
-	{
-		$array = (array)$this;
-
-		// remove price definition, when page is present
-		if ($array['page'] instanceof Page) {
-			unset($array['price']);
-			$array['page'] = (string)$array['page']->uuid();
-		}
-
-		return $array;
 	}
 
 	/**
@@ -237,5 +175,58 @@ class ListItem extends Obj
 		}
 
 		return $array;
+	}
+
+	/**
+	 * Convert ListItem to session array
+	 */
+	public function toSessionArray(): array
+	{
+		$array = (array)$this;
+
+		// remove price definition, when page is present
+		if ($array['page'] instanceof Page) {
+			unset($array['price']);
+			$array['page'] = (string)$array['page']->uuid();
+		}
+
+		return $array;
+	}
+
+	/**
+	 * Total price
+	 * Price per item × quantity
+	 */
+	public function total(): Price|null
+	{
+		// A price without a pricing rule includes its tax, the same way `Price`
+		// itself treats it. Without the fallback the total would be built from the
+		// net price while the item’s own price is a gross one.
+		$taxIncluded = $this->price?->pricingRule?->taxIncluded ?? true;
+		$pricePerItem = $taxIncluded ? $this->price?->price : $this->price?->priceNet;
+
+		if (!is_float($pricePerItem)) {
+			return null;
+		}
+
+		$tax = $this->price?->tax ?? null;
+
+		return new Price(
+			price: $pricePerItem * $this->quantity,
+			tax: $tax?->toFloat(),
+			currency: $this->price?->currency,
+			pricingRule: $this->price?->pricingRule,
+		);
+	}
+
+	/**
+	 * Updates the price according to the page’s price definition
+	 */
+	public function updatePrice(): self
+	{
+		if ($this->page instanceof ProductPage) {
+			$this->price = $this->page->price(pricingRule: $this->price->pricingRule, quantity: $this->quantity);
+		}
+		return $this;
 	}
 }

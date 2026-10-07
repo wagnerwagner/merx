@@ -16,17 +16,30 @@ use Wagnerwagner\Merx\OrderPage;
  */
 final class PaymentCompletedTest extends TestCase
 {
-	protected App $app;
-
-	protected App $kirby;
-
-	protected string $root;
+	/** Whether the hooks write to the order they are given */
+	public bool $hooksUpdateOrder = false;
 
 	/** Orders the hook was triggered for, with their status at that moment */
 	public array $triggered = [];
 
-	/** Whether the hooks write to the order they are given */
-	public bool $hooksUpdateOrder = false;
+	protected App $app;
+	protected App $kirby;
+	protected string $root;
+
+	/**
+	 * Runs a whole checkout, the way `/api/shop/success` completes it
+	 */
+	protected function checkout(string $paymentGateway): OrderPage
+	{
+		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
+
+		$merx = merx();
+		$merx->initializeOrder(['paymentGateway' => $paymentGateway, 'email' => 'customer@example.com']);
+
+		return $merx->createOrder([
+			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
+		]);
+	}
 
 	public function setUp(): void
 	{
@@ -103,19 +116,35 @@ final class PaymentCompletedTest extends TestCase
 		App::instance($this->app);
 	}
 
-	/**
-	 * Runs a whole checkout, the way `/api/shop/success` completes it
-	 */
-	protected function checkout(string $paymentGateway): OrderPage
+	public function testCreateOrderReturnsTheOrderWhichTheHooksUpdated(): void
 	{
-		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
+		$this->hooksUpdateOrder = true;
 
-		$merx = merx();
-		$merx->initializeOrder(['paymentGateway' => $paymentGateway, 'email' => 'customer@example.com']);
+		$orderPage = $this->checkout('paid-right-away');
 
-		return $merx->createOrder([
-			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
-		]);
+		$this->assertSame('true', $orderPage->content()->get('mailSent')->value());
+
+		// Updating an outdated copy would remove the order from disk
+		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
+			'shipped' => 'true',
+		]));
+
+		$this->assertFileExists($orderPage->root() . '/order.txt');
+		$this->assertStringContainsString('Shipped: true', file_get_contents($orderPage->root() . '/order.txt'));
+	}
+
+	public function testFiresForOrderWhichIsPaidLater(): void
+	{
+		$orderPage = $this->checkout('invoice');
+
+		$this->assertSame([], $this->triggered);
+
+		$this->kirby->impersonate('kirby', fn () => $orderPage->update([
+			'paymentComplete' => true,
+			'datePaid' => date('c'),
+		]));
+
+		$this->assertSame(['listed'], $this->triggered);
 	}
 
 	public function testFiresForOrderWhichIsPaidOnCreation(): void
@@ -141,20 +170,6 @@ final class PaymentCompletedTest extends TestCase
 		$this->assertSame(['listed'], $this->triggered);
 	}
 
-	public function testFiresForOrderWhichIsPaidLater(): void
-	{
-		$orderPage = $this->checkout('invoice');
-
-		$this->assertSame([], $this->triggered);
-
-		$this->kirby->impersonate('kirby', fn () => $orderPage->update([
-			'paymentComplete' => true,
-			'datePaid' => date('c'),
-		]));
-
-		$this->assertSame(['listed'], $this->triggered);
-	}
-
 	public function testKeepsOrderWhichTheHooksUpdate(): void
 	{
 		// Each hook updates the order it is given. When a hook is handed a copy
@@ -172,23 +187,6 @@ final class PaymentCompletedTest extends TestCase
 		$this->assertStringContainsString('Mailsent: true', $content);
 
 		$this->assertSame(['listed'], $this->triggered);
-	}
-
-	public function testCreateOrderReturnsTheOrderWhichTheHooksUpdated(): void
-	{
-		$this->hooksUpdateOrder = true;
-
-		$orderPage = $this->checkout('paid-right-away');
-
-		$this->assertSame('true', $orderPage->content()->get('mailSent')->value());
-
-		// Updating an outdated copy would remove the order from disk
-		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
-			'shipped' => 'true',
-		]));
-
-		$this->assertFileExists($orderPage->root() . '/order.txt');
-		$this->assertStringContainsString('Shipped: true', file_get_contents($orderPage->root() . '/order.txt'));
 	}
 
 	public function testKeepsOrderWhichTheHooksUpdateWhenPaidLater(): void

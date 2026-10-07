@@ -16,34 +16,7 @@ use Wagnerwagner\Merx\OrderPage;
 final class StripeWebhookTest extends TestCase
 {
 	protected App $kirby;
-
 	protected string $root;
-
-	public function setUp(): void
-	{
-		App::$enableWhoops = false;
-
-		$this->root = __DIR__ . '/kirby/stripe-webhook';
-		Dir::remove($this->root);
-		Dir::make($this->root . '/content');
-
-		$this->kirby = new App([
-			'roots' => [
-				'index' => $this->root,
-				'content' => $this->root . '/content',
-				'site' => $this->root . '/site',
-			],
-			'options' => [
-				'wagnerwagner.merx.logging' => false,
-			],
-		]);
-	}
-
-	public function tearDown(): void
-	{
-		App::$enableWhoops = true;
-		Dir::remove($this->root);
-	}
 
 	protected function createOrder(string $slug, string|null $paymentIntentId): OrderPage
 	{
@@ -101,42 +74,36 @@ final class StripeWebhookTest extends TestCase
 		return page('orders/' . $slug)?->paymentComplete()->toBool() === true;
 	}
 
-	public function testMarksTheOrderOfThePaymentAsPaid(): void
+	public function setUp(): void
 	{
-		$this->createOrder('an-order', 'pi_matching');
-		$this->fireWebhook('pi_matching', 'an-order');
+		App::$enableWhoops = false;
 
-		$this->assertTrue($this->isPaid('an-order'));
+		$this->root = __DIR__ . '/kirby/stripe-webhook';
+		Dir::remove($this->root);
+		Dir::make($this->root . '/content');
+
+		$this->kirby = new App([
+			'roots' => [
+				'index' => $this->root,
+				'content' => $this->root . '/content',
+				'site' => $this->root . '/site',
+			],
+			'options' => [
+				'wagnerwagner.merx.logging' => false,
+			],
+		]);
 	}
 
-	public function testIgnoresAPaymentIntentWhichBelongsToAnotherOrder(): void
+	public function tearDown(): void
 	{
-		$this->createOrder('an-order', 'pi_of_this_order');
-		$this->fireWebhook('pi_of_a_different_one', 'an-order');
-
-		$this->assertFalse($this->isPaid('an-order'));
+		App::$enableWhoops = true;
+		Dir::remove($this->root);
 	}
 
 	public function testIgnoresAnOrderWithoutAPaymentIntent(): void
 	{
 		$this->createOrder('an-order', null);
 		$this->fireWebhook('pi_matching', 'an-order');
-
-		$this->assertFalse($this->isPaid('an-order'));
-	}
-
-	public function testSurvivesAnUnknownOrder(): void
-	{
-		$this->createOrder('an-order', 'pi_matching');
-		$this->fireWebhook('pi_matching', 'no-such-order');
-
-		$this->assertFalse($this->isPaid('an-order'));
-	}
-
-	public function testSurvivesAnEventWithoutAnOrderUid(): void
-	{
-		$this->createOrder('an-order', 'pi_matching');
-		$this->fireWebhook('pi_matching', null);
 
 		$this->assertFalse($this->isPaid('an-order'));
 	}
@@ -160,5 +127,37 @@ final class StripeWebhookTest extends TestCase
 		$page = page('orders/not-an-order');
 		$this->assertNotInstanceOf(OrderPage::class, $page);
 		$this->assertNull($page->content()->get('paymentComplete')->value());
+	}
+
+	public function testIgnoresAPaymentIntentWhichBelongsToAnotherOrder(): void
+	{
+		$this->createOrder('an-order', 'pi_of_this_order');
+		$this->fireWebhook('pi_of_a_different_one', 'an-order');
+
+		$this->assertFalse($this->isPaid('an-order'));
+	}
+
+	public function testMarksTheOrderOfThePaymentAsPaid(): void
+	{
+		$this->createOrder('an-order', 'pi_matching');
+		$this->fireWebhook('pi_matching', 'an-order');
+
+		$this->assertTrue($this->isPaid('an-order'));
+	}
+
+	public function testSurvivesAnEventWithoutAnOrderUid(): void
+	{
+		$this->createOrder('an-order', 'pi_matching');
+		$this->fireWebhook('pi_matching', null);
+
+		$this->assertFalse($this->isPaid('an-order'));
+	}
+
+	public function testSurvivesAnUnknownOrder(): void
+	{
+		$this->createOrder('an-order', 'pi_matching');
+		$this->fireWebhook('pi_matching', 'no-such-order');
+
+		$this->assertFalse($this->isPaid('an-order'));
 	}
 }

@@ -4,8 +4,9 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
 use Stripe\Event;
-use Stripe\Stripe;
+use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
+use Stripe\Stripe;
 use Stripe\Webhook;
 
 /**
@@ -19,30 +20,14 @@ use Stripe\Webhook;
 class StripePayment
 {
 	/**
-	 * Configure Stripe Payment connection settings
-	 *
-	 * @return void
-	 */
-	private static function setStripeApiKey(): void
-	{
-		if (option('wagnerwagner.merx.production') === true) {
-			Stripe::setApiKey(option('wagnerwagner.merx.stripe.live.secret_key'));
-		} else {
-			Stripe::setApiKey(option('wagnerwagner.merx.stripe.test.secret_key'));
-		}
-	}
-
-	/**
 	 * Verifies a Stripe webhook request and turns it into an event
 	 *
 	 * The reason a webhook is rejected is only written to the log. It must not
 	 * reach the caller, who is unauthenticated on this endpoint.
 	 *
 	 * @see https://docs.stripe.com/webhooks#verify-official-libraries
-	 * @param string $payload Payload from stripe webhook
-	 * @throws \Kirby\Exception\Exception merx.stripeWebhook when the signing secret is missing, the signature is invalid or the payload cannot be parsed
-	 *
-	 * @return \Stripe\Event
+	 * @param $payload Payload from stripe webhook
+	 * @throws Exception merx.stripeWebhook when the signing secret is missing, the signature is invalid or the payload cannot be parsed
 	 */
 	public static function constructEvent(string $payload): Event
 	{
@@ -68,9 +53,11 @@ class StripePayment
 
 		try {
 			return Webhook::constructEvent(
-				$payload, $sig_header, $endpoint_secret
+				$payload,
+				$sig_header,
+				$endpoint_secret
 			);
-		} catch (\UnexpectedValueException | \Stripe\Exception\SignatureVerificationException $ex) {
+		} catch (\UnexpectedValueException | SignatureVerificationException $ex) {
 			// Invalid payload or invalid signature
 			self::logWebhookError($ex->getMessage());
 			throw new Exception(
@@ -82,23 +69,10 @@ class StripePayment
 	}
 
 	/**
-	 * Writes the reason a webhook was rejected to the log
-	 */
-	private static function logWebhookError(string $message): void
-	{
-		if (option('wagnerwagner.merx.logging') === true) {
-			Logger::log('Stripe webhook rejected: ' . $message, 'error');
-		}
-	}
-
-	/**
 	 * Create Stripe Payment
 	 *
 	 * @see https://docs.stripe.com/api/payment_intents/create
-	 * @param float $amount
-	 * @param array $params
 	 * @param array $options
-	 * @return \Stripe\PaymentIntent
 	 */
 	public static function createStripePaymentIntent(float $amount, array $params = [], $options = []): PaymentIntent
 	{
@@ -112,11 +86,17 @@ class StripePayment
 	}
 
 	/**
+	 * Writes the reason a webhook was rejected to the log
+	 */
+	private static function logWebhookError(string $message): void
+	{
+		if (option('wagnerwagner.merx.logging') === true) {
+			Logger::log('Stripe webhook rejected: ' . $message, 'error');
+		}
+	}
+
+	/**
 	 * Get the Stripe Payment informations
-	 *
-	 * @param string $paymentIntentId
-	 *
-	 * @return \Stripe\PaymentIntent
 	 */
 	public static function retrieveStripePaymentIntent(string $paymentIntentId): PaymentIntent
 	{
@@ -124,5 +104,17 @@ class StripePayment
 
 		$intent = PaymentIntent::retrieve($paymentIntentId);
 		return $intent;
+	}
+
+	/**
+	 * Configure Stripe Payment connection settings
+	 */
+	private static function setStripeApiKey(): void
+	{
+		if (option('wagnerwagner.merx.production') === true) {
+			Stripe::setApiKey(option('wagnerwagner.merx.stripe.live.secret_key'));
+		} else {
+			Stripe::setApiKey(option('wagnerwagner.merx.stripe.test.secret_key'));
+		}
 	}
 }

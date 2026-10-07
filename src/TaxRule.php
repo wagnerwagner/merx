@@ -12,7 +12,8 @@ use Kirby\Toolkit\Obj;
  * @copyright Wagnerwagner GmbH
  * @see https://merx.wagnerwagner.de/guide/configuration/taxes
  */
-class TaxRule extends Obj {
+class TaxRule extends Obj
+{
 	/** Unique key */
 	public string $key = '';
 
@@ -25,13 +26,13 @@ class TaxRule extends Obj {
 	/**
 	 * Creates a new tax rule
 	 *
-	 * @param string $key The key of the tax rule
-	 * @param string|null $name The name of the tax rule
-	 * @param callable|null $rule A function that returns the tax rate as float.
-	 * E.g. 0.19 (for 19 %).
-	 * It is passed the Kirby instance as first argument.
+	 * @param $key The key of the tax rule
+	 * @param $name The name of the tax rule
+	 * @param $rule A function that returns the tax rate as float.
+	 *             E.g. 0.19 (for 19 %).
+	 *             It is passed the Kirby instance as first argument.
 	 */
-	public function __construct(string $key, ?string $name = null, ?callable $rule = null)
+	public function __construct(string $key, string|null $name = null, callable|null $rule = null)
 	{
 		$this->key = $key;
 
@@ -43,13 +44,13 @@ class TaxRule extends Obj {
 	/**
 	 * Gets the tax rate as decimal value
 	 *
-	 * @param App|null $kirby The Kirby instance
+	 * @param $kirby The Kirby instance
 	 * @return float|null The tax rate (e.g. 0.19) or null if no rule is set
 	 */
-	public function taxRate(?App $kirby = null): ?float
+	public function taxRate(App|null $kirby = null): float|null
 	{
 		if (is_callable($this->rule)) {
-			$kirby = $kirby ?? App::instance();
+			$kirby ??= App::instance();
 			return call_user_func($this->rule, $kirby);
 		}
 
@@ -58,8 +59,6 @@ class TaxRule extends Obj {
 
 	/**
 	 * Converts the tax rule to an array
-	 *
-	 * @return array
 	 */
 	public function toArray(): array
 	{
@@ -67,5 +66,4 @@ class TaxRule extends Obj {
 		$array['rule'] = $this->taxRate();
 		return $array;
 	}
-
 }

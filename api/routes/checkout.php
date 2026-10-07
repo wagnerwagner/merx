@@ -14,8 +14,7 @@ return [
 		 * @see https://merx.wagnerwagner.de/guide/getting-started/create-checkout
 		 * @return array Array with redirect url when json is the preferred mime type, otherwise redirects with code 303.
 		 */
-		'action' => function (): array
-		{
+		'action' => function (): array {
 			/** @var \Kirby\Cms\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
@@ -23,7 +22,7 @@ return [
 
 			$merx = merx();
 
-			$data['paymentGateway'] = $data['paymentGateway'] ?? $data['paymentgateway'] ?? $data['payment-gateway'] ?? $data['payment_gateway'] ?? null;
+			$data['paymentGateway'] ??= $data['paymentgateway'] ?? $data['payment-gateway'] ?? $data['payment_gateway'] ?? null;
 
 			$redirectUrl = $merx->initializeOrder($data);
 

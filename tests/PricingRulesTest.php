@@ -10,6 +10,19 @@ class PricingRulesTest extends TestCase
 {
 	protected App $app;
 
+	/**
+	 * A new App rather than `clone()`, which would merge in the pricing rules
+	 * of whatever instance an earlier test left behind.
+	 */
+	private function app(array $pricingRules): App
+	{
+		return new App([
+			'options' => [
+				'wagnerwagner.merx.pricingRules' => $pricingRules,
+			],
+		]);
+	}
+
 	public function setUp(): void
 	{
 		App::$enableWhoops = false;
@@ -28,19 +41,6 @@ class PricingRulesTest extends TestCase
 		restore_error_handler();
 		App::instance($this->app);
 		App::$enableWhoops = true;
-	}
-
-	/**
-	 * A new App rather than `clone()`, which would merge in the pricing rules
-	 * of whatever instance an earlier test left behind.
-	 */
-	private function app(array $pricingRules): App
-	{
-		return new App([
-			'options' => [
-				'wagnerwagner.merx.pricingRules' => $pricingRules,
-			],
-		]);
 	}
 
 	public function testDefaultIsCheckedLast(): void
@@ -89,6 +89,19 @@ class PricingRulesTest extends TestCase
 		$this->assertSame('EUR', Merx::currency());
 	}
 
+	public function testNameAndTaxIncludedAreOptional(): void
+	{
+		$this->app([
+			'usd' => [
+				'currency' => 'USD',
+			],
+		]);
+
+		$rule = Merx::pricingRules()->getRuleByKey('usd');
+		$this->assertSame('usd', $rule->name);
+		$this->assertTrue($rule->taxIncluded);
+	}
+
 	public function testOtherRulesAreCheckedInTheOrderTheyAreDefined(): void
 	{
 		$this->app([
@@ -106,18 +119,5 @@ class PricingRulesTest extends TestCase
 		]);
 
 		$this->assertSame('usd', Merx::pricingRule()->key);
-	}
-
-	public function testNameAndTaxIncludedAreOptional(): void
-	{
-		$this->app([
-			'usd' => [
-				'currency' => 'USD',
-			],
-		]);
-
-		$rule = Merx::pricingRules()->getRuleByKey('usd');
-		$this->assertSame('usd', $rule->name);
-		$this->assertTrue($rule->taxIncluded);
 	}
 }

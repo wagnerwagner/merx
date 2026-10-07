@@ -2,11 +2,17 @@
 
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\Price;
-use Wagnerwagner\Merx\Tax;
 use Wagnerwagner\Merx\PricingRule;
+use Wagnerwagner\Merx\Tax;
 
 final class PriceTest extends TestCase
 {
+	public function test__toStringReturnsPriceAsString()
+	{
+		$price = new Price(77.77, null);
+		$this->assertEquals('77.77', (string)$price);
+	}
+
 	public function testGrossPriceWithTaxIncluded()
 	{
 		$tax = new Tax(priceNet: 100.0, rate: 0.19, currency: 'EUR');
@@ -30,6 +36,12 @@ final class PriceTest extends TestCase
 		$this->assertEquals(100.0, $price->priceNet);
 		$this->assertInstanceOf(Tax::class, $price->tax);
 		$this->assertEquals(0.19, $price->tax->rate);
+	}
+
+	public function testTaxIncludedReturnsNullIfNoPricingRule()
+	{
+		$price = new Price(10.0, null, null, 'EUR');
+		$this->assertNull($price->taxIncluded());
 	}
 
 	public function testToArrayFiltersNullValues()
@@ -58,12 +70,6 @@ final class PriceTest extends TestCase
 		$this->assertStringContainsString('€', $price->toString());
 	}
 
-	public function testTaxIncludedReturnsNullIfNoPricingRule()
-	{
-		$price = new Price(10.0, null, null, 'EUR');
-		$this->assertNull($price->taxIncluded());
-	}
-
 	public function testToStringUsesPriceNetIfTaxNotIncluded()
 	{
 		$pricingRule = $this->createMock(PricingRule::class);
@@ -72,12 +78,6 @@ final class PriceTest extends TestCase
 
 		$price = new Price(100.0, 0.19, $pricingRule, 'EUR');
 		$this->assertStringContainsString('€', $price->toString('priceNet'));
-	}
-
-	public function test__toStringReturnsPriceAsString()
-	{
-		$price = new Price(77.77, null);
-		$this->assertEquals('77.77', (string)$price);
 	}
 
 	public function testUpdatePrice()

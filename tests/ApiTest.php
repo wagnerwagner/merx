@@ -17,14 +17,6 @@ final class ApiTest extends TestCase
 		$this->assertEquals(200, $response['code']);
 	}
 
-	public function testCartGet(): void
-	{
-		$kirby = kirby();
-		$response = $kirby->api()->call('shop/cart', 'GET');
-		$this->assertEquals(200, $response['code']);
-		$this->assertEquals(1, $response['data']['quantity']);
-	}
-
 	public function testCartAddWithQuantity(): void
 	{
 		$kirby = kirby();
@@ -37,6 +29,33 @@ final class ApiTest extends TestCase
 		$this->assertEquals(200, $response['code']);
 		$this->assertIsArray($response['data']['products']);
 		$this->assertEquals(4, $response['data']['quantity']);
+	}
+
+	public function testCartDelete(): void
+	{
+		$kirby = kirby();
+		// Add item first
+		$kirby->api()->call('shop/cart', 'POST', [
+			'body' => [
+				'key' => 'amet',
+				'quantity' => 2,
+			],
+		]);
+		// Remove item
+		$response = $kirby->api()->call('shop/cart', 'DELETE', [
+			'body' => [
+				'key' => 'amet',
+			],
+		]);
+		$this->assertIsArray($response['data']['products']);
+	}
+
+	public function testCartGet(): void
+	{
+		$kirby = kirby();
+		$response = $kirby->api()->call('shop/cart', 'GET');
+		$this->assertEquals(200, $response['code']);
+		$this->assertEquals(1, $response['data']['quantity']);
 	}
 
 	public function testCartPatch(): void
@@ -59,24 +78,5 @@ final class ApiTest extends TestCase
 		$this->assertIsArray($response['data']['products']);
 		$this->assertEquals('dolor', $response['data']['products']['items'][2]['key']);
 		$this->assertEquals(5, $response['data']['products']['items'][2]['quantity']);
-	}
-
-	public function testCartDelete(): void
-	{
-		$kirby = kirby();
-		// Add item first
-		$kirby->api()->call('shop/cart', 'POST', [
-			'body' => [
-				'key' => 'amet',
-				'quantity' => 2,
-			],
-		]);
-		// Remove item
-		$response = $kirby->api()->call('shop/cart', 'DELETE', [
-			'body' => [
-				'key' => 'amet',
-			],
-		]);
-		$this->assertIsArray($response['data']['products']);
 	}
 }

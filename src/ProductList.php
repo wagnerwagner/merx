@@ -26,12 +26,11 @@ class ProductList extends ListItems
 	 * $productList->add(new ListItem(key: 'nice-socks', price: 10])); // Custom LitItem
 	 * ```
 	 *
-	 * @see \Wagnerwagner\Merx\ListItem
+	 * @see ListItem
 	 */
 	public function add(
 		string|array|ListItem $data
-	): static
-	{
+	): static {
 		$listItem = ListItem::factory($data);
 
 		if ($existingItem = $this->get($listItem->key)) {

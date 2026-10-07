@@ -18,10 +18,28 @@ use Wagnerwagner\Merx\OrderPage;
 final class OrderNumberTest extends TestCase
 {
 	protected App $app;
-
 	protected App $kirby;
-
 	protected string $root;
+
+	/**
+	 * Runs a whole checkout, the way `/api/shop/success` completes it
+	 */
+	protected function checkout(): OrderPage
+	{
+		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
+
+		$merx = merx();
+		$merx->initializeOrder(['paymentGateway' => 'invoice', 'email' => 'customer@example.com']);
+
+		$orderPage = $merx->createOrder([
+			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
+		]);
+
+		// The next checkout is another request, which reads the orders from disk
+		$this->kirby->site()->purge();
+
+		return $orderPage;
+	}
 
 	public function setUp(): void
 	{
@@ -59,26 +77,6 @@ final class OrderNumberTest extends TestCase
 		App::instance($this->app);
 	}
 
-	/**
-	 * Runs a whole checkout, the way `/api/shop/success` completes it
-	 */
-	protected function checkout(): OrderPage
-	{
-		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
-
-		$merx = merx();
-		$merx->initializeOrder(['paymentGateway' => 'invoice', 'email' => 'customer@example.com']);
-
-		$orderPage = $merx->createOrder([
-			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
-		]);
-
-		// The next checkout is another request, which reads the orders from disk
-		$this->kirby->site()->purge();
-
-		return $orderPage;
-	}
-
 	public function testOrdersCreatedInQuickSuccessionGetConsecutiveNumbers(): void
 	{
 		$numbers = [];
@@ -102,13 +100,6 @@ final class OrderNumberTest extends TestCase
 		$this->assertSame(range(1, 10), $numbers);
 	}
 
-	public function testSortingNumberIsTheCreationTimeInUtcToTheMillisecond(): void
-	{
-		$date = new DateTimeImmutable('2026-09-23T17:08:08.123+02:00');
-
-		$this->assertSame(20260923150808123, OrderPage::sortingNumberFromDate($date));
-	}
-
 	public function testSortingNumberIsReadFromItsField(): void
 	{
 		$orderPage = new OrderPage([
@@ -121,6 +112,13 @@ final class OrderNumberTest extends TestCase
 		]);
 
 		$this->assertSame(20260923150808123, $orderPage->sortingNumber());
+	}
+
+	public function testSortingNumberIsTheCreationTimeInUtcToTheMillisecond(): void
+	{
+		$date = new DateTimeImmutable('2026-09-23T17:08:08.123+02:00');
+
+		$this->assertSame(20260923150808123, OrderPage::sortingNumberFromDate($date));
 	}
 
 	public function testSortingNumberOfOrderWithoutFieldComesFromDateCreated(): void

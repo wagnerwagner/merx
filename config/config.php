@@ -12,19 +12,18 @@ return [
 	'taxRules' => [
 		'default' => [
 			'name' => 'default',
-			'rule' => fn (?App $kirby): ?float => null,
+			'rule' => fn (App|null $kirby): float|null => null,
 		],
 	],
 	'pricingRules' => [
 		'default' => [
 			'name' => 'default',
 			'currency' => 'EUR',
-			'rule' => fn (?App $kirby): bool => true,
+			'rule' => fn (App|null $kirby): bool => true,
 			'taxIncluded' => true,
 		],
 	],
-	'orderNumber' => function (OrderPage $virtualOrderPage): int
-	{
+	'orderNumber' => function (OrderPage $virtualOrderPage): int {
 		$lastOrder = $virtualOrderPage->siblings()->listed()->last();
 		return ($lastOrder?->orderNumber()->toInt() ?? 0) + 1;
 	},

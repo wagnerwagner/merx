@@ -17,6 +17,39 @@ use Kirby\Toolkit\Collection;
 class ListItems extends Collection
 {
 	/**
+	 * Set a ListItem in the list
+	 *
+	 * @param ListItem $value
+	 */
+	public function __set(string $key, $value): void
+	{
+		$listItem = ListItem::factory($value);
+		parent::__set($key, $listItem);
+	}
+
+	/**
+	 * Gets the currency of this List
+	 *
+	 * @return string|bool|null
+	 *                          Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
+	 *                          Returns false if the currencies are mixed.
+	 *                          Returns null if none of the ListItems have a price with a currency.
+	 */
+	public function currency(): string|bool|null
+	{
+		$currency = null;
+		foreach ($this as $listItem) {
+			/** @var ListItem $listItem */
+			$price = $listItem->price;
+			if (is_string($currency) && $currency !== $price?->currency) {
+				return false;
+			}
+			$currency = $price?->currency;
+		}
+		return $currency;
+	}
+
+	/**
 	 * Filters items by given type
 	 *
 	 * See ListItem::$allowedTypes for allowed types.
@@ -24,84 +57,6 @@ class ListItems extends Collection
 	public function filterByType(string $type): ListItems
 	{
 		return new ListItems(array_filter($this->data, fn (ListItem $listItem) => $listItem->type === $type));
-	}
-
-	/**
-	 * Quantity of items of given type
-	 *
-	 * See ListItem::$allowedTypes for allowed types.
-	 */
-	public function quantity(?string $type = 'product'): float
-	{
-		$quantity = 0.0;
-		$items = $type === null ? $this : $this->filterByType($type);
-		foreach ($items as $listItem) {
-			/** @var ListItem $listItem */
-			$quantity += $listItem->quantity;
-		}
-		return $quantity;
-	}
-
-	/**
-	 * Total price of the ListItems
-	 *
-	 * The tax of the total keeps the tax rate the items share. Items with
-	 * different tax rates have no rate in common: `tax->rate` is `null` then and
-	 * `tax->price` the sum of their tax amounts. Use `taxRates()` for the
-	 * breakdown of such a list. A list whose items all come without a tax has no
-	 * tax either: `tax` is `null`.
-	 */
-	public function total(): ?Price
-	{
-		$price = 0.0;
-		$priceNet = 0.0;
-		$taxPrice = 0.0;
-		$taxRate = null;
-		$hasTax = false;
-		$mixedTaxRates = false;
-		$currency = null;
-		$pricingRule = null;
-		foreach ($this as $listItem) {
-			/** @var ListItem $listItem */
-			$listItemTotal = $listItem->total();
-
-			if ($currency !== null && $listItemTotal !== null && $currency !== $listItemTotal?->currency) {
-				return null;
-			}
-
-			$tax = $listItemTotal?->tax ?? null;
-			// An item without a tax is an item taxed at 0 %. A list of taxed and
-			// untaxed items does not share a rate either.
-			$listItemTaxRate = (float)$tax?->rate;
-
-			$price += (float)$listItemTotal?->price;
-			$priceNet += (float)$listItemTotal?->priceNet;
-			$taxPrice += (float)$tax?->price;
-			$hasTax = $hasTax || $tax !== null;
-			$mixedTaxRates = $mixedTaxRates || ($taxRate !== null && $taxRate !== $listItemTaxRate);
-			$taxRate ??= $listItemTaxRate;
-			$currency = $currency ?? $listItemTotal?->currency;
-			$pricingRule = $pricingRule ?? $listItemTotal?->pricingRule;
-		}
-
-		// A shared rate is handed to `Price` as a rate, which derives the net price
-		// from it, the same way a single item’s price is built. Mixed rates are
-		// handed over as the sum of the items’ tax amounts instead. Items which all
-		// come without a tax add up to no tax, not to a tax of 0 %.
-		$tax = match (true) {
-			$hasTax === false => null,
-			$mixedTaxRates === true => new Tax(priceNet: $priceNet, rate: null, currency: $currency, price: $taxPrice),
-			default => $taxRate,
-		};
-
-		return new Price(
-			// As in `ListItem::total()`, a list without a pricing rule adds up the
-			// gross prices, which is what `Price` expects to be handed.
-			price: ($pricingRule?->taxIncluded ?? true) ? $price : $priceNet,
-			tax: $tax,
-			currency: $currency,
-			pricingRule: $pricingRule,
-		);
 	}
 
 	/**
@@ -132,9 +87,25 @@ class ListItems extends Collection
 	}
 
 	/**
+	 * Quantity of items of given type
+	 *
+	 * See ListItem::$allowedTypes for allowed types.
+	 */
+	public function quantity(string|null $type = 'product'): float
+	{
+		$quantity = 0.0;
+		$items = $type === null ? $this : $this->filterByType($type);
+		foreach ($items as $listItem) {
+			/** @var ListItem $listItem */
+			$quantity += $listItem->quantity;
+		}
+		return $quantity;
+	}
+
+	/**
 	 * List of Tax items
 	 *
-	 * @return Wagnerwagner\Merx\Tax[]	List of `Tax` items sorted by tax rate, lowest first, with the total tax amount for each tax rate.
+	 * @return Wagnerwagner\Merx\Tax[] List of `Tax` items sorted by tax rate, lowest first, with the total tax amount for each tax rate.
 	 */
 	public function taxRates(): array
 	{
@@ -164,37 +135,65 @@ class ListItems extends Collection
 	}
 
 	/**
-	 * Gets the currency of this List
+	 * Total price of the ListItems
 	 *
-	 * @return string|bool|null
-	 * Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
-	 * Returns false if the currencies are mixed.
-	 * Returns null if none of the ListItems have a price with a currency.
+	 * The tax of the total keeps the tax rate the items share. Items with
+	 * different tax rates have no rate in common: `tax->rate` is `null` then and
+	 * `tax->price` the sum of their tax amounts. Use `taxRates()` for the
+	 * breakdown of such a list. A list whose items all come without a tax has no
+	 * tax either: `tax` is `null`.
 	 */
-	public function currency(): string|bool|null
+	public function total(): Price|null
 	{
+		$price = 0.0;
+		$priceNet = 0.0;
+		$taxPrice = 0.0;
+		$taxRate = null;
+		$hasTax = false;
+		$mixedTaxRates = false;
 		$currency = null;
+		$pricingRule = null;
 		foreach ($this as $listItem) {
 			/** @var ListItem $listItem */
-			$price = $listItem->price;
-			if (is_string($currency) && $currency !== $price?->currency) {
-				return false;
-			}
-			$currency = $price?->currency;
-		}
-		return $currency;
-	}
+			$listItemTotal = $listItem->total();
 
-	/**
-	 * Set a ListItem in the list
-	 *
-	 * @param string $key
-	 * @param ListItem $value
-	 */
-	public function __set(string $key, $value): void
-	{
-		$listItem = ListItem::factory($value);
-		parent::__set($key, $listItem);
+			if ($currency !== null && $listItemTotal !== null && $currency !== $listItemTotal?->currency) {
+				return null;
+			}
+
+			$tax = $listItemTotal?->tax ?? null;
+			// An item without a tax is an item taxed at 0 %. A list of taxed and
+			// untaxed items does not share a rate either.
+			$listItemTaxRate = (float)$tax?->rate;
+
+			$price += (float)$listItemTotal?->price;
+			$priceNet += (float)$listItemTotal?->priceNet;
+			$taxPrice += (float)$tax?->price;
+			$hasTax = $hasTax || $tax !== null;
+			$mixedTaxRates = $mixedTaxRates || ($taxRate !== null && $taxRate !== $listItemTaxRate);
+			$taxRate ??= $listItemTaxRate;
+			$currency ??= $listItemTotal?->currency;
+			$pricingRule ??= $listItemTotal?->pricingRule;
+		}
+
+		// A shared rate is handed to `Price` as a rate, which derives the net price
+		// from it, the same way a single item’s price is built. Mixed rates are
+		// handed over as the sum of the items’ tax amounts instead. Items which all
+		// come without a tax add up to no tax, not to a tax of 0 %.
+		$tax = match (true) {
+			$hasTax === false => null,
+			$mixedTaxRates === true => new Tax(priceNet: $priceNet, rate: null, currency: $currency, price: $taxPrice),
+			default => $taxRate,
+		};
+
+		return new Price(
+			// As in `ListItem::total()`, a list without a pricing rule adds up the
+			// gross prices, which is what `Price` expects to be handed.
+			price: ($pricingRule?->taxIncluded ?? true) ? $price : $priceNet,
+			tax: $tax,
+			currency: $currency,
+			pricingRule: $pricingRule,
+		);
 	}
 
 	/**

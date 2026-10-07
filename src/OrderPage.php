@@ -7,10 +7,6 @@ use DateTimeZone;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
 use Kirby\Content\VersionId;
-use Wagnerwagner\Merx\ListItem;
-use Wagnerwagner\Merx\Logger;
-use Wagnerwagner\Merx\Price;
-use Wagnerwagner\Merx\ProductList;
 
 /**
  * Page model for order page
@@ -34,29 +30,31 @@ use Wagnerwagner\Merx\ProductList;
 class OrderPage extends Page
 {
 	/**
-	 * Renders the order page
-	 *
-	 * An order is reachable by its url alone — the slug is the only secret —
-	 * and it shows the customer’s name, address and what they bought. The
-	 * headers keep that page out of shared caches, out of search engines, and
-	 * keep its url from travelling to other sites in a referrer.
-	 *
-	 * They are set before the template runs, so a shop can still override any
-	 * of them.
+	 * List of products of the Order
 	 */
-	public function render(
-		array $data = [],
-		$contentType = 'html',
-		VersionId|string|null $versionId = null
-	): string {
-		$response = $this->kirby()->response();
-		$response->header('Cache-Control', 'private, no-store');
-		$response->header('Referrer-Policy', 'same-origin');
-		$response->header('X-Robots-Tag', 'noindex, nofollow');
+	public function cart(): ProductList
+	{
+		$data = $this->items()->yaml();
+		$data = array_map(function (mixed $item) {
+			$page = $item['page'] ?? null;
+			$page = is_string($page) ? $page : ($page[0] ?? null);
+			$page = $page === '' ? null : $page;
+			$price = $item['price'] ?? null;
+			$price = $price ? new Price(price: $price, currency: $item['currency'] ?? null, tax: $item['taxrate'] ?? null) : null;
+			return new ListItem(
+				key: $item['key'],
+				title: $item['title'] ?? null,
+				page: $page,
+				price: $price,
+				quantity: $item['quantity'] ?? 1.0,
+				quantifier: $item['quantifier'] ?? null,
+				type: $item['type'] ?? null,
+				data: $item['data'] ?? null,
+				priceUpdate: false,
+			);
+		}, $data);
 
-		$this->logRender();
-
-		return parent::render($data, $contentType, $versionId);
+		return new ProductList($data);
 	}
 
 	/**
@@ -89,11 +87,89 @@ class OrderPage extends Page
 	}
 
 	/**
-	 * Returns order number
+	 * Reconciliation record of the payment
+	 *
+	 * @see PaymentDetails::$keys
 	 */
-	public function title(): Field
+	public function paymentDetails(): array
 	{
-		return new Field($this, 'title', $this->orderNumber());
+		return $this->content()->get('paymentDetails')->yaml();
+	}
+
+	/**
+	 * Name of the payment provider which processed the order, e.g. `stripe`
+	 */
+	public function paymentProvider(): string|null
+	{
+		$provider = $this->paymentDetails()['provider'] ?? null;
+
+		return is_string($provider) === true ? $provider : null;
+	}
+
+	/**
+	 * Link to this order’s transaction in the provider’s dashboard
+	 *
+	 * Whether the live or the test dashboard is linked follows the `livemode`
+	 * of the stored record. Records written before `livemode` was kept fall
+	 * back to the `production` option.
+	 *
+	 * Returns `null` when Merx cannot build a link: invoices, custom gateways
+	 * and PayPal orders without a capture.
+	 */
+	public function paymentProviderUrl(): string|null
+	{
+		$details = $this->paymentDetails();
+		$livemode = $details['livemode'] ?? (option('wagnerwagner.merx.production') === true);
+
+		return match ($this->paymentProvider()) {
+			// Stripe addresses a payment by its PaymentIntent id
+			'stripe' => isset($details['id'])
+				? 'https://dashboard.stripe.com/' . ($livemode ? '' : 'test/') . 'payments/' . rawurlencode((string)$details['id'])
+				: null,
+			// PayPal’s activity view knows captures, not orders, so `reference` is used
+			'paypal' => isset($details['reference'])
+				? 'https://www.' . ($livemode ? '' : 'sandbox.') . 'paypal.com/activity/payment/' . rawurlencode((string)$details['reference'])
+				: null,
+			default => null,
+		};
+	}
+
+	/**
+	 * Page uuids of products in this order
+	 *
+	 * Used in `ProductPage::orders()` to get the order pages for a product.
+	 *
+	 * @return string[]
+	 */
+	public function productUuids(): array
+	{
+		return array_map(fn (Page|null $page) => (string)$page?->uuid(), $this->cart()->pluck('page'));
+	}
+
+	/**
+	 * Renders the order page
+	 *
+	 * An order is reachable by its url alone — the slug is the only secret —
+	 * and it shows the customer’s name, address and what they bought. The
+	 * headers keep that page out of shared caches, out of search engines, and
+	 * keep its url from travelling to other sites in a referrer.
+	 *
+	 * They are set before the template runs, so a shop can still override any
+	 * of them.
+	 */
+	public function render(
+		array $data = [],
+		$contentType = 'html',
+		VersionId|string|null $versionId = null
+	): string {
+		$response = $this->kirby()->response();
+		$response->header('Cache-Control', 'private, no-store');
+		$response->header('Referrer-Policy', 'same-origin');
+		$response->header('X-Robots-Tag', 'noindex, nofollow');
+
+		$this->logRender();
+
+		return parent::render($data, $contentType, $versionId);
 	}
 
 	/**
@@ -135,98 +211,18 @@ class OrderPage extends Page
 	}
 
 	/**
-	 * List of products of the Order
+	 * Returns order number
 	 */
-	public function cart(): ProductList
+	public function title(): Field
 	{
-		$data = $this->items()->yaml();
-		$data = array_map(function (mixed $item) {
-			$page = $item['page'] ?? null;
-			$page = is_string($page) ? $page : ($page[0] ?? null);
-			$page = $page === '' ? null : $page;
-			$price = $item['price'] ?? null;
-			$price = $price ? new Price(price: $price, currency: $item['currency'] ?? null, tax: $item['taxrate'] ?? null) : null;
-			return new ListItem(
-				key: $item['key'],
-				title: $item['title'] ?? null,
-				page: $page,
-				price: $price,
-				quantity: $item['quantity'] ?? 1.0,
-				quantifier: $item['quantifier'] ?? null,
-				type: $item['type'] ?? null,
-				data: $item['data'] ?? null,
-				priceUpdate: false,
-			);
-		}, $data);
-
-		return new ProductList($data);
-	}
-
-	/**
-	 * Page uuids of products in this order
-	 *
-	 * Used in `ProductPage::orders()` to get the order pages for a product.
-	 *
-	 * @return string[]
-	 */
-	public function productUuids(): array
-	{
-		return array_map(fn (?Page $page) => (string)$page?->uuid(), $this->cart()->pluck('page'));
+		return new Field($this, 'title', $this->orderNumber());
 	}
 
 	/**
 	 * Total price of the order
 	 */
-	public function total(): ?Price
+	public function total(): Price|null
 	{
 		return $this->cart()->total();
-	}
-
-	/**
-	 * Reconciliation record of the payment
-	 *
-	 * @see \Wagnerwagner\Merx\PaymentDetails::$keys
-	 */
-	public function paymentDetails(): array
-	{
-		return $this->content()->get('paymentDetails')->yaml();
-	}
-
-	/**
-	 * Name of the payment provider which processed the order, e.g. `stripe`
-	 */
-	public function paymentProvider(): ?string
-	{
-		$provider = $this->paymentDetails()['provider'] ?? null;
-
-		return is_string($provider) === true ? $provider : null;
-	}
-
-	/**
-	 * Link to this order’s transaction in the provider’s dashboard
-	 *
-	 * Whether the live or the test dashboard is linked follows the `livemode`
-	 * of the stored record. Records written before `livemode` was kept fall
-	 * back to the `production` option.
-	 *
-	 * Returns `null` when Merx cannot build a link: invoices, custom gateways
-	 * and PayPal orders without a capture.
-	 */
-	public function paymentProviderUrl(): ?string
-	{
-		$details = $this->paymentDetails();
-		$livemode = $details['livemode'] ?? (option('wagnerwagner.merx.production') === true);
-
-		return match ($this->paymentProvider()) {
-			// Stripe addresses a payment by its PaymentIntent id
-			'stripe' => isset($details['id'])
-				? 'https://dashboard.stripe.com/' . ($livemode ? '' : 'test/') . 'payments/' . rawurlencode((string)$details['id'])
-				: null,
-			// PayPal’s activity view knows captures, not orders, so `reference` is used
-			'paypal' => isset($details['reference'])
-				? 'https://www.' . ($livemode ? '' : 'sandbox.') . 'paypal.com/activity/payment/' . rawurlencode((string)$details['reference'])
-				: null,
-			default => null,
-		};
 	}
 }

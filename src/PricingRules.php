@@ -22,13 +22,13 @@ class PricingRules extends Collection
 	 * If no options are provided, a default pricing rule is created with currency EUR.
 	 *
 	 * @param array $options
-	 * Key of the array is the key of the pricing rule.
-	 * Value of the array is an array with the following keys:
-	 * - `name`: The name of the pricing rule. Defaults to the key.
-	 * - `rule`: The rule to apply to the pricing rule.
-	 *	 It is passed the Kirby instance as first argument. It must return true when the rule applies, or false when it does not.
-	 * - `currency`: Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
-	 * - `taxIncluded`: Whether the price is including tax or not.
+	 *                       Key of the array is the key of the pricing rule.
+	 *                       Value of the array is an array with the following keys:
+	 *                       - `name`: The name of the pricing rule. Defaults to the key.
+	 *                       - `rule`: The rule to apply to the pricing rule.
+	 *                       It is passed the Kirby instance as first argument. It must return true when the rule applies, or false when it does not.
+	 *                       - `currency`: Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
+	 *                       - `taxIncluded`: Whether the price is including tax or not.
 	 */
 	public function __construct(array $options = [])
 	{
@@ -56,24 +56,13 @@ class PricingRules extends Collection
 	}
 
 	/**
-	 * Gets the pricing rule by its key
-	 */
-	public function getRuleByKey(null|string $key): ?PricingRule
-	{
-		if ($key === null) {
-			return null;
-		}
-		return $this->findByKey($key);
-	}
-
-	/**
 	 * Finds the pricing rule that applies to the current context
 	 *
 	 * Pricing rules are defined in the config and are checked in the order they are defined.
 	 * The `default` rule is the fallback and is always checked last, wherever it is defined.
 	 * The first rule that returns true for `$rule->checkRule()` is returned.
 	 */
-	public function findRule(): ?PricingRule
+	public function findRule(): PricingRule|null
 	{
 		$kirby = App::instance();
 
@@ -91,5 +80,16 @@ class PricingRules extends Collection
 		}
 
 		return null;
+	}
+
+	/**
+	 * Gets the pricing rule by its key
+	 */
+	public function getRuleByKey(string|null $key): PricingRule|null
+	{
+		if ($key === null) {
+			return null;
+		}
+		return $this->findByKey($key);
 	}
 }

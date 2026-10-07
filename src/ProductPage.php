@@ -26,20 +26,71 @@ class ProductPage extends Page
 	protected Structure $prices;
 
 	/**
+	 * Max amount that could be added to ListItems
+	 */
+	public function maxQuantity(): float|null
+	{
+		$maxQuantity = $this->content()->get('maxQuantity')->or($this->site()->maxQuantity());
+		return $maxQuantity->isEmpty() ? null : $maxQuantity->toFloat();
+	}
+
+	/**
+	 * Summary info string about the orders including this product
+	 * Used for the orders tab in the product page
+	 *
+	 * @see /blueprints/tabs/orders.yml
+	 * @return string Localized info text
+	 */
+	public function orderInfo(): string
+	{
+		$quantity = 0;
+		$count = $this->orders()->count();
+		foreach ($this->orders() as $order) {
+			$quantity += $order->quantity()->toFloat();
+		}
+		$quantityPerOrder = round($quantity / $count, 1);
+		return tt('section.orders.info', null, compact('quantity', 'count', 'quantityPerOrder'));
+	}
+
+	/**
+	 * Orders including this product with enriched cart information
+	 *
+	 * @return Pages<OrderPage>
+	 */
+	public function orders(): Pages
+	{
+		$ordersPage = $this->site()->ordersPage();
+		return $this->orders ?? $this->orders = $ordersPage->children()->filter(function (OrderPage $page) {
+			return in_array((string)$this->uuid(), $page->productUuids());
+		})->map(function (OrderPage $page) {
+			/** @var ?ListItem $listItem */
+			$listItem = $page->cart()->filter(function (ListItem $listItem) {
+				return (string)$listItem->page?->uuid() === (string)$this->uuid();
+			})->first();
+			$page->content()->update([
+				'quantity' => $listItem?->quantity,
+				'price' => $listItem?->price->toString(),
+				'productTotal' => $listItem?->total()->toString(),
+			]);
+			return $page;
+		});
+	}
+
+	/**
 	 * Converts price content field to Price class
 	 *
-	 * @param null|string|PricingRule $pricingRule Pricing rule to use, or its key as string, or null for default pricing rule
-	 * @param null|float $quantity Quantity used for volume-based pricing
+	 * @param $pricingRule Pricing rule to use, or its key as string, or null for default pricing rule
+	 * @param $quantity Quantity used for volume-based pricing
 	 * @return ?Price Price object, or null if no price is found
 	 */
-	public function price(null|string|PricingRule $pricingRule = null, null|float $quantity = null): ?Price
+	public function price(string|PricingRule|null $pricingRule = null, float|null $quantity = null): Price|null
 	{
 		if (is_string($pricingRule)) {
 			$pricingRule = Merx::pricingRules()->getRuleByKey($pricingRule);
-		} else if ($pricingRule instanceof PricingRule) {
+		} elseif ($pricingRule instanceof PricingRule) {
 			$pricingRule = $pricingRule;
 		}
-		$pricingRule = $pricingRule ?? Merx::pricingRule();
+		$pricingRule ??= Merx::pricingRule();
 
 		if ($pricingRule === null) {
 			return $this->prices()->first();
@@ -65,13 +116,13 @@ class ProductPage extends Page
 	/**
 	 * Returns a collection of Price objects created from the prices field
 	 *
-	 * @return \Kirby\Cms\Structure<\Wagnerwagner\Merx\Price>
+	 * @return Structure<Price>
 	 */
 	public function prices(): Structure
 	{
 		$pricingRules = Merx::pricingRules();
 		$taxRule = Merx::taxRule($this->taxRule()->value());
-		/** @var \Kirby\Cms\Structure $prices */
+		/** @var Structure $prices */
 		$prices = $this->content()->prices()->toStructure();
 		return $this->prices ?? $prices
 			->filter(fn ($item) => $item->price()->isNotEmpty())
@@ -88,62 +139,8 @@ class ProductPage extends Page
 	/**
 	 * Returns the Tax object associated with this product.
 	 */
-	public function tax(): ?Tax
+	public function tax(): Tax|null
 	{
 		return $this->price()?->tax();
-	}
-
-	/**
-	 * Orders including this product with enriched cart information
-	 *
-	 * @return \Kirby\Cms\Pages<\Wagnerwagner\Merx\OrderPage>
-	 */
-	public function orders(): Pages
-	{
-			$ordersPage = $this->site()->ordersPage();
-			return $this->orders ?? $this->orders = $ordersPage->children()->filter(function (OrderPage $page) {
-				return in_array((string)$this->uuid(), $page->productUuids());
-			})->map(function (OrderPage $page) {
-				/** @var ?ListItem $listItem */
-				$listItem = $page->cart()->filter(function (ListItem $listItem) {
-					return (string)$listItem->page?->uuid() === (string)$this->uuid();
-				})->first();
-				$page->content()->update([
-					'quantity' => $listItem?->quantity,
-					'price' => $listItem?->price->toString(),
-					'productTotal' => $listItem?->total()->toString(),
-				]);
-				return $page;
-			});
-	}
-
-	/**
-	 * Summary info string about the orders including this product
-	 * Used for the orders tab in the product page
-	 *
-	 * @see /blueprints/tabs/orders.yml
-	 * @return string Localized info text
-	 */
-	public function orderInfo(): string
-	{
-			$quantity = 0;
-			$count = $this->orders()->count();
-			foreach ($this->orders() as $order) {
-				$quantity += $order->quantity()->toFloat();
-			}
-			$quantityPerOrder = round($quantity / $count, 1);
-			return tt('section.orders.info', null, compact('quantity', 'count', 'quantityPerOrder'));
-	}
-
-
-	/**
-	 * Max amount that could be added to ListItems
-	 *
-	 * @return null|float
-	 */
-	public function maxQuantity(): ?float
-	{
-		$maxQuantity = $this->content()->get('maxQuantity')->or($this->site()->maxQuantity());
-		return $maxQuantity->isEmpty() ? null : $maxQuantity->toFloat();
 	}
 }

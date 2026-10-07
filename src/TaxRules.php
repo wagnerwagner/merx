@@ -20,7 +20,7 @@ class TaxRules extends Collection
 	 *
 	 * If no options are provided, a default tax rule is created.
 	 *
-	 * @param array $options The options for the tax rules
+	 * @param $options The options for the tax rules
 	 */
 	public function __construct(array $options = [])
 	{
@@ -47,10 +47,10 @@ class TaxRules extends Collection
 	/**
 	 * Gets the tax rule by its key
 	 *
-	 * @param null|string $key The key of the tax rule
+	 * @param $key The key of the tax rule
 	 * @return null|TaxRule The tax rule or null if not found
 	 */
-	public function getRuleByKey(null|string $key): ?TaxRule
+	public function getRuleByKey(string|null $key): TaxRule|null
 	{
 		if ($key === null) {
 			return null;

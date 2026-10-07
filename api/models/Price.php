@@ -5,13 +5,13 @@ use Wagnerwagner\Merx\Tax;
 
 return [
 	'fields' => [
-		'currency' => fn (Price $price): ?string => $price->currency,
+		'currency' => fn (Price $price): string|null => $price->currency,
 		'price' => fn (Price $price): string => $price->toString('price'),
 		'priceRaw' => fn (Price $price): float => $price->price,
 		'priceNet' => fn (Price $price): string => $price->toString('priceNet'),
-		'priceNetRaw' => fn (Price $price): ?float => $price->priceNet,
-		'priceIncludingTax' => fn (Price $price): ?bool => $price->pricingRule?->taxIncluded,
-		'tax' => fn (Price $price): ?Tax => $price->tax,
+		'priceNetRaw' => fn (Price $price): float|null => $price->priceNet,
+		'priceIncludingTax' => fn (Price $price): bool|null => $price->pricingRule?->taxIncluded,
+		'tax' => fn (Price $price): Tax|null => $price->tax,
 	],
 	'type' => Price::class,
 	'views' => [

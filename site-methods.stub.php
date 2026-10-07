@@ -10,4 +10,6 @@ namespace Kirby\Cms;
  * @method \Wagnerwagner\Merx\PricingRules pricingRules() All pricing rules defined in the config
  * @method \Wagnerwagner\Merx\TaxRules taxRules() All tax rules defined in the config
  */
-class Site extends \Kirby\Cms\Site {}
+class Site extends Site
+{
+}

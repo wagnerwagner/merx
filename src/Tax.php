@@ -13,30 +13,35 @@ use Kirby\Toolkit\Obj;
  */
 class Tax extends Obj
 {
+	/** Three-letter ISO currency code, in uppercase. E.g. EUR */
+	public string|null $currency = null;
+
 	/** Tax price. E.g. 21.5 */
 	public float $price;
 
 	/** Tax value. E.g. 0.19 (19 %) */
-	public ?float $rate = null;
-
-	/** Three-letter ISO currency code, in uppercase. E.g. EUR */
-	public string|null $currency = null;
+	public float|null $rate = null;
 
 	/**
 	 * Creates a new tax
 	 *
-	 * @param float $priceNet Net price the tax is calculated from
-	 * @param null|float $rate E.g. 0.19 (for 19 %)
-	 * @param null|string $currency Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
-	 * @param null|float $price Tax amount, when it does not follow from a single rate. E.g. the tax of a list whose items carry different tax rates. $priceNet is unused then.
+	 * @param $priceNet Net price the tax is calculated from
+	 * @param $rate E.g. 0.19 (for 19 %)
+	 * @param $currency Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
+	 * @param $price Tax amount, when it does not follow from a single rate. E.g. the tax of a list whose items carry different tax rates. $priceNet is unused then.
 	 */
-	public function __construct(float $priceNet, ?float $rate = null, null|string $currency = null, ?float $price = null)
+	public function __construct(float $priceNet, float|null $rate = null, string|null $currency = null, float|null $price = null)
 	{
 		$this->currency = $currency;
 
 		$this->price = round($price ?? $priceNet * ($rate ?? 0), Price::roundingPrecision);
 
 		$this->rate = $rate;
+	}
+
+	public function __toString(): string
+	{
+		return (string)$this->toString();
 	}
 
 	/**
@@ -67,10 +72,5 @@ class Tax extends Obj
 	public function toString(): string
 	{
 		return Merx::formatCurrency($this->price ?? 0, $this->currency);
-	}
-
-	public function __toString(): string
-	{
-		return (string)$this->toString();
 	}
 }

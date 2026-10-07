@@ -1,9 +1,9 @@
 <?php
 
+use Kirby\Cms\Page;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\Price;
-use Kirby\Cms\Page;
 
 class ListItemTest extends TestCase
 {
@@ -27,24 +27,6 @@ class ListItemTest extends TestCase
 		$this->assertInstanceOf(Price::class, $listItem->price);
 	}
 
-	public function testPriceTotalCalculation()
-	{
-		$key = 'item4';
-		$price = new Price(100.0, 0.2, null, 'USD');
-		$quantity = 3.0;
-
-		$listItem = new ListItem(
-			key: $key,
-			price: $price,
-			quantity: $quantity
-		);
-
-		$totalPrice = $listItem->total();
-
-		$this->assertInstanceOf(Price::class, $totalPrice);
-		$this->assertEquals(300.0, $totalPrice->toFloat());
-	}
-
 	public function testConstructorWithDefaults()
 	{
 		$key = 'item5';
@@ -66,6 +48,24 @@ class ListItemTest extends TestCase
 		$invalidPrice = 'invalid'; // Price should be a float or Price object
 
 		new ListItem(key: $key, price: $invalidPrice);
+	}
+
+	public function testPriceTotalCalculation()
+	{
+		$key = 'item4';
+		$price = new Price(100.0, 0.2, null, 'USD');
+		$quantity = 3.0;
+
+		$listItem = new ListItem(
+			key: $key,
+			price: $price,
+			quantity: $quantity
+		);
+
+		$totalPrice = $listItem->total();
+
+		$this->assertInstanceOf(Price::class, $totalPrice);
+		$this->assertEquals(300.0, $totalPrice->toFloat());
 	}
 
 	public function testTitleFallbackToPageTitle()

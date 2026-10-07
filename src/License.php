@@ -16,7 +16,7 @@ class License extends \Kirby\Plugin\License
 {
 	public function __construct(
 		protected Plugin $plugin
-	){
+	) {
 		if ($this->licenseKey() !== null) {
 
 			if ($this->isValid()) {
@@ -52,16 +52,6 @@ class License extends \Kirby\Plugin\License
 		}
 	}
 
-	public function privateLicense(): string
-	{
-		return 'MERX2-XXXXXXX-XXXX' . Str::substr($this->licenseKey(), -4);
-	}
-
-	public function licenseKey(): ?string
-	{
-		return option('wagnerwagner.merx.license');
-	}
-
 	private function crossfoot(int $int): string
 	{
 		$r = 0;
@@ -75,5 +65,15 @@ class License extends \Kirby\Plugin\License
 	{
 		$licenseArr = Str::split(Str::after($this->licenseKey(), 'MERX2-'), '-');
 		return self::crossfoot(hexdec($licenseArr[0] ?? 0)) + self::crossfoot(hexdec($licenseArr[1] ?? 0)) === 90;
+	}
+
+	public function licenseKey(): string|null
+	{
+		return option('wagnerwagner.merx.license');
+	}
+
+	public function privateLicense(): string
+	{
+		return 'MERX2-XXXXXXX-XXXX' . Str::substr($this->licenseKey(), -4);
 	}
 }

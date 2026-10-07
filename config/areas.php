@@ -19,7 +19,7 @@ return [
 			 *
 			 * Enable it per blueprint, see `blueprints/pages/order.yml`.
 			 */
-			'paymentProvider' => function (Page $page): ?array {
+			'paymentProvider' => function (Page $page): array|null {
 				if ($page instanceof OrderPage === false) {
 					return null;
 				}

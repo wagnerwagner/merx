@@ -22,17 +22,11 @@ class TaxRulesTest extends TestCase
 		restore_error_handler();
 	}
 
-	public function testNameIsOptional(): void
+	public function testDefaultRuleWithoutOptions(): void
 	{
-		$taxRules = new TaxRules([
-			'reduced' => [
-				'rule' => fn (): float => 0.07,
-			],
-		]);
+		$taxRules = new TaxRules();
 
-		$rule = $taxRules->getRuleByKey('reduced');
-		$this->assertSame('reduced', $rule->name);
-		$this->assertSame(0.07, $rule->taxRate());
+		$this->assertSame('default', $taxRules->getRuleByKey('default')?->key);
 	}
 
 	public function testNameCanBeAFunction(): void
@@ -46,10 +40,16 @@ class TaxRulesTest extends TestCase
 		$this->assertSame('Reduced', $taxRules->getRuleByKey('reduced')->name);
 	}
 
-	public function testDefaultRuleWithoutOptions(): void
+	public function testNameIsOptional(): void
 	{
-		$taxRules = new TaxRules();
+		$taxRules = new TaxRules([
+			'reduced' => [
+				'rule' => fn (): float => 0.07,
+			],
+		]);
 
-		$this->assertSame('default', $taxRules->getRuleByKey('default')?->key);
+		$rule = $taxRules->getRuleByKey('reduced');
+		$this->assertSame('reduced', $rule->name);
+		$this->assertSame(0.07, $rule->taxRate());
 	}
 }

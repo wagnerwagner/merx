@@ -4,7 +4,6 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
 use Kirby\Http\Remote;
-use Wagnerwagner\Merx\OrderPage;
 
 /**
  * Payment Class for PayPal Payments using PayPal REST API v2
@@ -20,130 +19,17 @@ class PayPalPayment
 	private static string $paypalSandboxApiEntry = 'https://api-m.sandbox.paypal.com';
 
 	/**
-	 * Handles the request for the gateway. Use 'use Kirby\Http\Remote'
-	 *
-	 * @param string $endpoint
-	 * @param array $params Request parameters as described in https://getkirby.com/docs/reference/objects/http/remote/request#params-array
-	 *
-	 * @return array PayPal REST API response
-	 */
-	private static function request(string $endpoint, array $params = []): array
-	{
-		if (option('wagnerwagner.merx.production') === true) {
-			$baseUrl = self::$paypalLiveApiEntry;
-		} else {
-			$baseUrl = self::$paypalSandboxApiEntry;
-		}
-		$endpoint = $baseUrl . $endpoint;
-		$response = Remote::request(
-			$endpoint,
-			$params,
-		);
-		if (in_array(substr($response->code(), 0, 1), ['4', '5'])) {
-			// A PayPal response can hold the payer’s name, email and address, so it
-			// goes to the log instead of to the caller.
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log('PayPal request to ' . $endpoint . ' failed: ' . $response->content(), 'error');
-			}
-			throw new Exception(
-				key: 'merx.paypalError',
-				httpCode: $response->code(),
-			);
-		}
-		return $response->json(true);
-	}
-
-	/**
-	 * Create OAuth 2.0 access tokens
-	 *
-	 * @see https://developer.paypal.com/api/rest/authentication/ PayPal REST API Documentation
-	 *
-	 * @return array Contains the authentication information with the following structure:
-	 *	 - 'scope': (string) A space-separated list of permissions granted by the access token.
-	 *	 - 'access_token': (string) The token that can be used to access PayPal APIs.
-	 *	 - 'token_type': (string) Indicates the type of token, typically "Bearer".
-	 *	 - 'app_id': (string) The PayPal application ID to which this token applies.
-	 *	 - 'expires_in': (int) The number of seconds until the token expires.
-	 *	 - 'nonce': (string) A unique nonce value associated with this token, used for validation purposes.
-	 */
-	private static function getAccessToken(): array
-	{
-		if (option('wagnerwagner.merx.production') === true) {
-			$auth = option('wagnerwagner.merx.paypal.live.clientID') . ':' . option('wagnerwagner.merx.paypal.live.secret');
-		} else {
-			$auth = option('wagnerwagner.merx.paypal.sandbox.clientID') . ':' . option('wagnerwagner.merx.paypal.sandbox.secret');
-		}
-		$endpoint = '/v1/oauth2/token';
-		$response = self::request(
-			$endpoint,
-			[
-				'method' => 'POST',
-				'basicAuth' => $auth,
-				'data' => 'grant_type=client_credentials',
-			],
-		);
-		return $response;
-	}
-
-	/**
-	 * Purchase units of a PayPal order
-	 *
-	 * The `wagnerwagner.merx.paypal.purchaseUnits` option replaces Merx’ own
-	 * purchase unit. PayPal charges the sum of all purchase units, so an option
-	 * which returns a complete unit — `Cart::payPalPurchaseUnits()` does — would
-	 * otherwise have the payer approve the cart total twice.
-	 *
-	 * @param \Wagnerwagner\Merx\OrderPage $virtualOrderPage
-	 * @param string $currency ISO currency code
-	 *
-	 * @return array List of PayPal’s purchase_unit_request
-	 */
-	public static function purchaseUnits(OrderPage $virtualOrderPage, string $currency): array
-	{
-		$purchaseUnits = [];
-		if (is_callable(option('wagnerwagner.merx.paypal.purchaseUnits'))) {
-			$purchaseUnits = option('wagnerwagner.merx.paypal.purchaseUnits')();
-		}
-
-		if (is_array($purchaseUnits) === false || count($purchaseUnits) === 0) {
-			$purchaseUnits = [
-				[
-					'description' => (string)site()->title(),
-					'amount' => [
-						'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
-						'currency_code' => $currency,
-					],
-				],
-			];
-		}
-
-		// Binds the PayPal order to this order, so a captured payment cannot be
-		// replayed to complete a second one. A PayPal order has no field of its own
-		// for this — `custom_id` belongs to the purchase unit — and
-		// `Gateways::validatePayPalOrderIsUnused()` checks it when the payer returns,
-		// so Merx sets it on every purchase unit, including those from the option.
-		return array_map(
-			fn (array $purchaseUnit): array => [
-				...$purchaseUnit,
-				'custom_id' => (string)$virtualOrderPage->uid(),
-			],
-			$purchaseUnits,
-		);
-	}
-
-	/**
 	 * Create PayPal order from OrderPage
 	 *
 	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_create PayPal REST API Documentation
 	 *
-	 * @param \Wagnerwagner\Merx\OrderPage $virtualOrderPage
-	 * @param string $currency ISO currency code
+	 * @param $currency ISO currency code
 	 *
 	 * @return array PayPal order details.
-	 *	 - 'id': (string) The ID of the order.
-	 *	 - 'status': (string) The order status.
-	 *	 - 'payment_source': (array) The payment source used to fund the payment.
-	 *	 - 'links': (array) An array of request-related HATEOAS links. To complete payer approval, use the approve link to redirect the payer.
+	 *               - 'id': (string) The ID of the order.
+	 *               - 'status': (string) The order status.
+	 *               - 'payment_source': (array) The payment source used to fund the payment.
+	 *               - 'links': (array) An array of request-related HATEOAS links. To complete payer approval, use the approve link to redirect the payer.
 	 */
 	public static function createPayPalPayment(OrderPage $virtualOrderPage, string $currency): array
 	{
@@ -188,11 +74,153 @@ class PayPalPayment
 	}
 
 	/**
+	 * Capture PayPal payment for order
+	 *
+	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_capture PayPal REST API Documentation
+	 *
+	 * @param $payPalOrderId The ID of the PayPal order for which to capture a payment.
+	 *
+	 * @return array Captured PayPal payment details
+	 *               - 'id': (string) The ID of the order.
+	 *               - 'status': (string) The order status.
+	 *               - 'payment_source': (array) The payment source used to fund the payment.
+	 *               - 'purchase_units': (array) An array of purchase units.
+	 *               - 'payer': (array) The customer who approves and pays for the order. The customer is also known as the payer.
+	 *               - 'links': (array) An array of request-related HATEOAS links.
+	 */
+	public static function executePayPalPayment(string $payPalOrderId): array
+	{
+		$access = self::getAccessToken();
+		$endpoint = '/v2/checkout/orders/' . rawurlencode($payPalOrderId) . '/capture';
+		$response = self::request(
+			$endpoint,
+			[
+				'method' => 'POST',
+				'headers' => [
+					'Content-Type' => 'application/json',
+					'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
+				],
+			],
+		);
+		return $response;
+	}
+
+	/**
+	 * Create OAuth 2.0 access tokens
+	 *
+	 * @see https://developer.paypal.com/api/rest/authentication/ PayPal REST API Documentation
+	 *
+	 * @return array Contains the authentication information with the following structure:
+	 *               - 'scope': (string) A space-separated list of permissions granted by the access token.
+	 *               - 'access_token': (string) The token that can be used to access PayPal APIs.
+	 *               - 'token_type': (string) Indicates the type of token, typically "Bearer".
+	 *               - 'app_id': (string) The PayPal application ID to which this token applies.
+	 *               - 'expires_in': (int) The number of seconds until the token expires.
+	 *               - 'nonce': (string) A unique nonce value associated with this token, used for validation purposes.
+	 */
+	private static function getAccessToken(): array
+	{
+		if (option('wagnerwagner.merx.production') === true) {
+			$auth = option('wagnerwagner.merx.paypal.live.clientID') . ':' . option('wagnerwagner.merx.paypal.live.secret');
+		} else {
+			$auth = option('wagnerwagner.merx.paypal.sandbox.clientID') . ':' . option('wagnerwagner.merx.paypal.sandbox.secret');
+		}
+		$endpoint = '/v1/oauth2/token';
+		$response = self::request(
+			$endpoint,
+			[
+				'method' => 'POST',
+				'basicAuth' => $auth,
+				'data' => 'grant_type=client_credentials',
+			],
+		);
+		return $response;
+	}
+
+	/**
+	 * Purchase units of a PayPal order
+	 *
+	 * The `wagnerwagner.merx.paypal.purchaseUnits` option replaces Merx’ own
+	 * purchase unit. PayPal charges the sum of all purchase units, so an option
+	 * which returns a complete unit — `Cart::payPalPurchaseUnits()` does — would
+	 * otherwise have the payer approve the cart total twice.
+	 *
+	 * @param $currency ISO currency code
+	 *
+	 * @return array List of PayPal’s purchase_unit_request
+	 */
+	public static function purchaseUnits(OrderPage $virtualOrderPage, string $currency): array
+	{
+		$purchaseUnits = [];
+		if (is_callable(option('wagnerwagner.merx.paypal.purchaseUnits'))) {
+			$purchaseUnits = option('wagnerwagner.merx.paypal.purchaseUnits')();
+		}
+
+		if (is_array($purchaseUnits) === false || count($purchaseUnits) === 0) {
+			$purchaseUnits = [
+				[
+					'description' => (string)site()->title(),
+					'amount' => [
+						'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
+						'currency_code' => $currency,
+					],
+				],
+			];
+		}
+
+		// Binds the PayPal order to this order, so a captured payment cannot be
+		// replayed to complete a second one. A PayPal order has no field of its own
+		// for this — `custom_id` belongs to the purchase unit — and
+		// `Gateways::validatePayPalOrderIsUnused()` checks it when the payer returns,
+		// so Merx sets it on every purchase unit, including those from the option.
+		return array_map(
+			fn (array $purchaseUnit): array => [
+				...$purchaseUnit,
+				'custom_id' => (string)$virtualOrderPage->uid(),
+			],
+			$purchaseUnits,
+		);
+	}
+
+	/**
+	 * Handles the request for the gateway. Use 'use Kirby\Http\Remote'
+	 *
+	 * @param $params Request parameters as described in https://getkirby.com/docs/reference/objects/http/remote/request#params-array
+	 *
+	 * @return array PayPal REST API response
+	 */
+	private static function request(string $endpoint, array $params = []): array
+	{
+		if (option('wagnerwagner.merx.production') === true) {
+			$baseUrl = self::$paypalLiveApiEntry;
+		} else {
+			$baseUrl = self::$paypalSandboxApiEntry;
+		}
+		$endpoint = $baseUrl . $endpoint;
+		$response = Remote::request(
+			$endpoint,
+			$params,
+		);
+		if (in_array(substr($response->code(), 0, 1), ['4', '5'])) {
+			// A PayPal response can hold the payer’s name, email and address, so it
+			// goes to the log instead of to the caller.
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log('PayPal request to ' . $endpoint . ' failed: ' . $response->content(), 'error');
+			}
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: $response->code(),
+			);
+		}
+		return $response->json(true);
+	}
+
+	/**
 	 * Get a PayPal order without capturing it
 	 *
 	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_get PayPal REST API Documentation
 	 *
-	 * @param string $payPalOrderId The ID of the PayPal order.
+	 * @param $payPalOrderId The ID of the PayPal order.
 	 *
 	 * @return array PayPal order details, including `status` and `purchase_units`
 	 */
@@ -210,37 +238,5 @@ class PayPalPayment
 				],
 			],
 		);
-	}
-
-	/**
-	 * Capture PayPal payment for order
-	 *
-	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_capture PayPal REST API Documentation
-	 *
-	 * @param string $payPalOrderId The ID of the PayPal order for which to capture a payment.
-	 *
-	 * @return array Captured PayPal payment details
-	 *	 - 'id': (string) The ID of the order.
-	 *	 - 'status': (string) The order status.
-	 *	 - 'payment_source': (array) The payment source used to fund the payment.
-	 *	 - 'purchase_units': (array) An array of purchase units.
-	 *	 - 'payer': (array) The customer who approves and pays for the order. The customer is also known as the payer.
-	 *	 - 'links': (array) An array of request-related HATEOAS links.
-	 */
-	public static function executePayPalPayment(string $payPalOrderId): array
-	{
-		$access = self::getAccessToken();
-		$endpoint = '/v2/checkout/orders/' . rawurlencode($payPalOrderId) . '/capture';
-		$response = self::request(
-			$endpoint,
-			[
-				'method' => 'POST',
-				'headers' => [
-					'Content-Type' => 'application/json',
-					'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
-				],
-			],
-		);
-		return $response;
 	}
 }

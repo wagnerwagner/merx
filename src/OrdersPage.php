@@ -13,7 +13,7 @@ use Kirby\Cms\Pages;
  */
 class OrdersPage extends Page
 {
-	static $allowedRoles = ['admin'];
+	public static $allowedRoles = ['admin'];
 
 	/**
 	 * Prevent index of all orders

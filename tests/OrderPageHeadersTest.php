@@ -15,8 +15,36 @@ use Wagnerwagner\Merx\OrderPage;
 final class OrderPageHeadersTest extends TestCase
 {
 	protected App $kirby;
-
 	protected string $root;
+
+	protected function log(): string
+	{
+		$file = $this->root . '/logs/' . date('Y-m-d') . '-merx.log';
+		return F::exists($file) ? F::read($file) : '';
+	}
+
+	protected function orderPage(): OrderPage
+	{
+		return $this->kirby->impersonate('kirby', function (): OrderPage {
+			$ordersPage = $this->kirby->site()->createChild([
+				'slug' => 'orders',
+				'template' => 'orders',
+				'draft' => false,
+				'content' => ['title' => 'Orders'],
+			]);
+
+			/** @var OrderPage $orderPage */
+			$orderPage = $ordersPage->createChild([
+				'slug' => 'aaaabbbbccccdddd',
+				'template' => 'order',
+				'model' => 'order',
+				'draft' => false,
+				'content' => ['dateCreated' => date('c'), 'name' => 'Marta Doe'],
+			]);
+
+			return $orderPage->changeStatus('listed');
+		});
+	}
 
 	public function setUp(): void
 	{
@@ -45,40 +73,6 @@ final class OrderPageHeadersTest extends TestCase
 		Dir::remove($this->root);
 	}
 
-	protected function orderPage(): OrderPage
-	{
-		return $this->kirby->impersonate('kirby', function (): OrderPage {
-			$ordersPage = $this->kirby->site()->createChild([
-				'slug' => 'orders',
-				'template' => 'orders',
-				'draft' => false,
-				'content' => ['title' => 'Orders'],
-			]);
-
-			/** @var OrderPage $orderPage */
-			$orderPage = $ordersPage->createChild([
-				'slug' => 'aaaabbbbccccdddd',
-				'template' => 'order',
-				'model' => 'order',
-				'draft' => false,
-				'content' => ['dateCreated' => date('c'), 'name' => 'Marta Doe'],
-			]);
-
-			return $orderPage->changeStatus('listed');
-		});
-	}
-
-	public function testRenderSetsTheProtectiveHeaders(): void
-	{
-		$this->orderPage()->render();
-
-		$headers = $this->kirby->response()->headers();
-
-		$this->assertSame('private, no-store', $headers['Cache-Control'] ?? null);
-		$this->assertSame('same-origin', $headers['Referrer-Policy'] ?? null);
-		$this->assertSame('noindex, nofollow', $headers['X-Robots-Tag'] ?? null);
-	}
-
 	public function testAShopCanStillOverrideThem(): void
 	{
 		// The headers are set before the template runs, so they are defaults
@@ -89,10 +83,12 @@ final class OrderPageHeadersTest extends TestCase
 		$this->assertSame('no-referrer', $this->kirby->response()->headers()['Referrer-Policy'] ?? null);
 	}
 
-	protected function log(): string
+	public function testNothingIsLoggedWhenLoggingIsOff(): void
 	{
-		$file = $this->root . '/logs/' . date('Y-m-d') . '-merx.log';
-		return F::exists($file) ? F::read($file) : '';
+		$this->kirby = $this->kirby->clone(['options' => ['wagnerwagner.merx.logging' => false]]);
+		$this->orderPage()->render();
+
+		$this->assertSame('', $this->log());
 	}
 
 	public function testRenderIsLogged(): void
@@ -107,6 +103,17 @@ final class OrderPageHeadersTest extends TestCase
 		$this->assertStringContainsString('aaaabbbbccccdddd', $log);
 	}
 
+	public function testRenderSetsTheProtectiveHeaders(): void
+	{
+		$this->orderPage()->render();
+
+		$headers = $this->kirby->response()->headers();
+
+		$this->assertSame('private, no-store', $headers['Cache-Control'] ?? null);
+		$this->assertSame('same-origin', $headers['Referrer-Policy'] ?? null);
+		$this->assertSame('noindex, nofollow', $headers['X-Robots-Tag'] ?? null);
+	}
+
 	public function testTheVisitorIsLoggedHashedOnly(): void
 	{
 		$ip = '203.0.113.9';
@@ -118,13 +125,5 @@ final class OrderPageHeadersTest extends TestCase
 		// The raw address must not be in there, a hash of it may
 		$this->assertStringNotContainsString($ip, $log);
 		$this->assertStringContainsString(substr(hash('sha256', $ip), 0, 50), $log);
-	}
-
-	public function testNothingIsLoggedWhenLoggingIsOff(): void
-	{
-		$this->kirby = $this->kirby->clone(['options' => ['wagnerwagner.merx.logging' => false]]);
-		$this->orderPage()->render();
-
-		$this->assertSame('', $this->log());
 	}
 }

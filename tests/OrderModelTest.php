@@ -19,16 +19,13 @@ use Wagnerwagner\Merx\OrderPage;
  */
 final class OrderModelTest extends TestCase
 {
-	protected App $app;
-
-	protected App $kirby;
-
-	protected array $models;
-
-	protected string $root;
-
 	/** Class of the order page each step was given */
 	public array $classes = [];
+
+	protected App $app;
+	protected App $kirby;
+	protected array $models;
+	protected string $root;
 
 	public function setUp(): void
 	{
@@ -114,17 +111,6 @@ final class OrderModelTest extends TestCase
 		App::instance($this->app);
 	}
 
-	public function testOwnModelValidatesTheCheckout(): void
-	{
-		try {
-			merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'customer@example.com']);
-			$this->fail('The checkout was accepted without a company.');
-		} catch (Exception $exception) {
-			$this->assertSame('error.merx.fieldsvalidation', $exception->getKey());
-			$this->assertArrayHasKey('company', $exception->getDetails());
-		}
-	}
-
 	public function testGatewayAndHooksGetTheOwnModel(): void
 	{
 		$merx = merx();
@@ -145,5 +131,16 @@ final class OrderModelTest extends TestCase
 			'completePayment' => 'OrderPage',
 			'createOrder' => 'OrderPage',
 		], $this->classes);
+	}
+
+	public function testOwnModelValidatesTheCheckout(): void
+	{
+		try {
+			merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'customer@example.com']);
+			$this->fail('The checkout was accepted without a company.');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.fieldsvalidation', $exception->getKey());
+			$this->assertArrayHasKey('company', $exception->getDetails());
+		}
 	}
 }

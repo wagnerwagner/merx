@@ -10,11 +10,6 @@ use Wagnerwagner\Merx\PayPalPayment;
 
 final class PayPalPaymentTest extends TestCase
 {
-	public function tearDown(): void
-	{
-		App::$enableWhoops = true;
-	}
-
 	/**
 	 * Kirby instance with the given `wagnerwagner.merx.paypal.purchaseUnits`
 	 */
@@ -29,6 +24,17 @@ final class PayPalPaymentTest extends TestCase
 				'wagnerwagner.merx.paypal.purchaseUnits' => fn (): array => $purchaseUnits,
 			],
 		]);
+	}
+
+	/**
+	 * The amount PayPal charges: the sum of all purchase units
+	 */
+	protected function chargedAmount(array $purchaseUnits): float
+	{
+		return array_sum(array_map(
+			fn (array $purchaseUnit): float => (float)$purchaseUnit['amount']['value'],
+			$purchaseUnits,
+		));
 	}
 
 	/**
@@ -54,26 +60,50 @@ final class PayPalPaymentTest extends TestCase
 		]);
 	}
 
-	/**
-	 * The amount PayPal charges: the sum of all purchase units
-	 */
-	protected function chargedAmount(array $purchaseUnits): float
+	public function tearDown(): void
 	{
-		return array_sum(array_map(
-			fn (array $purchaseUnit): float => (float)$purchaseUnit['amount']['value'],
-			$purchaseUnits,
-		));
+		App::$enableWhoops = true;
 	}
 
-	public function testPurchaseUnitIsCartTotal(): void
+	public function testCustomIdIsSetOnPurchaseUnitsFromOption(): void
+	{
+		// `Gateways::validatePayPalOrderIsUnused()` refuses a returning payer whose
+		// PayPal order does not name this order, so a `custom_id` of the option
+		// must not be able to break the replay protection.
+		$this->app([
+			[
+				'custom_id' => 'something-else',
+				'amount' => ['value' => '60.00', 'currency_code' => 'EUR'],
+			],
+			[
+				'amount' => ['value' => '40.00', 'currency_code' => 'EUR'],
+			],
+		]);
+
+		$purchaseUnits = PayPalPayment::purchaseUnits($this->orderPage(), 'EUR');
+
+		$this->assertCount(2, $purchaseUnits);
+		$this->assertSame('test-order', $purchaseUnits[0]['custom_id']);
+		$this->assertSame('test-order', $purchaseUnits[1]['custom_id']);
+	}
+
+	public function testCustomIdNamesTheOrder(): void
 	{
 		$this->app();
 
 		$purchaseUnits = PayPalPayment::purchaseUnits($this->orderPage(), 'EUR');
 
+		$this->assertSame('test-order', $purchaseUnits[0]['custom_id']);
+	}
+
+	public function testEmptyOptionKeepsMerxPurchaseUnit(): void
+	{
+		// The default option returns an empty array
+		$this->app([]);
+
+		$purchaseUnits = PayPalPayment::purchaseUnits($this->orderPage(), 'EUR');
+
 		$this->assertCount(1, $purchaseUnits);
-		$this->assertSame('100.00', $purchaseUnits[0]['amount']['value']);
-		$this->assertSame('EUR', $purchaseUnits[0]['amount']['currency_code']);
 		$this->assertSame(100.0, $this->chargedAmount($purchaseUnits));
 	}
 
@@ -99,45 +129,15 @@ final class PayPalPaymentTest extends TestCase
 		$this->assertSame(100.0, $this->chargedAmount($purchaseUnits));
 	}
 
-	public function testEmptyOptionKeepsMerxPurchaseUnit(): void
-	{
-		// The default option returns an empty array
-		$this->app([]);
-
-		$purchaseUnits = PayPalPayment::purchaseUnits($this->orderPage(), 'EUR');
-
-		$this->assertCount(1, $purchaseUnits);
-		$this->assertSame(100.0, $this->chargedAmount($purchaseUnits));
-	}
-
-	public function testCustomIdNamesTheOrder(): void
+	public function testPurchaseUnitIsCartTotal(): void
 	{
 		$this->app();
 
 		$purchaseUnits = PayPalPayment::purchaseUnits($this->orderPage(), 'EUR');
 
-		$this->assertSame('test-order', $purchaseUnits[0]['custom_id']);
-	}
-
-	public function testCustomIdIsSetOnPurchaseUnitsFromOption(): void
-	{
-		// `Gateways::validatePayPalOrderIsUnused()` refuses a returning payer whose
-		// PayPal order does not name this order, so a `custom_id` of the option
-		// must not be able to break the replay protection.
-		$this->app([
-			[
-				'custom_id' => 'something-else',
-				'amount' => ['value' => '60.00', 'currency_code' => 'EUR'],
-			],
-			[
-				'amount' => ['value' => '40.00', 'currency_code' => 'EUR'],
-			],
-		]);
-
-		$purchaseUnits = PayPalPayment::purchaseUnits($this->orderPage(), 'EUR');
-
-		$this->assertCount(2, $purchaseUnits);
-		$this->assertSame('test-order', $purchaseUnits[0]['custom_id']);
-		$this->assertSame('test-order', $purchaseUnits[1]['custom_id']);
+		$this->assertCount(1, $purchaseUnits);
+		$this->assertSame('100.00', $purchaseUnits[0]['amount']['value']);
+		$this->assertSame('EUR', $purchaseUnits[0]['amount']['currency_code']);
+		$this->assertSame(100.0, $this->chargedAmount($purchaseUnits));
 	}
 }

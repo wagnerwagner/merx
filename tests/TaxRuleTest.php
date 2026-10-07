@@ -1,35 +1,23 @@
 <?php
 
+use Kirby\Cms\App;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\TaxRule;
-use Kirby\Cms\App;
 
 class TaxRuleTest extends TestCase
 {
-	public function testConstructorSetsProperties()
-	{
-		$rule = new TaxRule('vat', 'VAT', fn () => 0.19);
-		$this->assertEquals('vat', $rule->key);
-		$this->assertEquals('VAT', $rule->name);
-		$this->assertTrue(is_callable($rule->rule));
-	}
-
 	public function testConstructorDefaultsNameToKey()
 	{
 		$rule = new TaxRule('mwst');
 		$this->assertEquals('mwst', $rule->name);
 	}
 
-	public function testTaxRateReturnsNullIfNoRule()
+	public function testConstructorSetsProperties()
 	{
-		$rule = new TaxRule('no-tax');
-		$this->assertNull($rule->taxRate());
-	}
-
-	public function testTaxRateReturnsCorrectValue()
-	{
-		$rule = new TaxRule('vat', null, fn () => 0.19);
-		$this->assertEquals(0.19, $rule->taxRate());
+		$rule = new TaxRule('vat', 'VAT', fn () => 0.19);
+		$this->assertEquals('vat', $rule->key);
+		$this->assertEquals('VAT', $rule->name);
+		$this->assertTrue(is_callable($rule->rule));
 	}
 
 	public function testTaxRatePassesKirbyInstance()
@@ -42,9 +30,23 @@ class TaxRuleTest extends TestCase
 		$this->assertEquals(0.07, $rule->taxRate($kirby));
 	}
 
+	public function testTaxRateReturnsCorrectValue()
+	{
+		$rule = new TaxRule('vat', null, fn () => 0.19);
+		$this->assertEquals(0.19, $rule->taxRate());
+	}
+
+	public function testTaxRateReturnsNullIfNoRule()
+	{
+		$rule = new TaxRule('no-tax');
+		$this->assertNull($rule->taxRate());
+	}
+
 	public function testToArrayIncludesTaxRate()
 	{
-		$rule = new TaxRule('vat', 'VAT', function () { return 0.19; });
+		$rule = new TaxRule('vat', 'VAT', function () {
+			return 0.19;
+		});
 		$array = $rule->toArray();
 		$this->assertArrayHasKey('rule', $array);
 		$this->assertEquals(0.19, $array['rule']);

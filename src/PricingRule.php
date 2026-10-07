@@ -13,7 +13,10 @@ use Kirby\Toolkit\Str;
  * @copyright Wagnerwagner GmbH
  * @see https://merx.wagnerwagner.de/guide/configuration/currencies
  */
-class PricingRule extends Obj {
+class PricingRule extends Obj
+{
+	/** Three-letter ISO currency code, in uppercase. E.g. EUR or USD */
+	public string|null $currency = null;
 	public string $key;
 
 	/** Name of the pricing rule */
@@ -22,25 +25,21 @@ class PricingRule extends Obj {
 	/** Tax is included in price */
 	public bool $taxIncluded = true;
 
-	/** Three-letter ISO currency code, in uppercase. E.g. EUR or USD */
-	public string|null $currency = null;
-
 	/**
 	 * Constructor
 	 *
-	 * @param null|string $currency Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
-	 * @param null|callable $rule A function that returns true when the rule applies, or false when it does not.
-	 * It is passed the Kirby instance as first argument.
-	 * @param bool $taxIncluded Whether the price is including tax or not
+	 * @param $currency Three-letter ISO currency code, in uppercase. E.g. EUR or USD.
+	 * @param $rule A function that returns true when the rule applies, or false when it does not.
+	 *             It is passed the Kirby instance as first argument.
+	 * @param $taxIncluded Whether the price is including tax or not
 	 */
 	public function __construct(
 		string $key,
-		?string $name = null,
-		?string $currency = null,
-		?callable $rule = null,
+		string|null $name = null,
+		string|null $currency = null,
+		callable|null $rule = null,
 		bool $taxIncluded = true,
-	)
-	{
+	) {
 		$this->key = $key;
 
 		$this->name = $name ?? $key;
@@ -55,22 +54,26 @@ class PricingRule extends Obj {
 		$this->taxIncluded = $taxIncluded;
 	}
 
+	public function __toString(): string
+	{
+		return $this->key;
+	}
+
 	/**
 	 * Checks if the pricing rule applies to the current context
 	 *
 	 * Kirby instance is passed to the rule function if it is a callable.
 	 * If no rule is set, true is returned.
 	 *
-	 * @param App|null $kirby The Kirby instance
-	 * @return bool
+	 * @param $kirby The Kirby instance
 	 */
-	public function checkRule(?App $kirby = null): bool
+	public function checkRule(App|null $kirby = null): bool
 	{
 		if ($this->rule === null) {
 			return true;
 		}
 
-		$kirby = $kirby ?? App::instance();
+		$kirby ??= App::instance();
 
 		if (is_callable($this->rule)) {
 			return call_user_func($this->rule, $kirby);
@@ -80,18 +83,11 @@ class PricingRule extends Obj {
 
 	/**
 	 * Converts the pricing rule to an array. Rule function is removed.
-	 *
-	 * @return array
 	 */
 	public function toArray(): array
 	{
 		$array = parent::toArray();
 		unset($array['rule']);
 		return $array;
-	}
-
-	public function __toString(): string
-	{
-		return $this->key;
 	}
 }

@@ -44,6 +44,14 @@ final class CartTest extends TestCase
 		);
 	}
 
+	public function testPayPalPurchaseUnitsUsesTitle(): void
+	{
+		$cart = new Cart([
+			['key' => 'nice-shoes', 'title' => 'Nice Shoes', 'price' => new Price(price: 10.0, currency: 'EUR')],
+		]);
+
+		$this->assertSame('Nice Shoes', $cart->payPalPurchaseUnits()[0]['items'][0]['name']);
+	}
 
 	public function testPayPalPurchaseUnitsWithDiscount(): void
 	{
@@ -62,17 +70,6 @@ final class CartTest extends TestCase
 		$this->assertCount(1, $purchaseUnit['items']);
 		$this->assertSame('nice-shoes', $purchaseUnit['items'][0]['name']);
 	}
-
-
-	public function testPayPalPurchaseUnitsUsesTitle(): void
-	{
-		$cart = new Cart([
-			['key' => 'nice-shoes', 'title' => 'Nice Shoes', 'price' => new Price(price: 10.0, currency: 'EUR')],
-		]);
-
-		$this->assertSame('Nice Shoes', $cart->payPalPurchaseUnits()[0]['items'][0]['name']);
-	}
-
 
 	public function testPayPalPurchaseUnitsWithoutListableItems(): void
 	{

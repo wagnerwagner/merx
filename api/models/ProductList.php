@@ -6,8 +6,7 @@ use Wagnerwagner\Merx\Tax;
 
 return [
 	'fields' => [
-		'products' => function (ProductList $productList): ?array
-		{
+		'products' => function (ProductList $productList): array|null {
 			/** @var \Kirby\Api\Api $this */
 			$listItems = $productList->filterByType('product');
 			return $listItems->count() === 0 ? null : [
@@ -15,8 +14,7 @@ return [
 				'total' => $this->model('price', $listItems->total())->toArray(),
 			];
 		},
-		'shippings' => function (ProductList $productList): ?array
-		{
+		'shippings' => function (ProductList $productList): array|null {
 			/** @var \Kirby\Api\Api $this */
 			$listItems = $productList->filterByType('shipping');
 			return $listItems->count() === 0 ? null : [
@@ -29,7 +27,7 @@ return [
 			/** @var \Kirby\Api\Api $this */
 			return $this->model('tax', $tax)->toArray();
 		}, $productList->taxRates())),
-		'total' => fn (ProductList $productList): ?Price => $productList->total(),
+		'total' => fn (ProductList $productList): Price|null => $productList->total(),
 		'isFromPrice' => fn (ProductList $productList): bool => $productList->isFromPrice(),
 		'isOrderable' => fn (ProductList $productList): bool => $productList->isOrderable(),
 	],

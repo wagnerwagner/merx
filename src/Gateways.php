@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Data\Yaml;
 use Kirby\Exception\Exception;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Gateway class dummy holder
@@ -21,9 +22,9 @@ class Gateways
 	/**
 	 * Captures stripe payment intent
 	 *
-	 * @param OrderPage $virtualOrderPage Virtual order page which may contain `stripePaymentIntentId` field (Credit Card Payment)
-	 * @param array $data Additional data from get request which may contain `payment_intent` (Klarna Payment)
-	 * @throws \Kirby\Exception\Exception|\Stripe\Exception\ApiErrorException Kirby exception, when user canceled the payment, payment is incomplete or Stripe API Exception
+	 * @param $virtualOrderPage Virtual order page which may contain `stripePaymentIntentId` field (Credit Card Payment)
+	 * @param $data Additional data from get request which may contain `payment_intent` (Klarna Payment)
+	 * @throws Exception|ApiErrorException Kirby exception, when user canceled the payment, payment is incomplete or Stripe API Exception
 	 *
 	 * @return OrderPage Virtual order page with updated payment details
 	 */
@@ -110,9 +111,9 @@ class Gateways
 	 * does not pay for. Correcting the amount is the frontend’s job — it has to
 	 * fetch a new client secret when the cart changes — so this only refuses.
 	 *
-	 * @param int $amount Amount of the payment in the currency’s minor unit
-	 * @param string|null $currency Three-letter ISO currency code of the payment
-	 * @throws \Kirby\Exception\Exception merx.amountMismatch when amount or currency do not match the cart
+	 * @param $amount Amount of the payment in the currency’s minor unit
+	 * @param $currency Three-letter ISO currency code of the payment
+	 * @throws Exception merx.amountMismatch when amount or currency do not match the cart
 	 */
 	public static function validatePaymentAmount(int $amount, string|null $currency, OrderPage $virtualOrderPage): void
 	{
@@ -139,121 +140,13 @@ class Gateways
 	}
 
 	/**
-	 * Makes sure PayPal is configured before a payment is started
-	 *
-	 * Both keys are needed, so either one missing is a problem. Merx defaults
-	 * them to empty strings rather than null, which is why emptiness is what is
-	 * checked — comparing against null never matched.
-	 *
-	 * Which key is missing goes to the log. The caller is an unauthenticated
-	 * visitor and has no business learning how the shop is configured.
-	 *
-	 * @throws \Kirby\Exception\Exception merx.paypalError
-	 */
-	public static function validatePayPalCredentials(): void
-	{
-		$environment = option('wagnerwagner.merx.production') === true ? 'live' : 'sandbox';
-
-		foreach (['clientID', 'secret'] as $key) {
-			if (empty(option('wagnerwagner.merx.paypal.' . $environment . '.' . $key)) === false) {
-				continue;
-			}
-
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log('Missing PayPal ' . $environment . ' ' . $key, 'error');
-			}
-
-			throw new Exception(
-				key: 'merx.paypalError',
-				httpCode: 500,
-			);
-		}
-	}
-
-	/**
-	 * Makes sure a PayPal order charges what the order costs
-	 *
-	 * The amount is fixed when the PayPal order is created. The default purchase
-	 * unit takes it from the cart, but `paypal.purchaseUnits` lets a shop build
-	 * its own — a mistake there would charge the wrong amount while the order is
-	 * still marked as paid.
-	 *
-	 * Checked on the retrieved order rather than on the one Merx sent, and before
-	 * the capture, so no money moves on a mismatch. The create response cannot be
-	 * used: PayPal answers it minimally and leaves the purchase units out.
-	 *
-	 * @param array $paypalOrder Response of `PayPalPayment::retrievePayPalOrder()`
-	 * @throws \Kirby\Exception\Exception merx.amountMismatch
-	 */
-	public static function validatePayPalOrderAmount(array $paypalOrder, OrderPage $virtualOrderPage): void
-	{
-		$amount = 0.0;
-		$currency = null;
-
-		foreach ($paypalOrder['purchase_units'] ?? [] as $purchaseUnit) {
-			$value = $purchaseUnit['amount']['value'] ?? null;
-
-			if ($value !== null) {
-				// PayPal charges the sum of the purchase units
-				$amount += (float)$value;
-				$currency ??= $purchaseUnit['amount']['currency_code'] ?? null;
-			}
-		}
-
-		static::validatePaymentAmount(
-			(int)round($amount * 100),
-			is_string($currency) === true ? $currency : null,
-			$virtualOrderPage,
-		);
-	}
-
-	/**
-	 * Makes sure a PayPal order has not been used for another order already
-	 *
-	 * PayPal refuses a second capture itself, but relying on that leaves the
-	 * check with the provider and reports it as an unspecific API error. This
-	 * is the PayPal counterpart of the `order_uid` check in
-	 * `completeStripePayment()`.
-	 *
-	 * @param array $paypalOrder Response of `PayPalPayment::retrievePayPalOrder()`
-	 * @param OrderPage $virtualOrderPage Order the payment is about to complete
-	 * @throws \Kirby\Exception\Exception merx.paypalError when the order was captured before or belongs to another order
-	 */
-	public static function validatePayPalOrderIsUnused(array $paypalOrder, OrderPage $virtualOrderPage): void
-	{
-		// A `COMPLETED` order has been captured already.
-		if (($paypalOrder['status'] ?? null) === 'COMPLETED') {
-			throw new Exception(
-				key: 'merx.paypalError',
-				httpCode: 400,
-			);
-		}
-
-		// `custom_id` is set when the PayPal order is created and names the order
-		// it belongs to.
-		$customIds = [];
-		foreach ($paypalOrder['purchase_units'] ?? [] as $purchaseUnit) {
-			if (isset($purchaseUnit['custom_id']) === true) {
-				$customIds[] = (string)$purchaseUnit['custom_id'];
-			}
-		}
-
-		if ($customIds !== [] && in_array((string)$virtualOrderPage->uid(), $customIds, true) === false) {
-			throw new Exception(
-				key: 'merx.paypalError',
-				httpCode: 400,
-			);
-		}
-	}
-
-	/**
 	 * Checks whether a PayPal capture response actually paid for the order
 	 *
 	 * PayPal answers with HTTP 2xx even when the order was not captured, so the
 	 * status has to be checked explicitly before an order is marked as paid.
 	 *
-	 * @param array $paypalResponse Response of `PayPalPayment::executePayPalPayment()`
-	 * @throws \Kirby\Exception\Exception merx.paypalError when the order was not captured or a capture was declined
+	 * @param $paypalResponse Response of `PayPalPayment::executePayPalPayment()`
+	 * @throws Exception merx.paypalError when the order was not captured or a capture was declined
 	 *
 	 * @return bool `true` when every capture is settled, `false` when at least one capture is still pending
 	 */
@@ -291,7 +184,115 @@ class Gateways
 		}
 
 		// `PENDING` captures are completed by PayPal at a later point.
-		return array_filter($captureStatus, fn (?string $state) => $state !== 'COMPLETED') === [];
+		return array_filter($captureStatus, fn (string|null $state) => $state !== 'COMPLETED') === [];
+	}
+
+	/**
+	 * Makes sure PayPal is configured before a payment is started
+	 *
+	 * Both keys are needed, so either one missing is a problem. Merx defaults
+	 * them to empty strings rather than null, which is why emptiness is what is
+	 * checked — comparing against null never matched.
+	 *
+	 * Which key is missing goes to the log. The caller is an unauthenticated
+	 * visitor and has no business learning how the shop is configured.
+	 *
+	 * @throws Exception merx.paypalError
+	 */
+	public static function validatePayPalCredentials(): void
+	{
+		$environment = option('wagnerwagner.merx.production') === true ? 'live' : 'sandbox';
+
+		foreach (['clientID', 'secret'] as $key) {
+			if (empty(option('wagnerwagner.merx.paypal.' . $environment . '.' . $key)) === false) {
+				continue;
+			}
+
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log('Missing PayPal ' . $environment . ' ' . $key, 'error');
+			}
+
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 500,
+			);
+		}
+	}
+
+	/**
+	 * Makes sure a PayPal order charges what the order costs
+	 *
+	 * The amount is fixed when the PayPal order is created. The default purchase
+	 * unit takes it from the cart, but `paypal.purchaseUnits` lets a shop build
+	 * its own — a mistake there would charge the wrong amount while the order is
+	 * still marked as paid.
+	 *
+	 * Checked on the retrieved order rather than on the one Merx sent, and before
+	 * the capture, so no money moves on a mismatch. The create response cannot be
+	 * used: PayPal answers it minimally and leaves the purchase units out.
+	 *
+	 * @param $paypalOrder Response of `PayPalPayment::retrievePayPalOrder()`
+	 * @throws Exception merx.amountMismatch
+	 */
+	public static function validatePayPalOrderAmount(array $paypalOrder, OrderPage $virtualOrderPage): void
+	{
+		$amount = 0.0;
+		$currency = null;
+
+		foreach ($paypalOrder['purchase_units'] ?? [] as $purchaseUnit) {
+			$value = $purchaseUnit['amount']['value'] ?? null;
+
+			if ($value !== null) {
+				// PayPal charges the sum of the purchase units
+				$amount += (float)$value;
+				$currency ??= $purchaseUnit['amount']['currency_code'] ?? null;
+			}
+		}
+
+		static::validatePaymentAmount(
+			(int)round($amount * 100),
+			is_string($currency) === true ? $currency : null,
+			$virtualOrderPage,
+		);
+	}
+
+	/**
+	 * Makes sure a PayPal order has not been used for another order already
+	 *
+	 * PayPal refuses a second capture itself, but relying on that leaves the
+	 * check with the provider and reports it as an unspecific API error. This
+	 * is the PayPal counterpart of the `order_uid` check in
+	 * `completeStripePayment()`.
+	 *
+	 * @param $paypalOrder Response of `PayPalPayment::retrievePayPalOrder()`
+	 * @param $virtualOrderPage Order the payment is about to complete
+	 * @throws Exception merx.paypalError when the order was captured before or belongs to another order
+	 */
+	public static function validatePayPalOrderIsUnused(array $paypalOrder, OrderPage $virtualOrderPage): void
+	{
+		// A `COMPLETED` order has been captured already.
+		if (($paypalOrder['status'] ?? null) === 'COMPLETED') {
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 400,
+			);
+		}
+
+		// `custom_id` is set when the PayPal order is created and names the order
+		// it belongs to.
+		$customIds = [];
+		foreach ($paypalOrder['purchase_units'] ?? [] as $purchaseUnit) {
+			if (isset($purchaseUnit['custom_id']) === true) {
+				$customIds[] = (string)$purchaseUnit['custom_id'];
+			}
+		}
+
+		if ($customIds !== [] && in_array((string)$virtualOrderPage->uid(), $customIds, true) === false) {
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 400,
+			);
+		}
 	}
 }
 

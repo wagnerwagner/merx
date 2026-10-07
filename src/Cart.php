@@ -3,8 +3,9 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\App;
-use Wagnerwagner\Merx\ProductList;
 use Kirby\Exception\Exception;
+use Stripe\PaymentIntent;
+use Stripe\Util\RequestOptions;
 
 /**
  * Storage for cart items
@@ -21,7 +22,7 @@ class Cart extends ProductList
 	/**
 	 * Constructor
 	 *
-	 * @param array $data List of product items. Product items must contain `id`. `quantity`, `title`, `price`, `tax` are optional.
+	 * @param $data List of product items. Product items must contain `id`. `quantity`, `title`, `price`, `tax` are optional.
 	 */
 	public function __construct(array $data = [])
 	{
@@ -33,6 +34,33 @@ class Cart extends ProductList
 		$kirby->trigger('wagnerwagner.merx.cart.create:before', ['cart' => $this, 'data' => $data]);
 		$this->save();
 		$kirby->trigger('wagnerwagner.merx.cart.create:after', ['cart' => $this]);
+	}
+
+	/**
+	 * @param ListItem $value
+	 * @internal
+	 * @throws Exception When currency of new item does not match existing currency
+	 */
+	public function __set(string $key, $value): void
+	{
+		$listItem = ListItem::factory($value);
+		$currency = $this->currency();
+
+		// Check currencies
+		if (is_string($currency) && $listItem->price?->currency !== $currency) {
+			$listItem->price = null;
+			parent::__set($key, $listItem);
+		// throw new Exception([
+		// 	'key' => 'merx.mixedCurrencies.add',
+		// 	'data' => [
+		// 		'key' => $listItem->key,
+		// 		'currency' => $currency,
+		// 		'newCurrency' => $listItem->price?->currency,
+		// 	],
+		// ]);
+		} else {
+			parent::__set($key, $listItem);
+		}
 	}
 
 	/**
@@ -75,59 +103,26 @@ class Cart extends ProductList
 	}
 
 	/**
-	 * Removes item from Cart by key
-	 *
-	 * @param string $key the name of the key
-	 * @return $this
+	 * Removes Cart from user’s session.
 	 */
-	public function remove(string $key): static
+	public function delete(): void
 	{
 		$kirby = App::instance();
-		$kirby->trigger('wagnerwagner.merx.cart.remove:before', ['cart' => $this, 'key' => $key]);
-		parent::remove($key);
-		$this->save();
-		$kirby->trigger('wagnerwagner.merx.cart.remove:after', ['cart' => $this, 'key' => $key]);
-		return $this;
-	}
-
-	/**
-	 * Updates existing item.
-	 */
-	public function updateItem(string $key, array $data): static
-	{
-		$kirby = App::instance();
-		try {
-			$kirby->trigger('wagnerwagner.merx.cart.updateItem:before', ['cart' => $this, 'key' => $key, 'data' => $data]);
-			parent::updateItem($key, $data);
-			$this->save();
-			$kirby->trigger('wagnerwagner.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
-			return $this;
-		} catch (\Exception $ex) {
-			// A rejected update (invalid quantity, `maxQuantity`) is a client error and
-			// must keep its own message instead of being hidden behind merx.cart.update.
-			if ($ex instanceof Exception) {
-				throw $ex;
-			}
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log($ex, 'error');
-			}
-			throw new Exception(
-				key: 'merx.cart.update',
-				details: Merx::exceptionDetails($ex),
-				previous: $ex,
-			);
-		}
+		$kirby->trigger('wagnerwagner.merx.cart.delete:before', ['cart' => $this]);
+		$kirby->session()->remove($this->sessionName);
+		$this->data = [];
+		$kirby->trigger('wagnerwagner.merx.cart.delete:after', ['cart' => $this]);
 	}
 
 	/**
 	 * Get Stripe’s PaymentIntent.
 	 *
-	 * @param null|array $params Additional parameters used by \Stripe\PaymentIntent::create().
-	 * @param null|array|\Stripe\Util\RequestOptions $options Additional options used by \Stripe\PaymentIntent::create().
-	 * @throws \Kirby\Exception\Exception merx.emptycart
-	 * @return \Stripe\PaymentIntent
+	 * @param $params Additional parameters used by \Stripe\PaymentIntent::create().
+	 * @param null|array|RequestOptions $options Additional options used by \Stripe\PaymentIntent::create().
+	 * @throws Exception merx.emptycart
+	 * @return PaymentIntent
 	 */
-	public function getStripePaymentIntent(?array $params = [], $options = []): object
+	public function getStripePaymentIntent(array|null $params = [], $options = []): object
 	{
 		$amount = $this->total()->toFloat();
 		if ($amount === 0.0) {
@@ -142,31 +137,6 @@ class Cart extends ProductList
 		], $params);
 
 		return StripePayment::createStripePaymentIntent($amount, $params, $options);
-	}
-
-	/**
-	 * Removes Cart from user’s session.
-	 */
-	public function delete(): void
-	{
-		$kirby = App::instance();
-		$kirby->trigger('wagnerwagner.merx.cart.delete:before', ['cart' => $this]);
-		$kirby->session()->remove($this->sessionName);
-		$this->data = [];
-		$kirby->trigger('wagnerwagner.merx.cart.delete:after', ['cart' => $this]);
-	}
-
-
-	private function save(): static
-	{
-		$kirby = App::instance();
-		if ($this->count() === 0) {
-			$kirby->session()->remove($this->sessionName);
-		} else {
-			$sessionData = $this->toArray(fn (ListItem $item) => $item->toSessionArray());
-			$kirby->session()->set($this->sessionName, $sessionData);
-		}
-		return $this;
 	}
 
 	/**
@@ -251,31 +221,59 @@ class Cart extends ProductList
 	}
 
 	/**
-	 * @param string $key
-	 * @param ListItem $value
-	 * @return void
-	 * @internal
-	 * @throws Exception When currency of new item does not match existing currency
+	 * Removes item from Cart by key
+	 *
+	 * @param $key the name of the key
+	 * @return $this
 	 */
-	public function __set(string $key, $value): void
+	public function remove(string $key): static
 	{
-		$listItem = ListItem::factory($value);
-		$currency = $this->currency();
+		$kirby = App::instance();
+		$kirby->trigger('wagnerwagner.merx.cart.remove:before', ['cart' => $this, 'key' => $key]);
+		parent::remove($key);
+		$this->save();
+		$kirby->trigger('wagnerwagner.merx.cart.remove:after', ['cart' => $this, 'key' => $key]);
+		return $this;
+	}
 
-		// Check currencies
-		if (is_string($currency) && $listItem->price?->currency !== $currency) {
-			$listItem->price = null;
-			parent::__set($key, $listItem);
-			// throw new Exception([
-			// 	'key' => 'merx.mixedCurrencies.add',
-			// 	'data' => [
-			// 		'key' => $listItem->key,
-			// 		'currency' => $currency,
-			// 		'newCurrency' => $listItem->price?->currency,
-			// 	],
-			// ]);
+	private function save(): static
+	{
+		$kirby = App::instance();
+		if ($this->count() === 0) {
+			$kirby->session()->remove($this->sessionName);
 		} else {
-			parent::__set($key, $listItem);
+			$sessionData = $this->toArray(fn (ListItem $item) => $item->toSessionArray());
+			$kirby->session()->set($this->sessionName, $sessionData);
+		}
+		return $this;
+	}
+
+	/**
+	 * Updates existing item.
+	 */
+	public function updateItem(string $key, array $data): static
+	{
+		$kirby = App::instance();
+		try {
+			$kirby->trigger('wagnerwagner.merx.cart.updateItem:before', ['cart' => $this, 'key' => $key, 'data' => $data]);
+			parent::updateItem($key, $data);
+			$this->save();
+			$kirby->trigger('wagnerwagner.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
+			return $this;
+		} catch (\Exception $ex) {
+			// A rejected update (invalid quantity, `maxQuantity`) is a client error and
+			// must keep its own message instead of being hidden behind merx.cart.update.
+			if ($ex instanceof Exception) {
+				throw $ex;
+			}
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log($ex, 'error');
+			}
+			throw new Exception(
+				key: 'merx.cart.update',
+				details: Merx::exceptionDetails($ex),
+				previous: $ex,
+			);
 		}
 	}
 }

@@ -5,4 +5,6 @@ namespace Kirby\Content;
 /**
  * @method string toFormattedPrice(Field $field, string|null $currency = null) Uses Merx::formatCurrency to format the field value
  */
-class Field extends \Kirby\Content\Field {}
+class Field extends Field
+{
+}

@@ -48,8 +48,7 @@ return [
 		 * @see https://merx.wagnerwagner.de/guide/getting-started/showing-the-cart
 		 * @return Cart The visitor’s current cart.
 		 */
-		'action' => function (): Cart
-		{
+		'action' => function (): Cart {
 			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
@@ -66,8 +65,7 @@ return [
 		 * @see https://merx.wagnerwagner.de/guide/getting-started/adding-products
 		 * @return Cart The cart including the added item.
 		 */
-		'action' => function () use ($cartRequestData): Cart
-		{
+		'action' => function () use ($cartRequestData): Cart {
 			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
@@ -87,8 +85,7 @@ return [
 		/**
 		 * @return Cart The cart including the updated item.
 		 */
-		'action' => function () use ($cartRequestData): Cart
-		{
+		'action' => function () use ($cartRequestData): Cart {
 			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 
@@ -111,8 +108,7 @@ return [
 		/**
 		 * @return Cart The cart without the removed item.
 		 */
-		'action' => function (): Cart
-		{
+		'action' => function (): Cart {
 			/** @var \Kirby\Api\Api $this */
 			$this->kirby()->setCurrentTranslation($this->language());
 

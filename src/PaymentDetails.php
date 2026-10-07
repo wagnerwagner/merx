@@ -66,7 +66,7 @@ class PaymentDetails
 	 * ])),
 	 * ```
 	 *
-	 * @see \Wagnerwagner\Merx\PaymentDetails::$keys
+	 * @see PaymentDetails::$keys
 	 */
 	public static function create(array $data): array
 	{
@@ -80,6 +80,48 @@ class PaymentDetails
 		}
 
 		return $details;
+	}
+
+	/**
+	 * Builds a record from a captured PayPal order
+	 *
+	 * PayPal reports one amount per capture. An order may hold more than one,
+	 * so their values are added up.
+	 *
+	 * @param $paypalResponse Response of `PayPalPayment::executePayPalPayment()`
+	 */
+	public static function fromPayPalOrder(array $paypalResponse): array
+	{
+		$captures = [];
+		foreach ($paypalResponse['purchase_units'] ?? [] as $purchaseUnit) {
+			foreach ($purchaseUnit['payments']['captures'] ?? [] as $capture) {
+				$captures[] = $capture;
+			}
+		}
+
+		$amount = null;
+		$currency = null;
+		foreach ($captures as $capture) {
+			$value = $capture['amount']['value'] ?? null;
+			if ($value !== null) {
+				$amount = (float)$amount + (float)$value;
+				$currency ??= $capture['amount']['currency_code'] ?? null;
+			}
+		}
+
+		$created = $captures[0]['create_time'] ?? $paypalResponse['create_time'] ?? null;
+		$timestamp = is_string($created) ? strtotime($created) : false;
+
+		return static::create([
+			'provider' => 'paypal',
+			'id' => $paypalResponse['id'] ?? null,
+			'status' => $paypalResponse['status'] ?? null,
+			'amount' => $amount,
+			'currency' => is_string($currency) ? Str::upper($currency) : null,
+			'created' => $timestamp !== false ? date('c', $timestamp) : null,
+			'reference' => $captures[0]['id'] ?? null,
+			'livemode' => option('wagnerwagner.merx.production') === true,
+		]);
 	}
 
 	/**
@@ -134,47 +176,5 @@ class PaymentDetails
 			}
 			return null;
 		}
-	}
-
-	/**
-	 * Builds a record from a captured PayPal order
-	 *
-	 * PayPal reports one amount per capture. An order may hold more than one,
-	 * so their values are added up.
-	 *
-	 * @param array $paypalResponse Response of `PayPalPayment::executePayPalPayment()`
-	 */
-	public static function fromPayPalOrder(array $paypalResponse): array
-	{
-		$captures = [];
-		foreach ($paypalResponse['purchase_units'] ?? [] as $purchaseUnit) {
-			foreach ($purchaseUnit['payments']['captures'] ?? [] as $capture) {
-				$captures[] = $capture;
-			}
-		}
-
-		$amount = null;
-		$currency = null;
-		foreach ($captures as $capture) {
-			$value = $capture['amount']['value'] ?? null;
-			if ($value !== null) {
-				$amount = (float)$amount + (float)$value;
-				$currency ??= $capture['amount']['currency_code'] ?? null;
-			}
-		}
-
-		$created = $captures[0]['create_time'] ?? $paypalResponse['create_time'] ?? null;
-		$timestamp = is_string($created) ? strtotime($created) : false;
-
-		return static::create([
-			'provider' => 'paypal',
-			'id' => $paypalResponse['id'] ?? null,
-			'status' => $paypalResponse['status'] ?? null,
-			'amount' => $amount,
-			'currency' => is_string($currency) ? Str::upper($currency) : null,
-			'created' => $timestamp !== false ? date('c', $timestamp) : null,
-			'reference' => $captures[0]['id'] ?? null,
-			'livemode' => option('wagnerwagner.merx.production') === true,
-		]);
 	}
 }

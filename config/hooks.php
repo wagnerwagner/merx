@@ -9,8 +9,7 @@ use Wagnerwagner\Merx\OrderPage;
 use Wagnerwagner\Merx\PaymentDetails;
 
 return [
-	'wagnerwagner.merx.stripe-hooks' => function (Event $stripeEvent): void
-	{
+	'wagnerwagner.merx.stripe-hooks' => function (Event $stripeEvent): void {
 		switch ($stripeEvent->type) {
 			case 'payment_intent.succeeded':
 				/** @var \Stripe\PaymentIntent $paymentIntent */
@@ -32,7 +31,7 @@ return [
 				};
 
 				try {
-					$orderPage = page(option('wagnerwagner.merx.ordersPage'). '/' . $orderUid);
+					$orderPage = page(option('wagnerwagner.merx.ordersPage') . '/' . $orderUid);
 
 					// `page()` resolves any page at that path, not necessarily an order
 					if ($orderPage instanceof OrderPage === false) {
@@ -60,22 +59,38 @@ return [
 				break;
 		}
 	},
-	'wagnerwagner.merx.cart.add:after' => function (Cart $cart):void {},
-	'wagnerwagner.merx.cart.add:before' => function (Cart $cart, array $data):void {},
-	'wagnerwagner.merx.cart.add:before' => function (Cart $cart, string|array|ListItem $data): void {},
-	'wagnerwagner.merx.cart.create:after' => function (Cart $cart):void {},
-	'wagnerwagner.merx.cart.create:before' => function (Cart $cart, array $data):void {},
-	'wagnerwagner.merx.cart.delete:after' => function (Cart $cart):void {},
-	'wagnerwagner.merx.cart.delete:before' => function (Cart $cart):void {},
-	'wagnerwagner.merx.cart.remove:after' => function (Cart $cart, string $key):void {},
-	'wagnerwagner.merx.cart.remove:before' => function (Cart $cart, string $key):void {},
-	'wagnerwagner.merx.cart.updateItem:after' => function (Cart $cart, string $key, array $data):void {},
-	'wagnerwagner.merx.cart.updateItem:before' => function (Cart $cart, string $key, array $data):void {},
-	'wagnerwagner.merx.createOrder:after' => function (OrderPage $orderPage):void {},
-	'wagnerwagner.merx.createOrder:before' => function (OrderPage $virtualOrderPage, array $gateway, array $data):void {},
-	'wagnerwagner.merx.initializeOrder:after' => function (OrderPage $virtualOrderPage, string $redirect):void {},
-	'wagnerwagner.merx.initializeOrder:before' => function (Cart $cart, array $data):void {},
-	'wagnerwagner.merx.paymentCompleted' => function (OrderPage $orderPage):void {},
+	'wagnerwagner.merx.cart.add:after' => function (Cart $cart): void {
+	},
+	'wagnerwagner.merx.cart.add:before' => function (Cart $cart, array $data): void {
+	},
+	'wagnerwagner.merx.cart.add:before' => function (Cart $cart, string|array|ListItem $data): void {
+	},
+	'wagnerwagner.merx.cart.create:after' => function (Cart $cart): void {
+	},
+	'wagnerwagner.merx.cart.create:before' => function (Cart $cart, array $data): void {
+	},
+	'wagnerwagner.merx.cart.delete:after' => function (Cart $cart): void {
+	},
+	'wagnerwagner.merx.cart.delete:before' => function (Cart $cart): void {
+	},
+	'wagnerwagner.merx.cart.remove:after' => function (Cart $cart, string $key): void {
+	},
+	'wagnerwagner.merx.cart.remove:before' => function (Cart $cart, string $key): void {
+	},
+	'wagnerwagner.merx.cart.updateItem:after' => function (Cart $cart, string $key, array $data): void {
+	},
+	'wagnerwagner.merx.cart.updateItem:before' => function (Cart $cart, string $key, array $data): void {
+	},
+	'wagnerwagner.merx.createOrder:after' => function (OrderPage $orderPage): void {
+	},
+	'wagnerwagner.merx.createOrder:before' => function (OrderPage $virtualOrderPage, array $gateway, array $data): void {
+	},
+	'wagnerwagner.merx.initializeOrder:after' => function (OrderPage $virtualOrderPage, string $redirect): void {
+	},
+	'wagnerwagner.merx.initializeOrder:before' => function (Cart $cart, array $data): void {
+	},
+	'wagnerwagner.merx.paymentCompleted' => function (OrderPage $orderPage): void {
+	},
 
 	/**
 	 * Orders which are paid after they have been created

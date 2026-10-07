@@ -3,7 +3,7 @@
 namespace Wagnerwagner\Merx\Tests;
 
 use Kirby\Cms\App;
-use Kirby\Cms\Page;
+use Kirby\Cms\Pages;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\ProductPage;
@@ -25,24 +25,24 @@ class ProductPageTest extends TestCase
 					'de' => [
 						'name' => 'de (EUR)',
 						'currency' => 'EUR',
-						'rule' => fn (?App $kirby): bool => $kirby->languageCode() === 'de',
+						'rule' => fn (App|null $kirby): bool => $kirby->languageCode() === 'de',
 						'taxIncluded' => true,
 					],
 					'en' => [
 						'name' => 'en (USD)',
 						'currency' => 'USD',
-						'rule' => fn (?App $kirby): bool => $kirby->languageCode() === 'en',
+						'rule' => fn (App|null $kirby): bool => $kirby->languageCode() === 'en',
 						'taxIncluded' => false,
 					],
 				],
 				'wagnerwagner.merx.taxRules' => [
 					'default' => [
 						'name' => fn (): string => t('taxRule.default', 'default'),
-						'rule' => fn (?App $kirby): float => $kirby->languageCode() === 'de' ? 0.19 : 0.2,
+						'rule' => fn (App|null $kirby): float => $kirby->languageCode() === 'de' ? 0.19 : 0.2,
 					],
 					'reduced' => [
 						'name' => fn (): string => t('taxRule.reduced', 'reduced'),
-						'rule' => fn (?App $kirby): float => $kirby->languageCode() === 'de' ? 0.7 : 0.55,
+						'rule' => fn (App|null $kirby): float => $kirby->languageCode() === 'de' ? 0.7 : 0.55,
 					],
 				],
 			],
@@ -80,6 +80,12 @@ class ProductPageTest extends TestCase
 		App::$enableWhoops = true;
 	}
 
+	public function testOrders(): void
+	{
+		$orders = $this->product->orders();
+		$this->assertInstanceOf(Pages::class, $orders);
+	}
+
 	public function testPrice(): void
 	{
 		$price = $this->product->price('de');
@@ -102,11 +108,5 @@ class ProductPageTest extends TestCase
 		$this->assertInstanceOf(Price::class, $firstPrice);
 		$this->assertEquals(19.99, $firstPrice->price);
 		$this->assertEquals('EUR', $firstPrice->currency);
-	}
-
-	public function testOrders(): void
-	{
-		$orders = $this->product->orders();
-		$this->assertInstanceOf(\Kirby\Cms\Pages::class, $orders);
 	}
 }

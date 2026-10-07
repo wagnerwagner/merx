@@ -13,15 +13,15 @@ use Throwable;
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  */
-class Logger {
+class Logger
+{
 	public static string $appendix = '-merx';
-
 	public static int $randomMaxThreshold = 100;
 
 	/**
 	 * Delete old Merx logs
 	 *
-	 * @param string $threshold relative date string
+	 * @param $threshold relative date string
 	 */
 	public static function deleteOldLogs(string $threshold = '-1 year'): void
 	{
@@ -63,7 +63,6 @@ class Logger {
 	/**
 	 * Create log in Kirby’s log directory
 	 *
-	 * @param string|int|array $content
 	 * @param string $level Should be one of the eight RFC 5424 levels (debug, info, notice, warning, error, critical, alert, emergency)
 	 */
 	public static function log(string|int|array $content, $level = 'info'): void
@@ -95,5 +94,4 @@ class Logger {
 			}
 		}
 	}
-
 }

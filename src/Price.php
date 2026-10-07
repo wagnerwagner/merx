@@ -15,7 +15,10 @@ use Kirby\Toolkit\Obj;
 class Price extends Obj
 {
 	/** Floating point precision for price calculations */
-	const roundingPrecision = 2;
+	public const roundingPrecision = 2;
+
+	/** Three-letter ISO currency code, in uppercase. E.g. EUR */
+	public string|null $currency = null;
 
 	/** Gross price, including tax. E.g. 119.00 */
 	public float $price;
@@ -23,14 +26,11 @@ class Price extends Obj
 	/** E.g. 100.00 */
 	public float $priceNet;
 
-	/** E.g. 0.19 for 19 % */
-	public Tax|null $tax = null;
-
-	/** Three-letter ISO currency code, in uppercase. E.g. EUR */
-	public string|null $currency = null;
-
 	/** Pricing rule used for this price */
 	public PricingRule|null $pricingRule = null;
+
+	/** E.g. 0.19 for 19 % */
+	public Tax|null $tax = null;
 
 	/**
 	 * Price constructor.
@@ -42,18 +42,17 @@ class Price extends Obj
 	 * new Price(100.0, new Tax(100.0, 0.19, 'USD'), new PricingRule('default', 'US', 'USD', true, false));
 	 * ```
 	 *
-	 * @param float $price Gross or net price, depending on tax inclusion, defined by $pricingRule (default is gross [tax included]).
-	 * @param Tax|float|null $tax Tax object or tax rate as float (e.g. 0.19 for 19%), or null.
-	 * @param PricingRule|string|null $pricingRule PricingRule object, its key as string, or null.
-	 * @param string|null $currency Three-letter ISO currency code, or null. If pricing rule is set, currency is taken from pricing rule.
+	 * @param $price Gross or net price, depending on tax inclusion, defined by $pricingRule (default is gross [tax included]).
+	 * @param $tax Tax object or tax rate as float (e.g. 0.19 for 19%), or null.
+	 * @param $pricingRule PricingRule object, its key as string, or null.
+	 * @param $currency Three-letter ISO currency code, or null. If pricing rule is set, currency is taken from pricing rule.
 	 */
 	public function __construct(
 		float $price,
 		Tax|float|null $tax = null,
 		PricingRule|string|null $pricingRule = null,
 		string|null $currency = null,
-	)
-	{
+	) {
 		$roundingPrecision = self::roundingPrecision;
 
 		$this->price = round($price, $roundingPrecision);
@@ -61,7 +60,7 @@ class Price extends Obj
 
 		if (is_string($pricingRule)) {
 			$this->pricingRule = Merx::pricingRules()->getRuleByKey($pricingRule);
-		} else if ($pricingRule instanceof PricingRule) {
+		} elseif ($pricingRule instanceof PricingRule) {
 			$this->pricingRule = $pricingRule;
 		}
 
@@ -78,7 +77,7 @@ class Price extends Obj
 				$this->priceNet = $this->price;
 				$this->price = round($this->priceNet * (1 + $taxRate), $roundingPrecision);
 			}
-		} else if ($tax instanceof Tax && $tax->rate === null && $tax->price !== 0.0) {
+		} elseif ($tax instanceof Tax && $tax->rate === null && $tax->price !== 0.0) {
 			// A tax amount without a rate belongs to the total of a list whose items
 			// carry different tax rates. There is no rate to divide by, so gross and
 			// net are what the amount sits between.
@@ -96,9 +95,17 @@ class Price extends Obj
 				rate: $tax,
 				currency: $this->currency,
 			);
-		} else if ($tax instanceof Tax) {
+		} elseif ($tax instanceof Tax) {
 			$this->tax = $tax;
 		}
+	}
+
+	/**
+	 * Returns the gross price as unformatted string
+	 */
+	public function __toString(): string
+	{
+		return (string)$this->toString();
 	}
 
 	/**
@@ -122,51 +129,10 @@ class Price extends Obj
 	}
 
 	/**
-	 * Updates the net price and recalculates the price and tax
-	 *
-	 * @param float $priceNet New net price (without tax)
-	 * @return self
-	 */
-	public function updateNetPrice(float $priceNet): self
-	{
-		$this->priceNet = $priceNet;
-		$this->price = round($this->priceNet * (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
-		if ($this->tax !== null) {
-			$this->tax = new Tax(
-				priceNet: $this->priceNet,
-				rate: $this->tax?->rate,
-				currency: $this->currency,
-			);
-		}
-		return $this;
-	}
-
-	/**
-	 * Updates the price and recalculates the net price and tax
-	 *
-	 * @param float $price New gross price (including tax)
-	 * @return self
-	 * @see https://merx.wagnerwagner.de/cookbook/volume-based-pricing
-	 */
-	public function updatePrice(float $price): self
-	{
-		$this->price = $price;
-		$this->priceNet = round($this->price / (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
-		if ($this->tax !== null) {
-			$this->tax = new Tax(
-				priceNet: $this->priceNet,
-				rate: $this->tax?->rate,
-				currency: $this->currency,
-			);
-		}
-		return $this;
-	}
-
-	/**
 	 * Returns if the tax is included in the price
 	 * @return ?bool True if tax is included, false if tax is not included, null if `pricingRule` is not set.
 	 */
-	public function taxIncluded(): ?bool
+	public function taxIncluded(): bool|null
 	{
 		return $this->pricingRule?->taxIncluded;
 	}
@@ -185,7 +151,7 @@ class Price extends Obj
 	/**
 	 * Returns the price as float
 	 */
-	public function toFloat(): ?float
+	public function toFloat(): float|null
 	{
 		return $this->price;
 	}
@@ -197,10 +163,10 @@ class Price extends Obj
 	 * Use $key to determine which price is used.
 	 *
 	 * @param string $key Use `priceNet` to get net price as formatted currency. When not set, `price` or `priceNet` is used, depending on tax inclusion of pricing rule.
-	 * @return string	Formatted price as string, e.g. "119,00 €"
+	 * @return string Formatted price as string, e.g. "119,00 €"
 	 * @see https://merx.wagnerwagner.de/guide/configuration/localization#number-formatting
 	 */
-	public function toString(?string $key = null): string
+	public function toString(string|null $key = null): string
 	{
 		if ($key === null) {
 			$key = 'price';
@@ -212,12 +178,41 @@ class Price extends Obj
 	}
 
 	/**
-	 * Returns the gross price as unformatted string
+	 * Updates the net price and recalculates the price and tax
 	 *
-	 * @return string
+	 * @param $priceNet New net price (without tax)
 	 */
-	public function __toString(): string
+	public function updateNetPrice(float $priceNet): self
 	{
-		return (string)$this->toString();
+		$this->priceNet = $priceNet;
+		$this->price = round($this->priceNet * (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
+		if ($this->tax !== null) {
+			$this->tax = new Tax(
+				priceNet: $this->priceNet,
+				rate: $this->tax?->rate,
+				currency: $this->currency,
+			);
+		}
+		return $this;
+	}
+
+	/**
+	 * Updates the price and recalculates the net price and tax
+	 *
+	 * @param $price New gross price (including tax)
+	 * @see https://merx.wagnerwagner.de/cookbook/volume-based-pricing
+	 */
+	public function updatePrice(float $price): self
+	{
+		$this->price = $price;
+		$this->priceNet = round($this->price / (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
+		if ($this->tax !== null) {
+			$this->tax = new Tax(
+				priceNet: $this->priceNet,
+				rate: $this->tax?->rate,
+				currency: $this->currency,
+			);
+		}
+		return $this;
 	}
 }

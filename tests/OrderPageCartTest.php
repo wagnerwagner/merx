@@ -16,8 +16,29 @@ use Wagnerwagner\Merx\ProductList;
 final class OrderPageCartTest extends TestCase
 {
 	protected App $app;
-
 	protected App $kirby;
+
+	/**
+	 * Reads items, and turns the warning a missing key raises into a failure.
+	 * The suite silences warnings, `debug` turns them into exceptions.
+	 */
+	protected function cart(string $items): ProductList
+	{
+		set_error_handler(function (int $no, string $message): bool {
+			throw new RuntimeException($message);
+		});
+
+		try {
+			$orderPage = new OrderPage([
+				'slug' => 'test-order',
+				'content' => ['items' => $items],
+			]);
+
+			return $orderPage->cart();
+		} finally {
+			restore_error_handler();
+		}
+	}
 
 	public function setUp(): void
 	{
@@ -49,25 +70,13 @@ final class OrderPageCartTest extends TestCase
 	}
 
 	/**
-	 * Reads items, and turns the warning a missing key raises into a failure.
-	 * The suite silences warnings, `debug` turns them into exceptions.
+	 * An empty page means no page. `page('')` returns the home page.
 	 */
-	protected function cart(string $items): ProductList
+	public function testItemWithEmptyPage(): void
 	{
-		set_error_handler(function (int $no, string $message): bool {
-			throw new RuntimeException($message);
-		});
+		$cart = $this->cart("-\n  key: shipping\n  page: ''\n  type: shipping\n  price: 4.9\n");
 
-		try {
-			$orderPage = new OrderPage([
-				'slug' => 'test-order',
-				'content' => ['items' => $items],
-			]);
-
-			return $orderPage->cart();
-		} finally {
-			restore_error_handler();
-		}
+		$this->assertNull($cart->first()->page);
 	}
 
 	/**
@@ -81,13 +90,13 @@ final class OrderPageCartTest extends TestCase
 	}
 
 	/**
-	 * An empty page means no page. `page('')` returns the home page.
+	 * An item without a price has none. It must not take the page’s.
 	 */
-	public function testItemWithEmptyPage(): void
+	public function testItemWithoutPrice(): void
 	{
-		$cart = $this->cart("-\n  key: shipping\n  page: ''\n  type: shipping\n  price: 4.9\n");
+		$cart = $this->cart("-\n  key: note\n  page: nice-shoes\n  type: custom\n");
 
-		$this->assertNull($cart->first()->page);
+		$this->assertNull($cart->first()->price);
 	}
 
 	/**
@@ -98,16 +107,6 @@ final class OrderPageCartTest extends TestCase
 		$cart = $this->cart("-\n  key: other-key\n  page: nice-shoes\n  type: product\n  price: 100\n");
 
 		$this->assertSame('nice-shoes', $cart->first()->page?->id());
-	}
-
-	/**
-	 * An item without a price has none. It must not take the page’s.
-	 */
-	public function testItemWithoutPrice(): void
-	{
-		$cart = $this->cart("-\n  key: note\n  page: nice-shoes\n  type: custom\n");
-
-		$this->assertNull($cart->first()->price);
 	}
 
 	/**

@@ -8,10 +8,12 @@ use Wagnerwagner\Merx\Price;
 return [
 	'fields' => [
 		'key' => fn (ListItem $listItem): string => $listItem->key,
-		'title' => fn (ListItem $listItem): ?string => $listItem->title,
+		'title' => fn (ListItem $listItem): string|null => $listItem->title,
 		'type' => fn (ListItem $listItem): string => $listItem->type,
-		'thumb' => function (ListItem $listItem): ?array {
-			if (!$listItem->page) return null;
+		'thumb' => function (ListItem $listItem): array|null {
+			if (!$listItem->page) {
+				return null;
+			}
 
 			/** @var \Kirby\Cms\File $thumb */
 			$thumb = $listItem->page->thumb() instanceof File ? $listItem->page->thumb() : $listItem->page->thumb()->toFile();
@@ -22,12 +24,12 @@ return [
 				'srcset' => $thumb->srcset('thumb'),
 			] : null;
 		},
-		'url' => fn (ListItem $listItem): ?string => $listItem->page?->url(),
-		'price' => fn (ListItem $listItem): ?Price => $listItem->price,
-		'total' => fn (ListItem $listItem): ?Price => $listItem->total(),
+		'url' => fn (ListItem $listItem): string|null => $listItem->page?->url(),
+		'price' => fn (ListItem $listItem): Price|null => $listItem->price,
+		'total' => fn (ListItem $listItem): Price|null => $listItem->total(),
 		'quantity' => fn (ListItem $listItem): float => $listItem->quantity,
-		'page' => fn (ListItem $listItem): ?Page => $listItem->page,
-		'data' => fn (ListItem $listItem): ?array => $listItem->data,
+		'page' => fn (ListItem $listItem): Page|null => $listItem->page,
+		'data' => fn (ListItem $listItem): array|null => $listItem->data,
 	],
 	'type' => ListItem::class,
 	'views' => [

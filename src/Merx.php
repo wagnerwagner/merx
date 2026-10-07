@@ -6,15 +6,13 @@ use Closure;
 use DateTimeImmutable;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
-use NumberFormatter;
-use Wagnerwagner\Merx\Gateways;
-use Wagnerwagner\Merx\Cart;
-use Kirby\Toolkit\Str;
-use Kirby\Toolkit\Escape;
 use Kirby\Exception\Exception;
 use Kirby\Http\Url;
 use Kirby\Session\Session;
+use Kirby\Toolkit\Escape;
 use Kirby\Toolkit\Locale;
+use Kirby\Toolkit\Str;
+use NumberFormatter;
 
 /**
  * This is the core of the plugin. The class mainly contains helper methods.
@@ -24,40 +22,6 @@ use Kirby\Toolkit\Locale;
  */
 class Merx
 {
-	protected Cart $cart;
-
-	/**
-	 * Custom and default gateways
-	 */
-	protected array $gateways = [];
-
-	/**
-	 * Cache of `NumberFormatter` objects by locale
-	 */
-	protected static array $currencyFormatters = [];
-
-	/**
-	 * Cache of `NumberFormatter` objects by locale
-	 */
-	protected static array $percentFormatters = [];
-
-	/**
-	 * Cache of `NumberFormatter` objects by locale
-	 */
-	protected static array $decimalFormatters = [];
-
-	protected PricingRules $pricingRules;
-
-	public static string $sessionTokenParameterName = 'sessionToken';
-
-	public static string $returnNonceParameterName = 'nonce';
-
-	/**
-	 * Session key of the one-time nonce which ties a return from the payment
-	 * provider to the checkout that started it
-	 */
-	public static string $returnNonceSessionKey = 'wagnerwagner.merx.returnNonce';
-
 	/**
 	 * Content fields of an `OrderPage` which Merx sets itself
 	 *
@@ -78,6 +42,37 @@ class Merx
 		'stripepaymentintentid',
 		'uuid',
 	];
+	public static string $returnNonceParameterName = 'nonce';
+
+	/**
+	 * Session key of the one-time nonce which ties a return from the payment
+	 * provider to the checkout that started it
+	 */
+	public static string $returnNonceSessionKey = 'wagnerwagner.merx.returnNonce';
+	public static string $sessionTokenParameterName = 'sessionToken';
+
+	protected Cart $cart;
+
+	/**
+	 * Custom and default gateways
+	 */
+	protected array $gateways = [];
+	protected PricingRules $pricingRules;
+
+	/**
+	 * Cache of `NumberFormatter` objects by locale
+	 */
+	protected static array $currencyFormatters = [];
+
+	/**
+	 * Cache of `NumberFormatter` objects by locale
+	 */
+	protected static array $decimalFormatters = [];
+
+	/**
+	 * Cache of `NumberFormatter` objects by locale
+	 */
+	protected static array $percentFormatters = [];
 
 	/**
 	 * Initializes cart and gateways
@@ -88,84 +83,243 @@ class Merx
 		$this->gateways = array_merge(Gateways::$gateways, option('wagnerwagner.merx.gateways', []));
 	}
 
+	/**
+	 * Calculates tax amount from gross price and tax rate
+	 *
+	 * E.g. calculateTax(200, 0.19) → 31.932773109243698
+	 *
+	 * @param $grossPrice E.g. 200
+	 * @param $taxRate Tax rate. E.g. 0.19
+	 */
+	public static function calculateTax(float $grossPrice, float $taxRate): float
+	{
+		return $grossPrice - ($grossPrice / (1 + $taxRate));
+	}
 
 	/**
-	 * Url to be used to complete the payment
+	 * Returns visitors cart.
 	 *
-	 * Includes the session token, a one-time nonce and the language code (for
-	 * multilang pages)
-	 *
-	 * @return string e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6&language=de
+	 * @param array $data Optional data to create a new cart.
 	 */
-	static function returnUrl(): string
+	public function cart(array|null $data = null): Cart
+	{
+		if ($data) {
+			return $this->cart = new Cart($data);
+		}
+		return $this->cart;
+	}
+
+	/**
+	 * Stores order page to file system
+	 *
+	 * Calls `completePayment` of the payment gateway
+	 * Deletes cart
+	 *
+	 * @param $data Data required for payment gateway’s `completePayment()`
+	 */
+	public function createOrder(array $data = []): OrderPage
 	{
 		$kirby = App::instance();
-		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('wagnerwagner.merx.api.endpoint', 'shop') . '/success';
-		// Creating the nonce writes to the session, which starts it. Without that
-		// `token()` below is null until something else has written to it.
-		$nonce = static::returnNonce();
 
-		$url = Url::build([
-			'query' => [
-				Merx::$sessionTokenParameterName => $kirby->session()->token(),
-				Merx::$returnNonceParameterName => $nonce,
-				'language' => $kirby->multilang() ? $kirby->currentLanguage()->code() : null,
-			]
-		], $apiEndpint);
-		return $url;
+		try {
+			$virtualOrderPage = $this->getVirtualOrderPageFromSession($data);
+			$gateway = $this->getGateway($virtualOrderPage->paymentGateway()->toString());
+
+			$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
+
+			if (is_callable($gateway['completePayment'])) {
+				$gateway['completePayment']($virtualOrderPage, $data);
+			}
+
+			// Set to default language to make sure content is saved in default language
+			$currentLanguageCode = null;
+			if ($kirby->multilang()) {
+				$currentLanguageCode = $kirby->languageCode();
+				$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
+			}
+
+			// Creating the order requires admin permissions. The callback makes sure the
+			// impersonation is always reset, even when an error occurs. Without it the
+			// `kirby` super user would stay active for the rest of the request.
+			/** @var OrderPage $orderPage */
+			$orderPage = $kirby->impersonate('kirby', function () use ($kirby, $virtualOrderPage, $currentLanguageCode): OrderPage {
+				$ordersPage = $kirby->site()->ordersPage();
+				if ($ordersPage === null) {
+					// create orders page if it does not exist
+					$ordersPage = $kirby->site()->createChild([
+						'slug' => option('wagnerwagner.merx.ordersPage'),
+						'template' => 'orders',
+						'draft' => false,
+						'content' => [
+							'title' => t('field.orders'),
+						],
+					]);
+				}
+				$virtualOrderPageArray = $virtualOrderPage->toArray();
+				$virtualOrderPageArray['template'] = 'order';
+				$virtualOrderPageArray['model'] = 'order';
+				$virtualOrderPageArray['draft'] = false;
+				$virtualOrderPageArray['translations'] = null;
+
+				/** @var OrderPage $orderPage */
+				$orderPage = static::lockOrders($ordersPage, function () use ($ordersPage, $virtualOrderPage, $virtualOrderPageArray): OrderPage {
+					// `orderNumber` reads the orders through the virtual order page’s parent.
+					// They may have been read before the lock was taken, and another
+					// checkout may have written one since.
+					$virtualOrderPage->parentModel()->purge();
+
+					// Taken inside the lock, so the orders sort in the order they got their number
+					$now = new DateTimeImmutable();
+					$virtualOrderPageArray['content']['dateCreated'] = $now->format('c');
+					// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
+					$virtualOrderPageArray['content']['sortingNumber'] = (string)OrderPage::sortingNumberFromDate($now);
+
+					if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
+						$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
+					}
+
+					/** @var OrderPage $orderPage */
+					$orderPage = $ordersPage->createChild($virtualOrderPageArray);
+					return $orderPage->changeStatus('listed');
+				});
+
+				// Gateways which complete the payment right away — PayPal, Stripe
+				// Elements — create an order which is already paid. This is reported
+				// here rather than from `page.create:after`, where the hooks would run
+				// while the lock above holds back every other checkout.
+				//
+				// `apply()` rather than `trigger()`: a hook which updates the order
+				// leaves the object it was given behind as an outdated copy. Updating
+				// that copy again throws, and Kirby removes the order’s content from
+				// disk while it does. `apply()` hands every hook, and Merx, the current one.
+				if ($orderPage->paymentComplete()->toBool() === true) {
+					$orderPage = $kirby->apply('wagnerwagner.merx.paymentCompleted', ['orderPage' => $orderPage], 'orderPage');
+				}
+
+				// Reset language
+				$kirby->setCurrentLanguage($currentLanguageCode);
+
+				$this->cart->delete();
+
+				// `apply()`, like `paymentCompleted` above, so a caller gets the order
+				// with what the hooks wrote, not an outdated copy of it
+				return $kirby->apply('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage], 'orderPage');
+			});
+
+			return $orderPage;
+		} catch (\Exception $ex) {
+			if ($ex::class !== 'Kirby\Exception\Exception') {
+				$ex = new Exception(
+					key: 'merx.createOrder',
+					httpCode: 500,
+					details: static::exceptionDetails($ex),
+					previous: $ex,
+				);
+			}
+			if (option('wagnerwagner.merx.logging') === true) {
+				Logger::log($ex, 'error');
+			}
+			throw $ex;
+		}
 	}
 
 	/**
-	 * One-time nonce for the return url, created once per checkout
+	 * Currency of the pricing rule
 	 *
-	 * `returnUrl()` is called more than once while a payment is set up, so the
-	 * nonce is kept in the session and reused until `initializeOrder()` starts
-	 * the next checkout.
+	 * @return string|null Three-letter ISO currency code, in uppercase. E.g. EUR or USD
 	 */
-	protected static function returnNonce(): string
+	public static function currency(): string|null
 	{
-		$kirby = App::instance();
-		$nonce = $kirby->session()->get(static::$returnNonceSessionKey);
-
-		if (is_string($nonce) === false || $nonce === '') {
-			$nonce = bin2hex(random_bytes(16));
-			$kirby->session()->set(static::$returnNonceSessionKey, $nonce);
-		}
-
-		return $nonce;
+		return self::pricingRule()?->currency;
 	}
 
 	/**
-	 * Makes sure a return actually belongs to the checkout stored in $session
-	 *
-	 * `/api/shop/success` completes the payment on a GET request, and session
-	 * cookies are sent with a top-level GET even across sites. Without this a
-	 * link on any page could complete a pending payment of a visitor who
-	 * approved it at the provider but never returned.
-	 *
-	 * @throws Exception merx.invalidReturn when the nonce is missing or does not match
+	 * Returns (and creates) a currency number formatter for a given locale
+	 * Similar to I18n::decimalNumberFormatter()
 	 */
-	protected static function validateReturnNonce(Session $session, array $data): void
-	{
-		$nonce = $session->get(static::$returnNonceSessionKey);
-
-		// Checkouts started before the nonce existed carry none
-		if (is_string($nonce) === false || $nonce === '') {
-			return;
+	protected static function currencyNumberFormatter(
+		string $locale
+	): NumberFormatter|null {
+		if ($formatter = static::$currencyFormatters[$locale] ?? null) {
+			return $formatter;
 		}
 
-		$given = $data[static::$returnNonceParameterName] ?? null;
-
-		if (is_string($given) === false || hash_equals($nonce, $given) === false) {
-			throw new Exception(
-				key: 'merx.invalidReturn',
-				httpCode: 400,
-			);
+		if (
+			extension_loaded('intl') !== true ||
+			class_exists('NumberFormatter') !== true
+		) {
+			return null; // @codeCoverageIgnore
 		}
 
-		$session->remove(static::$returnNonceSessionKey);
+		return static::$currencyFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::CURRENCY);
 	}
 
+	/**
+	 * Returns (and creates) a decimal number formatter for a given locale
+	 *
+	 * Used for prices without a currency. It keeps the two fraction digits of a
+	 * price, where `NumberFormatter::DECIMAL` would print 10.20 as `10.2`.
+	 */
+	protected static function decimalNumberFormatter(
+		string $locale
+	): NumberFormatter|null {
+		if ($formatter = static::$decimalFormatters[$locale] ?? null) {
+			return $formatter;
+		}
+
+		if (
+			extension_loaded('intl') !== true ||
+			class_exists('NumberFormatter') !== true
+		) {
+			return null; // @codeCoverageIgnore
+		}
+
+		$formatter = new NumberFormatter($locale, NumberFormatter::DECIMAL);
+		$formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, Price::roundingPrecision);
+		$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, Price::roundingPrecision);
+
+		return static::$decimalFormatters[$locale] = $formatter;
+	}
+
+	/**
+	 * Diagnostic details of an exception, for use in `Exception::$details`
+	 *
+	 * The API is reachable without authentication, so internals such as the file
+	 * path are only handed out while `debug` is on. The full exception is written
+	 * to the log either way.
+	 *
+	 * @return array Empty array unless Kirby’s `debug` option is enabled
+	 */
+	public static function exceptionDetails(\Throwable $ex): array
+	{
+		if (App::instance()->option('debug') !== true) {
+			return [];
+		}
+
+		return [
+			'message' => $ex->getMessage(),
+			'code' => $ex->getCode(),
+			'file' => $ex->getFile(),
+			'line' => $ex->getLine(),
+		];
+	}
+
+	/**
+	 * Removes the fields Merx sets itself from client submitted order data
+	 *
+	 * Kirby stores content keys in lower case, so `paymentComplete`, `PaymentComplete`
+	 * and `paymentcomplete` all address the same field and all have to be removed.
+	 *
+	 * @see Merx::$protectedOrderFields
+	 */
+	public static function filterOrderData(array $data): array
+	{
+		return array_filter(
+			$data,
+			fn ($key) => in_array(Str::lower((string)$key), static::$protectedOrderFields, true) === false,
+			ARRAY_FILTER_USE_KEY,
+		);
+	}
 
 	/**
 	 * Formats a currency number
@@ -201,6 +355,19 @@ class Merx
 		return (string)$number;
 	}
 
+	/**
+	 * Helper method to format IBAN
+	 *
+	 * @param $iban E.g. DE0000000000000000
+	 * @return string
+	 *                Space separated string with 4 characters per group.
+	 *                E.g. DE00 0000 0000 0000 00
+	 */
+	public static function formatIBAN(string $iban): string
+	{
+		$ibanArray = str_split($iban, 4);
+		return implode(' ', $ibanArray);
+	}
 
 	/**
 	 * Formats a float to percent
@@ -223,115 +390,22 @@ class Merx
 		return (string)$number;
 	}
 
-	/**
-	 * Calculates tax amount from gross price and tax rate
-	 *
-	 * E.g. calculateTax(200, 0.19) → 31.932773109243698
-	 *
-	 * @param float $grossPrice E.g. 200
-	 * @param float $taxRate Tax rate. E.g. 0.19
-	 */
-	public static function calculateTax(float $grossPrice, float $taxRate): float
+	private function getGateway(string $paymentMethod): array
 	{
-		return $grossPrice - ($grossPrice / (1 + $taxRate));
-	}
-
-
-	/**
-	 * Helper method to format IBAN
-	 *
-	 * @param string $iban E.g. DE0000000000000000
-	 * @return string
-	 * Space separated string with 4 characters per group.
-	 * E.g. DE00 0000 0000 0000 00
-	 */
-	public static function formatIBAN(string $iban): string
-	{
-		$ibanArray = str_split($iban, 4);
-		return implode(' ', $ibanArray);
-	}
-
-
-	/**
-	 * Returns (and creates) a currency number formatter for a given locale
-	 * Similar to I18n::decimalNumberFormatter()
-	 */
-	protected static function currencyNumberFormatter(
-		string $locale
-	): NumberFormatter|null {
-		if ($formatter = static::$currencyFormatters[$locale] ?? null) {
-			return $formatter;
+		if (!array_key_exists($paymentMethod, $this->gateways)) {
+			throw new \Exception('No gateway for payment method (' . $paymentMethod . ')');
 		}
-
-		if (
-			extension_loaded('intl') !== true ||
-			class_exists('NumberFormatter') !== true
-		) {
-			return null; // @codeCoverageIgnore
+		$gateway = $this->gateways[$paymentMethod];
+		if (!is_array($gateway)) {
+			$gateway = [];
 		}
-
-		return static::$currencyFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::CURRENCY);
-	}
-
-	/**
-	 * Returns (and creates) a percent number formatter for a given locale
-	 * Similar to I18n::decimalNumberFormatter()
-	 */
-	protected static function percentNumberFormatter(
-		string $locale
-	): NumberFormatter|null {
-		if ($formatter = static::$percentFormatters[$locale] ?? null) {
-			return $formatter;
+		if (!array_key_exists('initializePayment', $gateway)) {
+			$gateway['initializePayment'] = null;
 		}
-
-		if (
-			extension_loaded('intl') !== true ||
-			class_exists('NumberFormatter') !== true
-		) {
-			return null; // @codeCoverageIgnore
+		if (!array_key_exists('completePayment', $gateway)) {
+			$gateway['completePayment'] = null;
 		}
-
-		return static::$percentFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::PERCENT);
-	}
-
-	/**
-	 * Returns (and creates) a decimal number formatter for a given locale
-	 *
-	 * Used for prices without a currency. It keeps the two fraction digits of a
-	 * price, where `NumberFormatter::DECIMAL` would print 10.20 as `10.2`.
-	 */
-	protected static function decimalNumberFormatter(
-		string $locale
-	): NumberFormatter|null {
-		if ($formatter = static::$decimalFormatters[$locale] ?? null) {
-			return $formatter;
-		}
-
-		if (
-			extension_loaded('intl') !== true ||
-			class_exists('NumberFormatter') !== true
-		) {
-			return null; // @codeCoverageIgnore
-		}
-
-		$formatter = new NumberFormatter($locale, NumberFormatter::DECIMAL);
-		$formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, Price::roundingPrecision);
-		$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, Price::roundingPrecision);
-
-		return static::$decimalFormatters[$locale] = $formatter;
-	}
-
-	/**
-	 * Returns visitors cart.
-	 *
-	 * @param array $data Optional data to create a new cart.
-	 */
-	public function cart(?array $data = null): Cart
-	{
-		if ($data) {
-			return $this->cart = new Cart($data);
-		}
-		return $this->cart;
+		return $gateway;
 	}
 
 	private function getVirtualOrderPageFromSession(array $data = []): OrderPage
@@ -369,32 +443,12 @@ class Merx
 		return OrderPage::factory((array)$orderPageFromSession);
 	}
 
-
-	private function getGateway(string $paymentMethod): array
-	{
-		if (!array_key_exists($paymentMethod, $this->gateways)) {
-			throw new \Exception('No gateway for payment method (' . $paymentMethod . ')');
-		}
-		$gateway = $this->gateways[$paymentMethod];
-		if (!is_array($gateway)) {
-			$gateway = [];
-		}
-		if (!array_key_exists('initializePayment', $gateway)) {
-			$gateway['initializePayment'] = null;
-		}
-		if (!array_key_exists('completePayment', $gateway)) {
-			$gateway['completePayment'] = null;
-		}
-		return $gateway;
-	}
-
-
 	/**
 	 * Creates virtual OrderPage and validates it. Runs payment gateway’s initializeOrder function. Saves virtual OrderPage in user session.
 	 *
 	 * `initializePayment` of the payment gateway is called
 	 *
-	 * @param array $data Content of `OrderPage`. Must contain `paymentMethod`.
+	 * @param $data Content of `OrderPage`. Must contain `paymentMethod`.
 	 * @return string `api/shop/success` or result of `initializeOrder()` of `paymentMethod` gateway.
 	 */
 	public function initializeOrder(array $data): string
@@ -458,7 +512,7 @@ class Merx
 
 			// check for validation errors
 			$errors = $virtualOrderPage->errors();
-			if (sizeof($errors) > 0) {
+			if (count($errors) > 0) {
 				throw new Exception(
 					key: 'merx.fieldsvalidation',
 					httpCode: 400,
@@ -484,124 +538,9 @@ class Merx
 
 			return $redirect;
 		} catch (\Exception $ex) {
-			if (get_class($ex) !== 'Kirby\Exception\Exception') {
+			if ($ex::class !== 'Kirby\Exception\Exception') {
 				$ex = new Exception(
 					key: 'merx.initializeOrder',
-					httpCode: 500,
-					details: static::exceptionDetails($ex),
-					previous: $ex,
-				);
-			}
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log($ex, 'error');
-			}
-			throw $ex;
-		}
-	}
-
-
-	/**
-	 * Stores order page to file system
-	 *
-	 * Calls `completePayment` of the payment gateway
-	 * Deletes cart
-	 *
-	 * @param array $data Data required for payment gateway’s `completePayment()`
-	 */
-	public function createOrder(array $data = []): OrderPage
-	{
-		$kirby = App::instance();
-
-		try {
-			$virtualOrderPage = $this->getVirtualOrderPageFromSession($data);
-			$gateway = $this->getGateway($virtualOrderPage->paymentGateway()->toString());
-
-			$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
-
-			if (is_callable($gateway['completePayment'])) {
-				$gateway['completePayment']($virtualOrderPage, $data);
-			}
-
-			// Set to default language to make sure content is saved in default language
-			$currentLanguageCode = null;
-			if ($kirby->multilang()) {
-				$currentLanguageCode = $kirby->languageCode();
-				$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
-			}
-
-			// Creating the order requires admin permissions. The callback makes sure the
-			// impersonation is always reset, even when an error occurs. Without it the
-			// `kirby` super user would stay active for the rest of the request.
-			/** @var \Wagnerwagner\Merx\OrderPage $orderPage */
-			$orderPage = $kirby->impersonate('kirby', function () use ($kirby, $virtualOrderPage, $currentLanguageCode): OrderPage {
-				$ordersPage = $kirby->site()->ordersPage();
-				if ($ordersPage === null) {
-					// create orders page if it does not exist
-					$ordersPage = $kirby->site()->createChild([
-						'slug' => option('wagnerwagner.merx.ordersPage'),
-						'template' => 'orders',
-						'draft' => false,
-						'content' => [
-							'title' => t('field.orders'),
-						],
-					]);
-				}
-				$virtualOrderPageArray = $virtualOrderPage->toArray();
-				$virtualOrderPageArray['template'] = 'order';
-				$virtualOrderPageArray['model'] = 'order';
-				$virtualOrderPageArray['draft'] = false;
-				$virtualOrderPageArray['translations'] = null;
-
-				/** @var \Wagnerwagner\Merx\OrderPage $orderPage */
-				$orderPage = static::lockOrders($ordersPage, function () use ($ordersPage, $virtualOrderPage, $virtualOrderPageArray): OrderPage {
-					// `orderNumber` reads the orders through the virtual order page’s parent.
-					// They may have been read before the lock was taken, and another
-					// checkout may have written one since.
-					$virtualOrderPage->parentModel()->purge();
-
-					// Taken inside the lock, so the orders sort in the order they got their number
-					$now = new DateTimeImmutable();
-					$virtualOrderPageArray['content']['dateCreated'] = $now->format('c');
-					// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
-					$virtualOrderPageArray['content']['sortingNumber'] = (string)OrderPage::sortingNumberFromDate($now);
-
-					if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
-						$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
-					}
-
-					/** @var OrderPage $orderPage */
-					$orderPage = $ordersPage->createChild($virtualOrderPageArray);
-					return $orderPage->changeStatus('listed');
-				});
-
-				// Gateways which complete the payment right away — PayPal, Stripe
-				// Elements — create an order which is already paid. This is reported
-				// here rather than from `page.create:after`, where the hooks would run
-				// while the lock above holds back every other checkout.
-				//
-				// `apply()` rather than `trigger()`: a hook which updates the order
-				// leaves the object it was given behind as an outdated copy. Updating
-				// that copy again throws, and Kirby removes the order’s content from
-				// disk while it does. `apply()` hands every hook, and Merx, the current one.
-				if ($orderPage->paymentComplete()->toBool() === true) {
-					$orderPage = $kirby->apply('wagnerwagner.merx.paymentCompleted', ['orderPage' => $orderPage], 'orderPage');
-				}
-
-				// Reset language
-				$kirby->setCurrentLanguage($currentLanguageCode);
-
-				$this->cart->delete();
-
-				// `apply()`, like `paymentCompleted` above, so a caller gets the order
-				// with what the hooks wrote, not an outdated copy of it
-				return $kirby->apply('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage], 'orderPage');
-			});
-
-			return $orderPage;
-		} catch (\Exception $ex) {
-			if (get_class($ex) !== 'Kirby\Exception\Exception') {
-				$ex = new Exception(
-					key: 'merx.createOrder',
 					httpCode: 500,
 					details: static::exceptionDetails($ex),
 					previous: $ex,
@@ -645,60 +584,33 @@ class Merx
 	}
 
 	/**
-	 * Removes the fields Merx sets itself from client submitted order data
-	 *
-	 * Kirby stores content keys in lower case, so `paymentComplete`, `PaymentComplete`
-	 * and `paymentcomplete` all address the same field and all have to be removed.
-	 *
-	 * @see \Wagnerwagner\Merx\Merx::$protectedOrderFields
+	 * Returns (and creates) a percent number formatter for a given locale
+	 * Similar to I18n::decimalNumberFormatter()
 	 */
-	public static function filterOrderData(array $data): array
-	{
-		return array_filter(
-			$data,
-			fn ($key) => in_array(Str::lower((string)$key), static::$protectedOrderFields, true) === false,
-			ARRAY_FILTER_USE_KEY,
-		);
-	}
-
-	/**
-	 * Diagnostic details of an exception, for use in `Exception::$details`
-	 *
-	 * The API is reachable without authentication, so internals such as the file
-	 * path are only handed out while `debug` is on. The full exception is written
-	 * to the log either way.
-	 *
-	 * @return array Empty array unless Kirby’s `debug` option is enabled
-	 */
-	public static function exceptionDetails(\Throwable $ex): array
-	{
-		if (App::instance()->option('debug') !== true) {
-			return [];
+	protected static function percentNumberFormatter(
+		string $locale
+	): NumberFormatter|null {
+		if ($formatter = static::$percentFormatters[$locale] ?? null) {
+			return $formatter;
 		}
 
-		return [
-			'message' => $ex->getMessage(),
-			'code' => $ex->getCode(),
-			'file' => $ex->getFile(),
-			'line' => $ex->getLine(),
-		];
+		if (
+			extension_loaded('intl') !== true ||
+			class_exists('NumberFormatter') !== true
+		) {
+			return null; // @codeCoverageIgnore
+		}
+
+		return static::$percentFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::PERCENT);
 	}
 
 	/**
-	 * Gets all tax rules defined by tax rule option
+	 * Finds the pricing rule that applies to the current context
 	 */
-	public static function taxRules(array $options = []): TaxRules
+	public static function pricingRule(): PricingRule|null
 	{
-		return new TaxRules(option('wagnerwagner.merx.taxRules', $options));
-	}
-
-	/**
-	 * Gets the tax rule by its key
-	 */
-	public static function taxRule(null|string $key): ?TaxRule
-	{
-		$taxRules = self::taxRules();
-		return $taxRules->getRuleByKey($key);
+		$pricingRules = static::pricingRules();
+		return $pricingRules->findRule();
 	}
 
 	/**
@@ -710,21 +622,96 @@ class Merx
 	}
 
 	/**
-	 * Finds the pricing rule that applies to the current context
+	 * One-time nonce for the return url, created once per checkout
+	 *
+	 * `returnUrl()` is called more than once while a payment is set up, so the
+	 * nonce is kept in the session and reused until `initializeOrder()` starts
+	 * the next checkout.
 	 */
-	public static function pricingRule(): ?PricingRule
+	protected static function returnNonce(): string
 	{
-		$pricingRules = static::pricingRules();
-		return $pricingRules->findRule();
+		$kirby = App::instance();
+		$nonce = $kirby->session()->get(static::$returnNonceSessionKey);
+
+		if (is_string($nonce) === false || $nonce === '') {
+			$nonce = bin2hex(random_bytes(16));
+			$kirby->session()->set(static::$returnNonceSessionKey, $nonce);
+		}
+
+		return $nonce;
 	}
 
 	/**
-	 * Currency of the pricing rule
+	 * Url to be used to complete the payment
 	 *
-	 * @return string|null Three-letter ISO currency code, in uppercase. E.g. EUR or USD
+	 * Includes the session token, a one-time nonce and the language code (for
+	 * multilang pages)
+	 *
+	 * @return string e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6&language=de
 	 */
-	public static function currency(): ?string
+	public static function returnUrl(): string
 	{
-		return self::pricingRule()?->currency;
+		$kirby = App::instance();
+		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('wagnerwagner.merx.api.endpoint', 'shop') . '/success';
+		// Creating the nonce writes to the session, which starts it. Without that
+		// `token()` below is null until something else has written to it.
+		$nonce = static::returnNonce();
+
+		$url = Url::build([
+			'query' => [
+				Merx::$sessionTokenParameterName => $kirby->session()->token(),
+				Merx::$returnNonceParameterName => $nonce,
+				'language' => $kirby->multilang() ? $kirby->currentLanguage()->code() : null,
+			]
+		], $apiEndpint);
+		return $url;
+	}
+
+	/**
+	 * Gets the tax rule by its key
+	 */
+	public static function taxRule(string|null $key): TaxRule|null
+	{
+		$taxRules = self::taxRules();
+		return $taxRules->getRuleByKey($key);
+	}
+
+	/**
+	 * Gets all tax rules defined by tax rule option
+	 */
+	public static function taxRules(array $options = []): TaxRules
+	{
+		return new TaxRules(option('wagnerwagner.merx.taxRules', $options));
+	}
+
+	/**
+	 * Makes sure a return actually belongs to the checkout stored in $session
+	 *
+	 * `/api/shop/success` completes the payment on a GET request, and session
+	 * cookies are sent with a top-level GET even across sites. Without this a
+	 * link on any page could complete a pending payment of a visitor who
+	 * approved it at the provider but never returned.
+	 *
+	 * @throws Exception merx.invalidReturn when the nonce is missing or does not match
+	 */
+	protected static function validateReturnNonce(Session $session, array $data): void
+	{
+		$nonce = $session->get(static::$returnNonceSessionKey);
+
+		// Checkouts started before the nonce existed carry none
+		if (is_string($nonce) === false || $nonce === '') {
+			return;
+		}
+
+		$given = $data[static::$returnNonceParameterName] ?? null;
+
+		if (is_string($given) === false || hash_equals($nonce, $given) === false) {
+			throw new Exception(
+				key: 'merx.invalidReturn',
+				httpCode: 400,
+			);
+		}
+
+		$session->remove(static::$returnNonceSessionKey);
 	}
 }

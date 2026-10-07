@@ -1,12 +1,12 @@
 <?php
 
 use Kirby\Cms\App;
-use Wagnerwagner\Merx\Merx;
-use Wagnerwagner\Merx\Cart;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
 use Kirby\Plugin\Plugin;
+use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\License;
+use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\PricingRules;
 use Wagnerwagner\Merx\TaxRules;
 
@@ -98,12 +98,11 @@ App::plugin(
 			/**
 			 * Convert field to formatted price
 			 *
-			 * @param \Kirby\Content\Field $field Field
-			 * @param ?string $currency Three-letter ISO currency code. When null, currency from pricing rule is used
+			 * @param $field Field
+			 * @param $currency Three-letter ISO currency code. When null, currency from pricing rule is used
 			 * @see https://merx.wagnerwagner.de/guide/configuration/localization#number-formatting
 			 */
-			function (Field $field, string|null $currency = null): string
-			{
+			function (Field $field, string|null $currency = null): string {
 				return Merx::formatCurrency($field->toFloat(), $currency ?? Merx::pricingRule()?->currency);
 			},
 		],
@@ -118,13 +117,13 @@ App::plugin(
 				fn (): Cart => cart(),
 			'checkoutPage' =>
 				/** First page with template “checkout” */
-				fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
+				fn (): Page|null => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
 			'merx' =>
 				/** Current Merx instance */
 				fn (): Merx => merx(),
 			'ordersPage' =>
 				/** Parent page of all orders */
-				fn (): ?Page => /** @var \Kirby\Cms\Site $this */ $this->page(option('wagnerwagner.merx.ordersPage')),
+				fn (): Page|null => /** @var \Kirby\Cms\Site $this */ $this->page(option('wagnerwagner.merx.ordersPage')),
 			'pricingRules' =>
 				/** Pricing rules as defined in wagnerwagner.merx.pricingRules */
 				fn (): PricingRules => Merx::pricingRules(),
