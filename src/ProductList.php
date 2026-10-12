@@ -230,8 +230,10 @@ class ProductList extends Collection
 
     public function currencySymbol(): ?string
     {
-        $currency = $this->currency();
-        return option('ww.merx.currencySymbols', [])[$currency] ?? null;
+        if ($currency = $this->currency()) {
+            return option('ww.merx.currencySymbols', [])[$currency] ?? null;
+        }
+        return null;
     }
 
 
