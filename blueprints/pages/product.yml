@@ -8,7 +8,7 @@ tabs:
         type: prices
         width: 1/2
       taxRule:
-        label: field.taxRate
+        label: field.taxRule
         type: taxrules
         width: 1/2
   orders:
