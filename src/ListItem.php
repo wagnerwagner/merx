@@ -43,7 +43,7 @@ class ListItem extends Obj
 	 * @param $quantifier Multiplier for the price. Could be used when the item has a price per meter.
 	 * @param $type Type of ListItem. See ListItem::$allowedTypes for allowed types.
 	 * @param $data Additional data for the ListItem. Could be used to store additional information about the ListItem, e.g. a color variant.
-	 * @param $priceUpdate Will update prices and tax with recent prices and tax from page when $priceUpdate is true.
+	 * @param $refreshPrice Will update prices and tax with recent prices and tax from page when $refreshPrice is true.
 	 * @throws InvalidArgumentException when $type is not in ListItem::$allowedTypes.
 	 */
 	public function __construct(
@@ -55,7 +55,7 @@ class ListItem extends Obj
 		float|null $quantifier = null,
 		string|null $type = 'product',
 		array|null $data = null,
-		bool $priceUpdate = true,
+		bool $refreshPrice = true,
 	) {
 		$this->key = $key;
 		$this->title = $title;
@@ -76,7 +76,7 @@ class ListItem extends Obj
 			$this->price = new Price(price: $price);
 		} else {
 			// Update price by page’s definition
-			if ($this->page instanceof ProductPage && $priceUpdate === true) {
+			if ($this->page instanceof ProductPage && $refreshPrice === true) {
 				$this->price = $this->page->price(quantity: $quantity);
 			}
 		}
@@ -220,9 +220,9 @@ class ListItem extends Obj
 	}
 
 	/**
-	 * Updates the price according to the page’s price definition
+	 * Reads the price from the page’s price definition again
 	 */
-	public function updatePrice(): self
+	public function refreshPrice(): self
 	{
 		if ($this->page instanceof ProductPage) {
 			$this->price = $this->page->price(pricingRule: $this->price->pricingRule, quantity: $this->quantity);

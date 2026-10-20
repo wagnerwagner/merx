@@ -49,7 +49,7 @@ class OrderPage extends Page
 				quantity: $item['quantity'] ?? 1.0,
 				type: $item['type'] ?? null,
 				data: $item['data'] ?? null,
-				priceUpdate: false,
+				refreshPrice: false,
 			);
 			// The stored price already includes the quantifier. Passed to the
 			// constructor, it would be applied a second time.

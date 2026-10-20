@@ -81,7 +81,7 @@ class ProductList extends ListItems
 
 		// Update the price according to the quantity. Required for volume-based pricing.
 		if (!array_key_exists('price', $data) && $updatedItem->page instanceof ProductPage) {
-			$updatedItem->updatePrice();
+			$updatedItem->refreshPrice();
 		}
 
 		static::validateQuantity($updatedItem);
