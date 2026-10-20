@@ -603,11 +603,16 @@ class Merx
 	}
 
 	/**
-	 * Finds the pricing rule that applies to the current context
+	 * Gets a pricing rule by its key, or finds the one that applies to the current context
+	 *
+	 * @param $key Key of the pricing rule, or null for the pricing rule that applies to the current visitor
 	 */
-	public static function pricingRule(): PricingRule|null
+	public static function pricingRule(string|null $key = null): PricingRule|null
 	{
 		$pricingRules = static::pricingRules();
+		if ($key !== null) {
+			return $pricingRules->getRuleByKey($key);
+		}
 		return $pricingRules->findRule();
 	}
 

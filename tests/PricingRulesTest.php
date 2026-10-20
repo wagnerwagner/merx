@@ -76,6 +76,25 @@ class PricingRulesTest extends TestCase
 		$this->assertSame('default', Merx::pricingRule()->key);
 	}
 
+	/**
+	 * With a key, the rule is looked up rather than checked, as with `Merx::taxRule()`
+	 */
+	public function testRuleByKey(): void
+	{
+		$this->app([
+			'usd' => [
+				'currency' => 'USD',
+				'rule' => fn (): bool => false,
+			],
+			'default' => [
+				'currency' => 'EUR',
+			],
+		]);
+
+		$this->assertSame('usd', Merx::pricingRule('usd')->key);
+		$this->assertNull(Merx::pricingRule('chf'));
+	}
+
 	public function testDefaultIsTheFallbackWhenNotConfigured(): void
 	{
 		$this->app([
