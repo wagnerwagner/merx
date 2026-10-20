@@ -7,6 +7,7 @@ use Kirby\Plugin\Plugin;
 use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\License;
 use Wagnerwagner\Merx\Merx;
+use Wagnerwagner\Merx\PricesField;
 use Wagnerwagner\Merx\PricingRules;
 use Wagnerwagner\Merx\TaxRules;
 
@@ -61,8 +62,6 @@ App::plugin(
 			'wagnerwagner.merx.fields/list-items' => __DIR__ . '/blueprints/fields/list-items.yml',
 			'fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'wagnerwagner.merx.fields/price' => __DIR__ . '/blueprints/fields/price.yml',
-			'fields/prices' => __DIR__ . '/blueprints/fields/prices.yml',
-			'wagnerwagner.merx.fields/prices' => __DIR__ . '/blueprints/fields/prices.yml',
 			'fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
 			'wagnerwagner.merx.fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
 			'layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
@@ -93,6 +92,9 @@ App::plugin(
 			'en' => include __DIR__ . '/translations/en.php',
 		],
 		'hooks' => include __DIR__ . '/config/hooks.php',
+		'fields' => [
+			'prices' => PricesField::class,
+		],
 		'fieldMethods' => [
 			'toFormattedPrice' =>
 			/**

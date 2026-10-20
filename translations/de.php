@@ -40,7 +40,6 @@ return [
 	'field.personalData' => 'Persönliche Daten',
 	'field.price' => 'Preis',
 	'field.priceNet' => 'Preis (netto)',
-	'field.prices' => 'Preise',
 	'field.quantity' => 'Menge',
 	'field.tax' => 'Steuer',
 	'field.taxRate' => 'Steuerrate',

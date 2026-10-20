@@ -2,4 +2,4 @@ title: page.title.product
 
 fields:
   price:
-    extends: fields/price
+    type: prices

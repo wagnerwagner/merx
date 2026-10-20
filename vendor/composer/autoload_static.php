@@ -525,6 +525,7 @@ class ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d
         'Wagnerwagner\\Merx\\PayPalPayment' => __DIR__ . '/../..' . '/src/PayPalPayment.php',
         'Wagnerwagner\\Merx\\PaymentDetails' => __DIR__ . '/../..' . '/src/PaymentDetails.php',
         'Wagnerwagner\\Merx\\Price' => __DIR__ . '/../..' . '/src/Price.php',
+        'Wagnerwagner\\Merx\\PricesField' => __DIR__ . '/../..' . '/src/PricesField.php',
         'Wagnerwagner\\Merx\\PricingRule' => __DIR__ . '/../..' . '/src/PricingRule.php',
         'Wagnerwagner\\Merx\\PricingRules' => __DIR__ . '/../..' . '/src/PricingRules.php',
         'Wagnerwagner\\Merx\\ProductList' => __DIR__ . '/../..' . '/src/ProductList.php',

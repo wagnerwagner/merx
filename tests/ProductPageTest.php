@@ -58,7 +58,7 @@ class ProductPageTest extends TestCase
 		$this->product = new ProductPage([
 			'slug' => 'test-product',
 			'content' => [
-				'prices' => [
+				'price' => [
 					[
 						'price' => '19.99',
 						'pricingRule' => 'de'
@@ -97,6 +97,20 @@ class ProductPageTest extends TestCase
 		$this->assertInstanceOf(Price::class, $usdPrice);
 		$this->assertEquals(22.99, $usdPrice->price);
 		$this->assertEquals('USD', $usdPrice->currency);
+	}
+
+	public function testNoPriceForOtherRule(): void
+	{
+		$product = new ProductPage([
+			'slug' => 'euro-only',
+			'content' => [
+				'price' => [
+					['price' => '19.99', 'pricingRule' => 'de'],
+				],
+			],
+		]);
+
+		$this->assertNull($product->price('en'));
 	}
 
 	public function testPrices(): void

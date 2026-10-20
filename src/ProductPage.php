@@ -22,9 +22,6 @@ class ProductPage extends Page
 	/** Orders including this product */
 	protected Pages $orders;
 
-	/** Orders including this product */
-	protected Structure $prices;
-
 	/**
 	 * Max amount that could be added to ListItems
 	 */
@@ -77,9 +74,12 @@ class ProductPage extends Page
 	}
 
 	/**
-	 * Converts price content field to Price class
+	 * Price for a pricing rule
 	 *
-	 * @param $pricingRule Pricing rule to use, or its key as string, or null for default pricing rule
+	 * A price belongs to exactly one pricing rule. A product without a price
+	 * for the rule returns null, not the price of another rule.
+	 *
+	 * @param $pricingRule Pricing rule to use, or its key as string, or null for the pricing rule that applies to the current visitor
 	 * @param $quantity Quantity used for volume-based pricing
 	 * @return ?Price Price object, or null if no price is found
 	 */
@@ -87,8 +87,6 @@ class ProductPage extends Page
 	{
 		if (is_string($pricingRule)) {
 			$pricingRule = Merx::pricingRules()->getRuleByKey($pricingRule);
-		} elseif ($pricingRule instanceof PricingRule) {
-			$pricingRule = $pricingRule;
 		}
 		$pricingRule ??= Merx::pricingRule();
 
@@ -96,35 +94,28 @@ class ProductPage extends Page
 			return $this->prices()->first();
 		}
 
-		if ($this->prices()->count() > 0) {
-			return $this->prices()->findBy('pricingRule', $pricingRule);
-		}
-
-		// Fallback to price field
-		if ($this->content()->get('price')->exists()) {
-			$taxRule = Merx::taxRule($this->taxRule()->value());
-			return new Price(
-				price: $this->content()->get('price')->toFloat(),
-				pricingRule: Merx::pricingRules()->getRuleByKey('default'),
-				tax: $taxRule?->taxRate(),
-			);
-		}
-
-		return null;
+		return $this->prices()->findBy('pricingRule', $pricingRule);
 	}
 
 	/**
-	 * Returns a collection of Price objects created from the prices field
+	 * Returns a collection of Price objects created from the price field
+	 *
+	 * The field holds one price per pricing rule. A plain number, as in
+	 * `Price: 45`, is the price of the `default` pricing rule.
 	 *
 	 * @return Structure<Price>
 	 */
 	public function prices(): Structure
 	{
+		$field = $this->content()->get('price');
+		$rows = is_numeric($field->value())
+			? [['price' => $field->value(), 'pricingRule' => 'default']]
+			: $field->yaml();
+
 		$pricingRules = Merx::pricingRules();
 		$taxRule = Merx::taxRule($this->taxRule()->value());
-		/** @var Structure $prices */
-		$prices = $this->content()->prices()->toStructure();
-		return $this->prices ?? $prices
+
+		return Structure::factory($rows, ['parent' => $this])
 			->filter(fn ($item) => $item->price()->isNotEmpty())
 			->map(function ($item) use ($pricingRules, $taxRule) {
 				$pricingRule = $pricingRules->getRuleByKey($item->pricingRule()->value());

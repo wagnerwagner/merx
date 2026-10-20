@@ -490,6 +490,7 @@ return array(
     'Wagnerwagner\\Merx\\PayPalPayment' => $baseDir . '/src/PayPalPayment.php',
     'Wagnerwagner\\Merx\\PaymentDetails' => $baseDir . '/src/PaymentDetails.php',
     'Wagnerwagner\\Merx\\Price' => $baseDir . '/src/Price.php',
+    'Wagnerwagner\\Merx\\PricesField' => $baseDir . '/src/PricesField.php',
     'Wagnerwagner\\Merx\\PricingRule' => $baseDir . '/src/PricingRule.php',
     'Wagnerwagner\\Merx\\PricingRules' => $baseDir . '/src/PricingRules.php',
     'Wagnerwagner\\Merx\\ProductList' => $baseDir . '/src/ProductList.php',
