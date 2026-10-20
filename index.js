@@ -38,5 +38,8 @@ panel.plugin("wagnerwagner/merx", {
 				/>
 			`,
 		},
+		taxrules: {
+			extends: "k-select-field",
+		},
 	},
 });

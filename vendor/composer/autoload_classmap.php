@@ -499,4 +499,5 @@ return array(
     'Wagnerwagner\\Merx\\Tax' => $baseDir . '/src/Tax.php',
     'Wagnerwagner\\Merx\\TaxRule' => $baseDir . '/src/TaxRule.php',
     'Wagnerwagner\\Merx\\TaxRules' => $baseDir . '/src/TaxRules.php',
+    'Wagnerwagner\\Merx\\TaxRulesField' => $baseDir . '/src/TaxRulesField.php',
 );

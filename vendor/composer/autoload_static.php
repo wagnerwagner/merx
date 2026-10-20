@@ -534,6 +534,7 @@ class ComposerStaticInit5d2da0763bce75e9ca1335f3f4abd36d
         'Wagnerwagner\\Merx\\Tax' => __DIR__ . '/../..' . '/src/Tax.php',
         'Wagnerwagner\\Merx\\TaxRule' => __DIR__ . '/../..' . '/src/TaxRule.php',
         'Wagnerwagner\\Merx\\TaxRules' => __DIR__ . '/../..' . '/src/TaxRules.php',
+        'Wagnerwagner\\Merx\\TaxRulesField' => __DIR__ . '/../..' . '/src/TaxRulesField.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

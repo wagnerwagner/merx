@@ -11,7 +11,7 @@ use Kirby\Cms\Structure;
  *
  * Used in Cart, ProductList and ListItems.
  *
- * @method \Kirby\Content\Field taxRule() Content field: Key of the tax rule that applies to this product
+ * @method \Kirby\Content\Field taxRule() Content field: Key of the tax rule that applies to this product, `default` when empty
  *
  * @see https://merx.wagnerwagner.de/guide/getting-started/adding-products
  * @author Tobias Wolf
@@ -113,7 +113,7 @@ class ProductPage extends Page
 			: $field->yaml();
 
 		$pricingRules = Merx::pricingRules();
-		$taxRule = Merx::taxRule($this->taxRule()->value());
+		$taxRule = Merx::taxRule($this->taxRule()->or('default')->value());
 
 		return Structure::factory($rows, ['parent' => $this])
 			->filter(fn ($item) => $item->price()->isNotEmpty())

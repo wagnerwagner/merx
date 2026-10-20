@@ -19,9 +19,6 @@ use Kirby\Reflection\Attributes\Prop;
  */
 class PricesField extends ObjectField
 {
-	#[Prop(computed: true)]
-	protected array|string|null $label = 'field.price';
-
 	/**
 	 * Pricing rules set the currency, so prices are the same in every language
 	 */

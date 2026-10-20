@@ -79,12 +79,9 @@ class PricesFieldTest extends TestCase
 		$this->assertSame('USD', $fields['us']['after']);
 	}
 
-	public function testDefaults(): void
+	public function testNotTranslatable(): void
 	{
-		$field = $this->field();
-
-		$this->assertSame('Price', $field->label());
-		$this->assertFalse($field->translate());
+		$this->assertFalse($this->field()->translate());
 	}
 
 	public function testPlainNumberIsTheDefaultPrice(): void

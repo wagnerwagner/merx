@@ -10,6 +10,7 @@ use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\PricesField;
 use Wagnerwagner\Merx\PricingRules;
 use Wagnerwagner\Merx\TaxRules;
+use Wagnerwagner\Merx\TaxRulesField;
 
 @include_once __DIR__ . '/vendor/autoload.php';
 
@@ -62,8 +63,6 @@ App::plugin(
 			'wagnerwagner.merx.fields/list-items' => __DIR__ . '/blueprints/fields/list-items.yml',
 			'fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'wagnerwagner.merx.fields/price' => __DIR__ . '/blueprints/fields/price.yml',
-			'fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
-			'wagnerwagner.merx.fields/tax-rule' => __DIR__ . '/blueprints/fields/tax-rule.yml',
 			'layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
 			'wagnerwagner.merx.layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
 			'pages/checkout' => __DIR__ . '/blueprints/pages/checkout.yml',
@@ -94,6 +93,7 @@ App::plugin(
 		'hooks' => include __DIR__ . '/config/hooks.php',
 		'fields' => [
 			'prices' => PricesField::class,
+			'taxrules' => TaxRulesField::class,
 		],
 		'fieldMethods' => [
 			'toFormattedPrice' =>
@@ -130,7 +130,7 @@ App::plugin(
 				/** Pricing rules as defined in wagnerwagner.merx.pricingRules */
 				fn (): PricingRules => Merx::pricingRules(),
 			'taxRules' =>
-				/** Pricing rules as defined in wagnerwagner.merx.taxRules */
+				/** Tax rules as defined in wagnerwagner.merx.taxRules */
 				fn (): TaxRules => Merx::taxRules(),
 		],
 	],

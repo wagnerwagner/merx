@@ -95,7 +95,9 @@ class ProductPageTest extends TestCase
 
 		$usdPrice = $this->product->price('en');
 		$this->assertInstanceOf(Price::class, $usdPrice);
-		$this->assertEquals(22.99, $usdPrice->price);
+		// The `en` rule excludes tax, and the product has the `default` tax rule
+		$this->assertEquals(22.99, $usdPrice->priceNet);
+		$this->assertEquals(27.59, $usdPrice->price);
 		$this->assertEquals('USD', $usdPrice->currency);
 	}
 
