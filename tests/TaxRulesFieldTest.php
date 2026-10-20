@@ -23,11 +23,11 @@ class TaxRulesFieldTest extends TestCase
 		$this->app([
 			'default' => [
 				'name' => 'Standard rate',
-				'rule' => fn (): float => 0.19,
+				'rate' => 0.19,
 			],
 			'reduced' => [
 				'name' => 'Reduced rate',
-				'rule' => fn (): float => 0.07,
+				'rate' => 0.07,
 			],
 		]);
 	}
@@ -95,7 +95,7 @@ class TaxRulesFieldTest extends TestCase
 	{
 		$this->assertFalse($this->field()->isHidden());
 
-		$this->app(['default' => ['rule' => fn (): float => 0.19]]);
+		$this->app(['default' => ['rate' => 0.19]]);
 		$this->assertTrue($this->field()->isHidden());
 	}
 

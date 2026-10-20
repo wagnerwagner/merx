@@ -17,7 +17,7 @@ class TaxRuleTest extends TestCase
 		$rule = new TaxRule('vat', 'VAT', fn () => 0.19);
 		$this->assertEquals('vat', $rule->key);
 		$this->assertEquals('VAT', $rule->name);
-		$this->assertTrue(is_callable($rule->rule));
+		$this->assertTrue(is_callable($rule->rate));
 	}
 
 	public function testTaxRatePassesKirbyInstance()
@@ -36,7 +36,13 @@ class TaxRuleTest extends TestCase
 		$this->assertEquals(0.19, $rule->taxRate());
 	}
 
-	public function testTaxRateReturnsNullIfNoRule()
+	public function testTaxRateCanBeAFloat()
+	{
+		$rule = new TaxRule('vat', null, 0.19);
+		$this->assertSame(0.19, $rule->taxRate());
+	}
+
+	public function testTaxRateReturnsNullIfNoRate()
 	{
 		$rule = new TaxRule('no-tax');
 		$this->assertNull($rule->taxRate());
@@ -48,7 +54,7 @@ class TaxRuleTest extends TestCase
 			return 0.19;
 		});
 		$array = $rule->toArray();
-		$this->assertArrayHasKey('rule', $array);
-		$this->assertEquals(0.19, $array['rule']);
+		$this->assertArrayHasKey('rate', $array);
+		$this->assertEquals(0.19, $array['rate']);
 	}
 }

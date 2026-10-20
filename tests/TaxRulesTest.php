@@ -44,12 +44,23 @@ class TaxRulesTest extends TestCase
 	{
 		$taxRules = new TaxRules([
 			'reduced' => [
-				'rule' => fn (): float => 0.07,
+				'rate' => 0.07,
 			],
 		]);
 
 		$rule = $taxRules->getRuleByKey('reduced');
 		$this->assertSame('reduced', $rule->name);
 		$this->assertSame(0.07, $rule->taxRate());
+	}
+
+	public function testRateCanBeAFunction(): void
+	{
+		$taxRules = new TaxRules([
+			'reduced' => [
+				'rate' => fn (): float => 0.07,
+			],
+		]);
+
+		$this->assertSame(0.07, $taxRules->getRuleByKey('reduced')->taxRate());
 	}
 }

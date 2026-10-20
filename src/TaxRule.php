@@ -20,41 +20,41 @@ class TaxRule extends Obj
 	/** Readable name*/
 	public string $name = '';
 
-	/** @var callable|null */
-	public $rule = null;
+	/** @var float|callable|null */
+	public $rate = null;
 
 	/**
 	 * Creates a new tax rule
 	 *
 	 * @param $key The key of the tax rule
 	 * @param $name The name of the tax rule
-	 * @param $rule A function that returns the tax rate as float.
-	 *             E.g. 0.19 (for 19 %).
-	 *             It is passed the Kirby instance as first argument.
+	 * @param $rate The tax rate as float, e.g. 0.19 (for 19 %),
+	 *             or a function that returns it.
+	 *             The function is passed the Kirby instance as first argument.
 	 */
-	public function __construct(string $key, string|null $name = null, callable|null $rule = null)
+	public function __construct(string $key, string|null $name = null, float|callable|null $rate = null)
 	{
 		$this->key = $key;
 
 		$this->name = $name ?? $key;
 
-		$this->rule = $rule;
+		$this->rate = $rate;
 	}
 
 	/**
 	 * Gets the tax rate as decimal value
 	 *
 	 * @param $kirby The Kirby instance
-	 * @return float|null The tax rate (e.g. 0.19) or null if no rule is set
+	 * @return float|null The tax rate (e.g. 0.19) or null if no rate is set
 	 */
 	public function taxRate(App|null $kirby = null): float|null
 	{
-		if (is_callable($this->rule)) {
+		if (is_callable($this->rate)) {
 			$kirby ??= App::instance();
-			return call_user_func($this->rule, $kirby);
+			return call_user_func($this->rate, $kirby);
 		}
 
-		return null;
+		return $this->rate;
 	}
 
 	/**
@@ -63,7 +63,7 @@ class TaxRule extends Obj
 	public function toArray(): array
 	{
 		$array = parent::toArray();
-		$array['rule'] = $this->taxRate();
+		$array['rate'] = $this->taxRate();
 		return $array;
 	}
 }

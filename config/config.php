@@ -12,7 +12,7 @@ return [
 	'taxRules' => [
 		'default' => [
 			'name' => 'default',
-			'rule' => fn (App|null $kirby): float|null => null,
+			'rate' => null,
 		],
 	],
 	'pricingRules' => [

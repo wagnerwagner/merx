@@ -39,7 +39,7 @@ class TaxRules extends Collection
 			$this->append($key, new TaxRule(
 				key: $key,
 				name: $name,
-				rule: $option['rule'] ?? null,
+				rate: $option['rate'] ?? null,
 			));
 		}
 	}
