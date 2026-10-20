@@ -16,6 +16,7 @@ use Kirby\Reflection\Attributes\Prop;
  * @see https://merx.wagnerwagner.de/guide/configuration/currencies
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ * @internal
  */
 class PricesField extends ObjectField
 {

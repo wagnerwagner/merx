@@ -15,6 +15,7 @@ use Kirby\Reflection\Attributes\Prop;
  * @see https://merx.wagnerwagner.de/guide/configuration/taxes
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
+ * @internal
  */
 class TaxRulesField extends SelectField
 {
