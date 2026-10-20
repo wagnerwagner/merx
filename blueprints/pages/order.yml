@@ -18,6 +18,9 @@ options:
   duplicate: false
   move: false
   sort: false
+  list:
+    admin: true
+    "*": false
 
 buttons:
   open: true
