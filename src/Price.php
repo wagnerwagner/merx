@@ -182,7 +182,7 @@ class Price extends Obj
 	 *
 	 * @param $priceNet New net price (without tax)
 	 */
-	public function updateNetPrice(float $priceNet): self
+	public function updatePriceNet(float $priceNet): self
 	{
 		$this->priceNet = $priceNet;
 		$this->price = round($this->priceNet * (1 + $this->tax?->rate ?? 0), self::roundingPrecision);

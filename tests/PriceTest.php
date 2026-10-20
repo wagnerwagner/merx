@@ -123,4 +123,14 @@ final class PriceTest extends TestCase
 		$this->assertEquals('EUR', $price->currency);
 		$this->assertEquals('default', $price->pricingRule->key);
 	}
+
+	public function testUpdatePriceNet()
+	{
+		$price = new Price(119.0, 0.19, 'default', 'EUR');
+		$price->updatePriceNet(90.0);
+		$this->assertEquals(107.1, $price->price);
+		$this->assertEquals(90.0, $price->priceNet);
+		$this->assertEquals(17.1, $price->tax->price);
+		$this->assertEquals(0.19, $price->tax->rate);
+	}
 }
