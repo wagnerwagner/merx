@@ -12,7 +12,7 @@ fields:
       quantity: true
       price: true
       producttotal: true
-      paymentmethod: true
+      paymentgateway: true
       email: true
       city: true
       date:
