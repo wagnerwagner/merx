@@ -47,7 +47,7 @@ class TaxRule extends Obj
 	 * @param $kirby The Kirby instance
 	 * @return float|null The tax rate (e.g. 0.19) or null if no rate is set
 	 */
-	public function taxRate(App|null $kirby = null): float|null
+	public function rate(App|null $kirby = null): float|null
 	{
 		if (is_callable($this->rate)) {
 			$kirby ??= App::instance();
@@ -63,7 +63,7 @@ class TaxRule extends Obj
 	public function toArray(): array
 	{
 		$array = parent::toArray();
-		$array['rate'] = $this->taxRate();
+		$array['rate'] = $this->rate();
 		return $array;
 	}
 }

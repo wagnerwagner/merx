@@ -50,7 +50,7 @@ class TaxRulesTest extends TestCase
 
 		$rule = $taxRules->getRuleByKey('reduced');
 		$this->assertSame('reduced', $rule->name);
-		$this->assertSame(0.07, $rule->taxRate());
+		$this->assertSame(0.07, $rule->rate());
 	}
 
 	public function testRateCanBeAFunction(): void
@@ -61,6 +61,6 @@ class TaxRulesTest extends TestCase
 			],
 		]);
 
-		$this->assertSame(0.07, $taxRules->getRuleByKey('reduced')->taxRate());
+		$this->assertSame(0.07, $taxRules->getRuleByKey('reduced')->rate());
 	}
 }

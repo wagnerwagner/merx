@@ -122,7 +122,7 @@ class ProductPage extends Page
 				return new Price(
 					price: $item->price()->toFloat(),
 					pricingRule: $pricingRule,
-					tax: $taxRule?->taxRate(),
+					tax: $taxRule?->rate(),
 				);
 			});
 	}
