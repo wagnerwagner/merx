@@ -5,6 +5,7 @@ namespace Wagnerwagner\Merx\Tests;
 use Kirby\Cms\App;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\OrderPage;
 use Wagnerwagner\Merx\ProductList;
 
@@ -107,6 +108,24 @@ final class OrderPageCartTest extends TestCase
 		$cart = $this->cart("-\n  key: other-key\n  page: nice-shoes\n  type: product\n  price: 100\n");
 
 		$this->assertSame('nice-shoes', $cart->first()->page?->id());
+	}
+
+	/**
+	 * An order stores each price with its quantifier already applied, so
+	 * reading it back must not apply the quantifier again. The payment amount
+	 * is checked against this total.
+	 */
+	public function testQuantifierIsAppliedOnce(): void
+	{
+		$productList = new ProductList([
+			new ListItem(key: 'fabric', title: 'Fabric', price: 10.0, quantifier: 1.5, type: 'custom'),
+		]);
+
+		$cart = $this->cart($productList->toYaml());
+
+		$this->assertSame(15.0, $cart->first()->price?->price);
+		$this->assertSame(1.5, $cart->first()->quantifier);
+		$this->assertSame($productList->total()->price, $cart->total()?->price);
 	}
 
 	/**

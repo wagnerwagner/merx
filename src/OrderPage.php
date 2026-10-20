@@ -41,17 +41,20 @@ class OrderPage extends Page
 			$page = $page === '' ? null : $page;
 			$price = $item['price'] ?? null;
 			$price = $price ? new Price(price: $price, currency: $item['currency'] ?? null, tax: $item['taxrate'] ?? null) : null;
-			return new ListItem(
+			$listItem = new ListItem(
 				key: $item['key'],
 				title: $item['title'] ?? null,
 				page: $page,
 				price: $price,
 				quantity: $item['quantity'] ?? 1.0,
-				quantifier: $item['quantifier'] ?? null,
 				type: $item['type'] ?? null,
 				data: $item['data'] ?? null,
 				priceUpdate: false,
 			);
+			// The stored price already includes the quantifier. Passed to the
+			// constructor, it would be applied a second time.
+			$listItem->quantifier = $item['quantifier'] ?? null;
+			return $listItem;
 		}, $data);
 
 		return new ProductList($data);
