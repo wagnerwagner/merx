@@ -13,5 +13,5 @@ options:
   update: false
   duplicate: false
 
-sections:
-  orders: sections/orders
+fields:
+  orders: fields/orders

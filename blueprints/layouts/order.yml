@@ -2,17 +2,17 @@ tabs:
   overview:
     label: field.overview
     icon: draft
-    sections:
-      order: sections/order
+    fields:
+      order: fields/order
   payment:
     label: field.payment
     icon: credit-card
-    sections:
-      payment: sections/payment
+    fields:
+      payment: fields/payment
   personalData:
     label:
       en: Personal Data
       de: Persönliche Daten
     icon: user
-    sections:
-      personalData: sections/personal-data
+    fields:
+      personalData: fields/personal-data

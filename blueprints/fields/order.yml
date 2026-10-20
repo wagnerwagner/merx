@@ -1,4 +1,4 @@
-type: fields
+type: group
 fields:
   dateCreated:
     type: date

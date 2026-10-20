@@ -1,5 +1,5 @@
-headline: field.orders
-type: pages
+label: field.orders
+type: pagelist
 parent: site.ordersPage
 template: order
 flip: true
