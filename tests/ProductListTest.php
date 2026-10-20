@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Cms\App;
 use Kirby\Exception\Exception;
 use PHPUnit\Framework\TestCase;
 
@@ -153,6 +154,42 @@ final class ProductListTest extends TestCase
 			179.98,
 			$productList->total()->toFloat()
 		);
+	}
+
+	/**
+	 * A new quantity reads the price from the page again, for volume-based
+	 * pricing. The item’s quantifier has to apply to that price as well.
+	 */
+	public function testUpdateItemKeepsTheQuantifier(): void
+	{
+		$app = App::instance();
+		App::$enableWhoops = false;
+
+		new App([
+			'roots' => ['index' => __DIR__ . '/kirby'],
+			'site' => [
+				'children' => [
+					[
+						'slug' => 'fabric',
+						'template' => 'product',
+						'content' => ['title' => 'Fabric', 'price' => 10],
+					],
+				],
+			],
+		]);
+
+		try {
+			$productList = new ProductList();
+			$productList->add(['key' => 'fabric', 'page' => 'fabric', 'quantifier' => 1.5]);
+			$this->assertSame(15.0, $productList->first()->price->price);
+
+			$productList->updateItem('fabric', ['quantity' => 2.0]);
+			$this->assertSame(15.0, $productList->first()->price->price);
+			$this->assertSame(30.0, $productList->total()->price);
+		} finally {
+			App::$enableWhoops = true;
+			App::instance($app);
+		}
 	}
 
 	public function testUpdateItemEnforcesMaxQuantity(): void

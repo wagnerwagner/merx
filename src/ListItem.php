@@ -220,12 +220,15 @@ class ListItem extends Obj
 	}
 
 	/**
-	 * Reads the price from the page’s price definition again
+	 * Reads the price from the page’s price definition again, and applies the quantifier to it
 	 */
 	public function refreshPrice(): self
 	{
 		if ($this->page instanceof ProductPage) {
 			$this->price = $this->page->price(pricingRule: $this->price->pricingRule, quantity: $this->quantity);
+			if (is_float($this->quantifier)) {
+				$this->price = $this->price?->quantify($this->quantifier);
+			}
 		}
 		return $this;
 	}
