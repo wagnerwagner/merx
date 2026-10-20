@@ -1,5 +1,15 @@
 title: page.title.product
 
-fields:
-  price:
-    type: prices
+tabs:
+  content:
+    fields:
+      price:
+        label: field.price
+        type: prices
+        width: 1/2
+      taxRule:
+        label: field.taxRate
+        type: taxrules
+        width: 1/2
+  orders:
+    extends: tabs/orders

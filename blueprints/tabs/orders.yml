@@ -1,6 +1,6 @@
-sections:
+fields:
   orders:
-    type: pages
+    type: pagelist
     query: page.orders.flip
     layout: table
     create: false
