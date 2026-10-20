@@ -225,4 +225,13 @@ class OrderPage extends Page
 	{
 		return $this->cart()->total();
 	}
+
+	/**
+	 * Do not cache order pages, to ensure that all security
+	 * guards remain effective at all times.
+	 */
+	public function isCacheable(?VersionId $versionId = null): bool
+	{
+		return false;
+	}
 }
