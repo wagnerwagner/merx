@@ -80,6 +80,20 @@ class ProductPageTest extends TestCase
 		App::$enableWhoops = true;
 	}
 
+	public function testNoPriceForOtherRule(): void
+	{
+		$product = new ProductPage([
+			'slug' => 'euro-only',
+			'content' => [
+				'price' => [
+					['price' => '19.99', 'pricingRule' => 'de'],
+				],
+			],
+		]);
+
+		$this->assertNull($product->price('en'));
+	}
+
 	public function testOrders(): void
 	{
 		$orders = $this->product->orders();
@@ -99,20 +113,6 @@ class ProductPageTest extends TestCase
 		$this->assertEquals(22.99, $usdPrice->priceNet);
 		$this->assertEquals(27.59, $usdPrice->price);
 		$this->assertEquals('USD', $usdPrice->currency);
-	}
-
-	public function testNoPriceForOtherRule(): void
-	{
-		$product = new ProductPage([
-			'slug' => 'euro-only',
-			'content' => [
-				'price' => [
-					['price' => '19.99', 'pricingRule' => 'de'],
-				],
-			],
-		]);
-
-		$this->assertNull($product->price('en'));
 	}
 
 	public function testPrices(): void

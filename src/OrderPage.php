@@ -61,6 +61,15 @@ class OrderPage extends Page
 	}
 
 	/**
+	 * Do not cache order pages, to ensure that all security
+	 * guards remain effective at all times.
+	 */
+	public function isCacheable(VersionId|null $versionId = null): bool
+	{
+		return false;
+	}
+
+	/**
 	 * Records that this order was looked at
 	 *
 	 * The url is the only thing protecting an order, and it never expires. A
@@ -227,14 +236,5 @@ class OrderPage extends Page
 	public function total(): Price|null
 	{
 		return $this->cart()->total();
-	}
-
-	/**
-	 * Do not cache order pages, to ensure that all security
-	 * guards remain effective at all times.
-	 */
-	public function isCacheable(?VersionId $versionId = null): bool
-	{
-		return false;
 	}
 }

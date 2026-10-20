@@ -12,6 +12,30 @@ class TaxRulesFieldTest extends TestCase
 {
 	protected App $app;
 
+	protected function app(array $taxRules): App
+	{
+		return new App([
+			// The test site, so no site config adds tax rules of its own
+			'roots' => [
+				'index' => __DIR__,
+				'content' => __DIR__ . '/kirby/content',
+				'site' => __DIR__ . '/kirby/site',
+			],
+			'options' => [
+				'wagnerwagner.merx.taxRules' => $taxRules,
+			],
+		]);
+	}
+
+	protected function field(mixed $value = null): TaxRulesField
+	{
+		return new TaxRulesField(
+			model: new ProductPage(['slug' => 'test-product']),
+			name: 'taxRule',
+			value: $value,
+		);
+	}
+
 	public function setUp(): void
 	{
 		$this->app = App::instance();
@@ -38,46 +62,6 @@ class TaxRulesFieldTest extends TestCase
 		App::instance($this->app);
 	}
 
-	protected function app(array $taxRules): App
-	{
-		return new App([
-			// The test site, so no site config adds tax rules of its own
-			'roots' => [
-				'index' => __DIR__,
-				'content' => __DIR__ . '/kirby/content',
-				'site' => __DIR__ . '/kirby/site',
-			],
-			'options' => [
-				'wagnerwagner.merx.taxRules' => $taxRules,
-			],
-		]);
-	}
-
-	protected function field(mixed $value = null): TaxRulesField
-	{
-		return new TaxRulesField(
-			model: new ProductPage(['slug' => 'test-product']),
-			name: 'taxRule',
-			value: $value,
-		);
-	}
-
-	public function testOneOptionPerTaxRule(): void
-	{
-		$this->assertSame(
-			[
-				['disabled' => false, 'icon' => null, 'info' => null, 'text' => 'Standard rate', 'value' => 'default'],
-				['disabled' => false, 'icon' => null, 'info' => null, 'text' => 'Reduced rate', 'value' => 'reduced'],
-			],
-			$this->field()->options(),
-		);
-	}
-
-	public function testNotTranslatable(): void
-	{
-		$this->assertFalse($this->field()->translate());
-	}
-
 	public function testEmptyIsTheDefaultRule(): void
 	{
 		$this->assertSame('default', $this->field()->toFormValue());
@@ -99,9 +83,20 @@ class TaxRulesFieldTest extends TestCase
 		$this->assertTrue($this->field()->isHidden());
 	}
 
-	public function testUnknownRuleIsInvalid(): void
+	public function testNotTranslatable(): void
 	{
-		$this->assertArrayHasKey('option', $this->field('zero')->errors());
+		$this->assertFalse($this->field()->translate());
+	}
+
+	public function testOneOptionPerTaxRule(): void
+	{
+		$this->assertSame(
+			[
+				['disabled' => false, 'icon' => null, 'info' => null, 'text' => 'Standard rate', 'value' => 'default'],
+				['disabled' => false, 'icon' => null, 'info' => null, 'text' => 'Reduced rate', 'value' => 'reduced'],
+			],
+			$this->field()->options(),
+		);
 	}
 
 	public function testProductWithoutTaxRuleHasTheDefaultRate(): void
@@ -112,5 +107,10 @@ class TaxRulesFieldTest extends TestCase
 		]);
 
 		$this->assertSame(0.19, $product->tax()->rate);
+	}
+
+	public function testUnknownRuleIsInvalid(): void
+	{
+		$this->assertArrayHasKey('option', $this->field('zero')->errors());
 	}
 }

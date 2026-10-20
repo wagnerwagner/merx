@@ -178,14 +178,15 @@ class Price extends Obj
 	}
 
 	/**
-	 * Updates the net price and recalculates the price and tax
+	 * Updates the price and recalculates the net price and tax
 	 *
-	 * @param $priceNet New net price (without tax)
+	 * @param $price New gross price (including tax)
+	 * @see https://merx.wagnerwagner.de/cookbook/volume-based-pricing
 	 */
-	public function updatePriceNet(float $priceNet): self
+	public function updatePrice(float $price): self
 	{
-		$this->priceNet = $priceNet;
-		$this->price = round($this->priceNet * (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
+		$this->price = $price;
+		$this->priceNet = round($this->price / (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
 		if ($this->tax !== null) {
 			$this->tax = new Tax(
 				priceNet: $this->priceNet,
@@ -197,15 +198,14 @@ class Price extends Obj
 	}
 
 	/**
-	 * Updates the price and recalculates the net price and tax
+	 * Updates the net price and recalculates the price and tax
 	 *
-	 * @param $price New gross price (including tax)
-	 * @see https://merx.wagnerwagner.de/cookbook/volume-based-pricing
+	 * @param $priceNet New net price (without tax)
 	 */
-	public function updatePrice(float $price): self
+	public function updatePriceNet(float $priceNet): self
 	{
-		$this->price = $price;
-		$this->priceNet = round($this->price / (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
+		$this->priceNet = $priceNet;
+		$this->price = round($this->priceNet * (1 + $this->tax?->rate ?? 0), self::roundingPrecision);
 		if ($this->tax !== null) {
 			$this->tax = new Tax(
 				priceNet: $this->priceNet,

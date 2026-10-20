@@ -20,6 +20,12 @@ class TaxRuleTest extends TestCase
 		$this->assertTrue(is_callable($rule->rate));
 	}
 
+	public function testRateCanBeAFloat()
+	{
+		$rule = new TaxRule('vat', null, 0.19);
+		$this->assertSame(0.19, $rule->rate());
+	}
+
 	public function testRatePassesKirbyInstance()
 	{
 		$kirby = $this->createMock(App::class);
@@ -34,12 +40,6 @@ class TaxRuleTest extends TestCase
 	{
 		$rule = new TaxRule('vat', null, fn () => 0.19);
 		$this->assertEquals(0.19, $rule->rate());
-	}
-
-	public function testRateCanBeAFloat()
-	{
-		$rule = new TaxRule('vat', null, 0.19);
-		$this->assertSame(0.19, $rule->rate());
 	}
 
 	public function testRateReturnsNullIfNoRate()

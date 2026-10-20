@@ -14,31 +14,6 @@ final class PriceTest extends TestCase
 		$this->assertEquals('77.77', (string)$price);
 	}
 
-	public function testGrossPriceWithTaxIncluded()
-	{
-		$tax = new Tax(priceNet: 100.0, rate: 0.19, currency: 'EUR');
-		$price = new Price(119.0, $tax);
-
-		$this->assertEquals(119.0, $price->price);
-		$this->assertEquals(100.0, $price->priceNet);
-		$this->assertInstanceOf(Tax::class, $price->tax);
-		$this->assertEquals(0.19, $price->tax->rate);
-	}
-
-	public function testNetPriceWithTaxExcluded()
-	{
-		$pricingRule = $this->createMock(PricingRule::class);
-		$pricingRule->taxIncluded = false;
-		$pricingRule->currency = 'EUR';
-
-		$price = new Price(100.0, 0.19, $pricingRule);
-
-		$this->assertEquals(119.0, $price->price);
-		$this->assertEquals(100.0, $price->priceNet);
-		$this->assertInstanceOf(Tax::class, $price->tax);
-		$this->assertEquals(0.19, $price->tax->rate);
-	}
-
 	/**
 	 * A pricing rule given by its key brings its currency, as a rule object does
 	 */
@@ -68,6 +43,31 @@ final class PriceTest extends TestCase
 			App::$enableWhoops = true;
 			App::instance($app);
 		}
+	}
+
+	public function testGrossPriceWithTaxIncluded()
+	{
+		$tax = new Tax(priceNet: 100.0, rate: 0.19, currency: 'EUR');
+		$price = new Price(119.0, $tax);
+
+		$this->assertEquals(119.0, $price->price);
+		$this->assertEquals(100.0, $price->priceNet);
+		$this->assertInstanceOf(Tax::class, $price->tax);
+		$this->assertEquals(0.19, $price->tax->rate);
+	}
+
+	public function testNetPriceWithTaxExcluded()
+	{
+		$pricingRule = $this->createMock(PricingRule::class);
+		$pricingRule->taxIncluded = false;
+		$pricingRule->currency = 'EUR';
+
+		$price = new Price(100.0, 0.19, $pricingRule);
+
+		$this->assertEquals(119.0, $price->price);
+		$this->assertEquals(100.0, $price->priceNet);
+		$this->assertInstanceOf(Tax::class, $price->tax);
+		$this->assertEquals(0.19, $price->tax->rate);
 	}
 
 	public function testTaxIncludedReturnsNullIfNoPricingRule()

@@ -156,6 +156,36 @@ final class ProductListTest extends TestCase
 		);
 	}
 
+	public function testUpdateItemEnforcesMaxQuantity(): void
+	{
+		$productList = new ProductList();
+		$productList->add([
+			'key' => 'nice-shoes',
+			'price' => 99.99,
+			'data' => ['maxQuantity' => 2.0],
+		]);
+
+		$this->expectException(Exception::class);
+		$productList->updateItem('nice-shoes', ['quantity' => 3.0]);
+	}
+
+	public function testUpdateItemKeepsMaxQuantityWhenDataIsReplaced(): void
+	{
+		$productList = new ProductList();
+		$productList->add([
+			'key' => 'nice-shoes',
+			'price' => 99.99,
+			'data' => ['maxQuantity' => 2.0],
+		]);
+
+		// A client must not be able to lift its own limit by overwriting `data`.
+		$this->expectException(Exception::class);
+		$productList->updateItem('nice-shoes', [
+			'quantity' => 3.0,
+			'data' => ['maxQuantity' => 999.0],
+		]);
+	}
+
 	/**
 	 * A new quantity reads the price from the page again, for volume-based
 	 * pricing. The item’s quantifier has to apply to that price as well.
@@ -190,36 +220,6 @@ final class ProductListTest extends TestCase
 			App::$enableWhoops = true;
 			App::instance($app);
 		}
-	}
-
-	public function testUpdateItemEnforcesMaxQuantity(): void
-	{
-		$productList = new ProductList();
-		$productList->add([
-			'key' => 'nice-shoes',
-			'price' => 99.99,
-			'data' => ['maxQuantity' => 2.0],
-		]);
-
-		$this->expectException(Exception::class);
-		$productList->updateItem('nice-shoes', ['quantity' => 3.0]);
-	}
-
-	public function testUpdateItemKeepsMaxQuantityWhenDataIsReplaced(): void
-	{
-		$productList = new ProductList();
-		$productList->add([
-			'key' => 'nice-shoes',
-			'price' => 99.99,
-			'data' => ['maxQuantity' => 2.0],
-		]);
-
-		// A client must not be able to lift its own limit by overwriting `data`.
-		$this->expectException(Exception::class);
-		$productList->updateItem('nice-shoes', [
-			'quantity' => 3.0,
-			'data' => ['maxQuantity' => 999.0],
-		]);
 	}
 
 	public function testUpdateItemRejectsInfiniteQuantity(): void

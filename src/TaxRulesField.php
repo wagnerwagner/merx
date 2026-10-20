@@ -39,6 +39,14 @@ class TaxRulesField extends SelectField
 	}
 
 	/**
+	 * With a single tax rule there is nothing to pick
+	 */
+	public function isHidden(): bool
+	{
+		return Merx::taxRules()->count() === 1;
+	}
+
+	/**
 	 * Shows an empty tax rule as the `default` rule, when there is one
 	 *
 	 * Not in `fill()`, which Kirby skips for content without the field.
@@ -52,13 +60,5 @@ class TaxRulesField extends SelectField
 		}
 
 		return $value;
-	}
-
-	/**
-	 * With a single tax rule there is nothing to pick
-	 */
-	public function isHidden(): bool
-	{
-		return Merx::taxRules()->count() === 1;
 	}
 }

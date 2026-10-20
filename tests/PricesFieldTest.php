@@ -14,6 +14,15 @@ class PricesFieldTest extends TestCase
 	protected App $app;
 	protected ProductPage $product;
 
+	protected function field(mixed $value = null): PricesField
+	{
+		return new PricesField(
+			model: $this->product,
+			name: 'price',
+			value: $value ?? $this->product->content()->get('price')->value(),
+		);
+	}
+
 	public function setUp(): void
 	{
 		$this->app = App::instance();
@@ -61,23 +70,12 @@ class PricesFieldTest extends TestCase
 		App::instance($this->app);
 	}
 
-	protected function field(mixed $value = null): PricesField
+	public function testFormValueHasOnePricePerRule(): void
 	{
-		return new PricesField(
-			model: $this->product,
-			name: 'price',
-			value: $value ?? $this->product->content()->get('price')->value(),
+		$this->assertEquals(
+			['default' => 19.99, 'us' => 21.99],
+			$this->field()->toFormValue(),
 		);
-	}
-
-	public function testOneFieldPerPricingRule(): void
-	{
-		$fields = $this->field()->fields();
-
-		$this->assertSame(['default', 'us'], array_keys($fields));
-		$this->assertSame('number', $fields['us']['type']);
-		$this->assertSame('US dollar', $fields['us']['label']);
-		$this->assertSame('USD', $fields['us']['after']);
 	}
 
 	public function testHelpSaysWhetherTaxIsIncluded(): void
@@ -93,6 +91,16 @@ class PricesFieldTest extends TestCase
 		$this->assertFalse($this->field()->translate());
 	}
 
+	public function testOneFieldPerPricingRule(): void
+	{
+		$fields = $this->field()->fields();
+
+		$this->assertSame(['default', 'us'], array_keys($fields));
+		$this->assertSame('number', $fields['us']['type']);
+		$this->assertSame('US dollar', $fields['us']['label']);
+		$this->assertSame('USD', $fields['us']['after']);
+	}
+
 	public function testPlainNumberIsTheDefaultPrice(): void
 	{
 		$this->assertEquals(['default' => 45.0, 'us' => null], $this->field('45')->toFormValue());
@@ -105,12 +113,26 @@ class PricesFieldTest extends TestCase
 		$this->assertSame('EUR', $product->price('default')->currency);
 	}
 
-	public function testFormValueHasOnePricePerRule(): void
+	public function testProductReadsStoredPrices(): void
 	{
-		$this->assertEquals(
-			['default' => 19.99, 'us' => 21.99],
-			$this->field()->toFormValue(),
+		$field = $this->field()->submit(['default' => 18.5, 'us' => 20]);
+		$product = new ProductPage([
+			'slug' => 'stored-product',
+			'content' => ['price' => Yaml::encode($field->toStoredValue())],
+		]);
+
+		$this->assertSame(20.0, $product->price('US')->price);
+		$this->assertSame('USD', $product->price('US')->currency);
+	}
+
+	public function testRequired(): void
+	{
+		$form = new Form(
+			fields: ['price' => ['type' => 'prices', 'required' => true]],
+			model: $this->product,
 		);
+
+		$this->assertArrayHasKey('price', $form->submit(input: ['price' => []])->errors());
 	}
 
 	public function testStoredValueIsList(): void
@@ -133,27 +155,5 @@ class PricesFieldTest extends TestCase
 	public function testValidPricesHaveNoErrors(): void
 	{
 		$this->assertSame([], $this->field()->errors());
-	}
-
-	public function testRequired(): void
-	{
-		$form = new Form(
-			fields: ['price' => ['type' => 'prices', 'required' => true]],
-			model: $this->product,
-		);
-
-		$this->assertArrayHasKey('price', $form->submit(input: ['price' => []])->errors());
-	}
-
-	public function testProductReadsStoredPrices(): void
-	{
-		$field = $this->field()->submit(['default' => 18.5, 'us' => 20]);
-		$product = new ProductPage([
-			'slug' => 'stored-product',
-			'content' => ['price' => Yaml::encode($field->toStoredValue())],
-		]);
-
-		$this->assertSame(20.0, $product->price('US')->price);
-		$this->assertSame('USD', $product->price('US')->currency);
 	}
 }
