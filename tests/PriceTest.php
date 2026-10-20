@@ -1,5 +1,6 @@
 <?php
 
+use Kirby\Cms\App;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\Price;
 use Wagnerwagner\Merx\PricingRule;
@@ -36,6 +37,37 @@ final class PriceTest extends TestCase
 		$this->assertEquals(100.0, $price->priceNet);
 		$this->assertInstanceOf(Tax::class, $price->tax);
 		$this->assertEquals(0.19, $price->tax->rate);
+	}
+
+	/**
+	 * A pricing rule given by its key brings its currency, as a rule object does
+	 */
+	public function testCurrencyFromPricingRuleKey()
+	{
+		$app = App::instance();
+		App::$enableWhoops = false;
+
+		new App([
+			'roots' => [
+				'index' => __DIR__,
+				'content' => __DIR__ . '/kirby/content',
+				'site' => __DIR__ . '/kirby/site',
+			],
+			'options' => [
+				'wagnerwagner.merx.pricingRules' => [
+					'usd' => ['currency' => 'USD'],
+				],
+			],
+		]);
+
+		try {
+			$price = new Price(10.0, 0.19, 'usd');
+			$this->assertSame('usd', $price->pricingRule?->key);
+			$this->assertSame('USD', $price->currency);
+		} finally {
+			App::$enableWhoops = true;
+			App::instance($app);
+		}
 	}
 
 	public function testTaxIncludedReturnsNullIfNoPricingRule()

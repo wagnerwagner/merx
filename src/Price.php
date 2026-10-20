@@ -39,7 +39,7 @@ class Price extends Obj
 	 * new Price(100.0, 0.19, 'default', 'EUR');
 	 * new Price(100.0, new Tax(100.0, 0.19, 'EUR'));
 	 * new Price(100.0, new Tax(100.0, 0.19, 'EUR'), 'default', 'EUR');
-	 * new Price(100.0, new Tax(100.0, 0.19, 'USD'), new PricingRule('default', 'US', 'USD', true, false));
+	 * new Price(100.0, new Tax(100.0, 0.19, 'USD'), new PricingRule(key: 'us', currency: 'USD', taxIncluded: false));
 	 * ```
 	 *
 	 * @param $price Gross or net price, depending on tax inclusion, defined by $pricingRule (default is gross [tax included]).
@@ -64,7 +64,7 @@ class Price extends Obj
 			$this->pricingRule = $pricingRule;
 		}
 
-		$this->currency = $pricingRule?->currency ?? $currency;
+		$this->currency = $this->pricingRule?->currency ?? $currency;
 
 		$taxRate = ($tax instanceof Tax) ? $tax->rate : $tax;
 		$taxIncluded = $this->pricingRule?->taxIncluded ?? true;
