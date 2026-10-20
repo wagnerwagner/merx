@@ -22,7 +22,7 @@ return [
 	'error.merx.paypalError' => 'PayPal Fehler',
 	'error.merx.stripeError' => 'Stripe Fehler',
 	'error.merx.stripeWebhook' => 'Stripe-Webhook konnte nicht verifiziert werden.',
-	'field.checkout.info' => 'Auf dieser Seite werden die E-Mail und die Lieferadresse des Benutzers erfasst. Der Benutzer wird hier auch die Zahlungsmethode auswählen können.',
+	'field.checkout.info' => 'Auf dieser Seite werden E-Mail-Adresse und Lieferadresse erfasst. Hier wird auch die Zahlungsmethode ausgewählt.',
 	'field.checkout' => 'Kasse',
 	'field.currency' => 'Währung',
 	'field.id' => 'ID',

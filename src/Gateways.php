@@ -24,13 +24,13 @@ class Gateways
 	 *
 	 * @param $virtualOrderPage Virtual order page which may contain `stripePaymentIntentId` field (Credit Card Payment)
 	 * @param $data Additional data from get request which may contain `payment_intent` (Klarna Payment)
-	 * @throws Exception|ApiErrorException Kirby exception, when user canceled the payment, payment is incomplete or Stripe API Exception
+	 * @throws Exception|ApiErrorException Kirby exception, when the customer canceled the payment, payment is incomplete or Stripe API Exception
 	 *
 	 * @return OrderPage Virtual order page with updated payment details
 	 */
 	public static function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderPage
 	{
-		// Check if user canceled payment
+		// Check if the customer canceled the payment
 		if (isset($data['redirect_status']) ? $data['redirect_status'] === 'failed' : false) {
 			throw new Exception(
 				key: 'merx.paymentCanceled',
@@ -313,7 +313,7 @@ Gateways::$gateways['paypal'] = [
 		return $virtualOrderPage;
 	},
 	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		// check if user canceled payment
+		// check if the customer canceled the payment
 		if (!isset($data['PayerID'])) {
 			throw new Exception(
 				key: 'merx.paymentCanceled',

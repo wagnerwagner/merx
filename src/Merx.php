@@ -444,7 +444,7 @@ class Merx
 	}
 
 	/**
-	 * Creates virtual OrderPage and validates it. Runs the payment gateway’s `initializePayment` function. Saves virtual OrderPage in user session.
+	 * Creates virtual OrderPage and validates it. Runs the payment gateway’s `initializePayment` function. Saves virtual OrderPage in the customer’s session.
 	 *
 	 * @param $data Content of `OrderPage`. Must contain `paymentGateway`.
 	 * @return string The return URL, or the `redirect` that the gateway’s `initializePayment` set on the virtual order page.

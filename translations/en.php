@@ -22,7 +22,7 @@ return [
 	'error.merx.paypalError' => 'Error while completing PayPal payment',
 	'error.merx.stripeError' => 'Error while completing Stripe payment',
 	'error.merx.stripeWebhook' => 'Stripe webhook could not be verified.',
-	'field.checkout.info' => 'On this page, the user’s email and shipping address are collected. The user will also be able to select the payment method here.',
+	'field.checkout.info' => 'On this page, the customer’s email and shipping address are collected. The customer will also be able to select the payment method here.',
 	'field.checkout' => 'Checkout',
 	'field.currency' => 'Currency',
 	'field.id' => 'ID',

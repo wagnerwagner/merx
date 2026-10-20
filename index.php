@@ -115,7 +115,7 @@ App::plugin(
 		],
 		'siteMethods' => [
 			'cart' =>
-				/** Current cart of user */
+				/** Current cart of the visitor */
 				fn (): Cart => cart(),
 			'checkoutPage' =>
 				/** First page with template “checkout” */

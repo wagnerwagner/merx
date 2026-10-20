@@ -103,7 +103,7 @@ class Cart extends ProductList
 	}
 
 	/**
-	 * Removes Cart from user’s session.
+	 * Removes the cart from the visitor’s session.
 	 */
 	public function delete(): void
 	{
