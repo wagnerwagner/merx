@@ -36,6 +36,7 @@ class PricesField extends ObjectField
 				'label' => $rule->name,
 				'after' => $rule->currency,
 				'step' => 0.01,
+				'help' => $rule->taxIncluded ? 'field.price.taxIncluded' : 'field.price.taxExcluded',
 			];
 		}
 	}

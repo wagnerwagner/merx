@@ -39,6 +39,8 @@ return [
 	'field.paymentGateway' => 'Payment gateway',
 	'field.personalData' => 'Personal Data',
 	'field.price' => 'Price',
+	'field.price.taxExcluded' => 'Excluding tax',
+	'field.price.taxIncluded' => 'Including tax',
 	'field.priceNet' => 'Price (net)',
 	'field.quantity' => 'Quantity',
 	'field.tax' => 'Tax',

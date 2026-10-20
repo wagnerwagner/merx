@@ -38,6 +38,7 @@ class PricesFieldTest extends TestCase
 					'US' => [
 						'name' => 'US dollar',
 						'currency' => 'USD',
+						'taxIncluded' => false,
 					],
 				],
 			],
@@ -77,6 +78,14 @@ class PricesFieldTest extends TestCase
 		$this->assertSame('number', $fields['us']['type']);
 		$this->assertSame('US dollar', $fields['us']['label']);
 		$this->assertSame('USD', $fields['us']['after']);
+	}
+
+	public function testHelpSaysWhetherTaxIsIncluded(): void
+	{
+		$fields = $this->field()->fields();
+
+		$this->assertSame('<p>Including tax</p>', (string)$fields['default']['help']);
+		$this->assertSame('<p>Excluding tax</p>', (string)$fields['us']['help']);
 	}
 
 	public function testNotTranslatable(): void

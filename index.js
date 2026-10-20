@@ -14,7 +14,7 @@ panel.plugin("wagnerwagner/merx", {
 				// The rule’s field with this field’s label, help and state
 				numberField() {
 					const { fields, value, ...field } = this.$props;
-					const set = Object.entries(field).filter(([, prop]) => prop !== undefined);
+					const set = Object.entries(field).filter(([, prop]) => prop !== undefined && prop !== null);
 					return { ...fields[this.rule], ...Object.fromEntries(set) };
 				},
 			},

@@ -39,6 +39,8 @@ return [
 	'field.paymentGateway' => 'Zahlungsgateway',
 	'field.personalData' => 'Persönliche Daten',
 	'field.price' => 'Preis',
+	'field.price.taxExcluded' => 'Zuzüglich Steuern',
+	'field.price.taxIncluded' => 'Inklusive Steuern',
 	'field.priceNet' => 'Preis (netto)',
 	'field.quantity' => 'Menge',
 	'field.tax' => 'Steuer',
