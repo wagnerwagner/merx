@@ -1,4 +1,4 @@
-type: fields
+type: group
 fields:
   paymentGateway:
     label: field.paymentGateway
