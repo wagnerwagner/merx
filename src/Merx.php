@@ -140,6 +140,21 @@ class Merx
         return new OrderPage($session);
     }
 
+    /**
+     * Returns the virtual OrderPage as array for the session and `createChild()`
+     *
+     * Since Kirby 5 `toArray()` contains a full copy of the content for every language,
+     * which `createChild()` would save as additional content files (e.g. `order.en.txt`).
+     */
+    private function virtualOrderPageToArray(OrderPage $virtualOrderPage): array
+    {
+        $array = $virtualOrderPage->toArray();
+        if (version_compare(App::version(), '5.0.0', '>=')) {
+            unset($array['translations']);
+        }
+        return $array;
+    }
+
     private function getGateway(string $paymentMethod): array
     {
         if (!array_key_exists($paymentMethod, $this->gateways)) {
@@ -246,7 +261,7 @@ class Merx
             }
 
             // save virtual order page as session
-            kirby()->session()->set('ww.merx.virtualOrderPage', $virtualOrderPage->toArray());
+            kirby()->session()->set('ww.merx.virtualOrderPage', $this->virtualOrderPageToArray($virtualOrderPage));
 
             // run hook
             kirby()->trigger('ww.merx.initializePayment:after', compact('virtualOrderPage', 'redirect'));
@@ -309,7 +324,7 @@ class Merx
 
             $kirby->impersonate('kirby');
             $ordersPage = page(option('ww.merx.ordersPage', 'orders'));
-            $virtualOrderPageArray = $virtualOrderPage->toArray();
+            $virtualOrderPageArray = $this->virtualOrderPageToArray($virtualOrderPage);
             $virtualOrderPageArray['template'] = $virtualOrderPageArray['template']->name();
 
             /** @var OrderPage $orderPage */
