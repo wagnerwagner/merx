@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Cms\App;
 use Kirby\Exception\Exception;
 use Kirby\Data\Data;
 use OrderPage;
@@ -38,9 +39,15 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
     }
 
     // Update content of VirtualOrderPage
-    $virtualOrderPage->content()->update([
-        'paymentDetails' => (array)$paymentIntent->toArray(),
-    ]);
+    if (version_compare(App::version(), '5.0.0', '>=')) {
+        $virtualOrderPage->version('latest')->update([
+            'paymentDetails' => (array)$paymentIntent->toArray(),
+        ]);
+    } else {
+        $virtualOrderPage->content()->update([
+            'paymentDetails' => (array)$paymentIntent->toArray(),
+        ]);
+    }
 
     // Prepare meta data
     $metadata = [
@@ -61,10 +68,17 @@ function completeStripePayment(OrderPage $virtualOrderPage, array $data): OrderP
 
     // Update content of VirtualOrderPage
     if ($paymentIntent->status === 'succeeded') {
-        $virtualOrderPage->content()->update([
-            'paymentComplete' => true,
-            'paidDate' => date('c'),
-        ]);
+        if (version_compare(App::version(), '5.0.0', '>=')) {
+            $virtualOrderPage->version('latest')->update([
+                'paymentComplete' => true,
+                'paidDate' => date('c'),
+            ]);
+        } else {
+            $virtualOrderPage->content()->update([
+                'paymentComplete' => true,
+                'paidDate' => date('c'),
+            ]);
+        }
     }
 
     if (!in_array($paymentIntent->status, ['succeeded', 'processing'])) {
@@ -103,15 +117,23 @@ Gateways::$gateways['paypal'] = [
             }
         }
         $response = PayPalPayment::createPayPalPayment($virtualOrderPage);
-        $virtualOrderPage->content()->update([
-            'payPalOrderId' => $response['id'],
-            'redirect' => $response['links'][1]['href'],
-        ]);
+
+        if (version_compare(App::version(), '5.0.0', '>=')) {
+            $virtualOrderPage->version('latest')->update([
+                'payPalOrderId' => $response['id'],
+                'redirect' => $response['links'][1]['href'],
+            ]);
+        } else {
+            $virtualOrderPage->content()->update([
+                'payPalOrderId' => $response['id'],
+                'redirect' => $response['links'][1]['href'],
+            ]);
+        }
         return $virtualOrderPage;
     },
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
         // check if user canceled payment
-        if (!isset($data['paymentId']) && !isset($data['PayerID'])) {
+        if (!isset($data['PayerID'])) {
             throw new Exception([
                 'key' => 'merx.paymentCanceled',
                 'httpCode' => 400,
@@ -120,11 +142,19 @@ Gateways::$gateways['paypal'] = [
 
         // execute payment
         $paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
-        $virtualOrderPage->content()->update([
-            'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
-            'paymentComplete' => true,
-            'paidDate' => date('c'),
-        ]);
+        if (version_compare(App::version(), '5.0.0', '>=')) {
+            $virtualOrderPage->version('latest')->update([
+                'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
+                'paymentComplete' => true,
+                'paidDate' => date('c'),
+            ]);
+        } else {
+            $virtualOrderPage->content()->update([
+                'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
+                'paymentComplete' => true,
+                'paidDate' => date('c'),
+            ]);
+        }
         return $virtualOrderPage;
     }
 ];
@@ -162,9 +192,16 @@ Gateways::$gateways['sofort'] = [
             'return_url' => url(option('ww.merx.successPage')),
         ]);
 
-        $virtualOrderPage->content()->update([
-            'redirect' => $paymentIntent->next_action->redirect_to_url->url,
-        ]);
+        $redirect = $paymentIntent->next_action->redirect_to_url->url;
+        if (version_compare(App::version(), '5.0.0', '>=')) {
+            $virtualOrderPage->version('latest')->update([
+                'redirect' => $redirect,
+            ]);
+        } else {
+            $virtualOrderPage->content()->update([
+                'redirect' => $redirect,
+            ]);
+        }
         return $virtualOrderPage;
     },
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
@@ -197,9 +234,16 @@ Gateways::$gateways['klarna'] = [
             'return_url' => url(option('ww.merx.successPage')),
         ]);
 
-        $virtualOrderPage->content()->update([
-            'redirect' => $paymentIntent->next_action->redirect_to_url->url,
-        ]);
+        $redirect = $paymentIntent->next_action->redirect_to_url->url;
+        if (version_compare(App::version(), '5.0.0', '>=')) {
+            $virtualOrderPage->version('latest')->update([
+                'redirect' => $redirect,
+            ]);
+        } else {
+            $virtualOrderPage->content()->update([
+                'redirect' => $redirect,
+            ]);
+        }
         return $virtualOrderPage;
     },
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
@@ -226,9 +270,16 @@ Gateways::$gateways['ideal'] = [
             'return_url' => url(option('ww.merx.successPage')),
         ]);
 
-        $virtualOrderPage->content()->update([
-            'redirect' => $paymentIntent->next_action->redirect_to_url->url,
-        ]);
+        $redirect = $paymentIntent->next_action->redirect_to_url->url;
+        if (version_compare(App::version(), '5.0.0', '>=')) {
+            $virtualOrderPage->version('latest')->update([
+                'redirect' => $redirect,
+            ]);
+        } else {
+            $virtualOrderPage->content()->update([
+                'redirect' => $redirect,
+            ]);
+        }
         return $virtualOrderPage;
     },
     'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {

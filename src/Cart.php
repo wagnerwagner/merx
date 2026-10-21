@@ -22,7 +22,7 @@ class Cart extends ProductList
         if (count($data) === 0 && is_array($kirby->session()->get($this->sessionName))) {
             $data = $kirby->session()->get($this->sessionName);
         }
-        parent::__construct($data);
+        parent::__construct($data, true);
         kirby()->trigger('ww.merx.cart', ['cart' => $this]);
         $this->save();
     }
@@ -65,7 +65,7 @@ class Cart extends ProductList
             throw new Exception([
                 'key' => 'merx.cart.add',
                 'data' => [
-                    'id' => $cartItem['id'] ?? '',
+                    'id' => $cartItem['id'] ?? $args[0] ?? '',
                 ],
                 'details' => [
                     'message' => $ex->getMessage(),
@@ -87,9 +87,6 @@ class Cart extends ProductList
      */
     public function remove($key): static
     {
-        if ($this->caseSensitive !== true) {
-            $key = strtolower($key);
-        }
         parent::remove($key);
         $this->save();
         return $this;
@@ -188,8 +185,6 @@ class Cart extends ProductList
     /**
      * Could be used for ww.merx.paypal.purchaseUnits
      *
-     * @author  Tobias Wolf <tobias.wolf@wagnerwagner.de>
-     * @license https://wagnerwagner.de Copyright
      * @since 1.3.0
      *
      * @return array Returns an array in the format of PayPal’s purchase_unit_request

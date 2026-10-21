@@ -29,8 +29,6 @@ class StripePayment
     }
 
     /**
-     * summary
-     *
      * @see https://docs.stripe.com/webhooks#verify-official-libraries
      * @param string $payload Payload from stripe webhook
      *
@@ -46,7 +44,6 @@ class StripePayment
         }
 
         $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
-        $event = null;
 
         try {
             $event = \Stripe\Webhook::constructEvent(
@@ -55,9 +52,9 @@ class StripePayment
             return $event;
         } catch(\UnexpectedValueException $e) {
             // Invalid payload
-          http_response_code(400);
-          echo json_encode(['Error parsing payload: ' => $e->getMessage()]);
-          exit();
+            http_response_code(400);
+            echo json_encode(['Error parsing payload: ' => $e->getMessage()]);
+            exit();
         } catch(\Stripe\Exception\SignatureVerificationException $e) {
             // Invalid signature
             http_response_code(400);
