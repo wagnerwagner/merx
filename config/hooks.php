@@ -49,7 +49,6 @@ return [
 					$kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent): OrderPage {
 						return $orderPage->update([
 							'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
-							'paymentComplete' => true,
 							'datePaid' => date('c'),
 						]);
 					});
@@ -89,16 +88,16 @@ return [
 	},
 	'wagnerwagner.merx.initializeOrder:before' => function (Cart $cart, array $data): void {
 	},
-	'wagnerwagner.merx.paymentCompleted' => function (OrderPage $orderPage): void {
+	'wagnerwagner.merx.orderPaid' => function (OrderPage $orderPage): void {
 	},
 
 	/**
 	 * Orders which are paid after they have been created
 	 *
 	 * Gateways which are completed by the payment provider at a later point, e.g.
-	 * the Stripe webhook. Orders which are paid when they are created are
-	 * reported by `Merx::createOrder()`, and do not pass here a second time,
-	 * because their `paymentComplete` was already true before.
+	 * the Stripe webhook, and orders marked as paid in the Panel. Orders which
+	 * are paid when they are created are reported by `Merx::createOrder()`, and
+	 * do not pass here a second time, because they already had a `datePaid`.
 	 *
 	 * `apply()` rather than `trigger()`, for the same reason as in
 	 * `Merx::createOrder()`: every hook gets the current order. Returning it
@@ -108,8 +107,8 @@ return [
 	 */
 	'page.update:after' => function (Kirby\Cms\Page $newPage, Kirby\Cms\Page $oldPage) {
 		if ($newPage instanceof OrderPage && $oldPage instanceof OrderPage) {
-			if ($newPage->paymentComplete()->toBool() === true && $oldPage->paymentComplete()->toBool() === false) {
-				return $newPage->kirby()->apply('wagnerwagner.merx.paymentCompleted', ['orderPage' => $newPage], 'orderPage');
+			if ($newPage->isPaid() === true && $oldPage->isPaid() === false) {
+				return $newPage->kirby()->apply('wagnerwagner.merx.orderPaid', ['orderPage' => $newPage], 'orderPage');
 			}
 		}
 	},

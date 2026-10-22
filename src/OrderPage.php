@@ -15,8 +15,7 @@ use Kirby\Content\VersionId;
  *
  * @method \Kirby\Content\Field email() Content field: Customer’s email address
  * @method \Kirby\Content\Field dateCreated() Content field: Date, when the order was created (date('c')).
- * @method \Kirby\Content\Field datePaid() Content field: Date, when the order was paid (date('c')).
- * @method \Kirby\Content\Field paymentComplete() Content field: True, when payment is complete
+ * @method \Kirby\Content\Field datePaid() Content field: Date, when the order was paid (date('c')). Empty while the payment is pending.
  * @method \Kirby\Content\Field payPalOrderId() Content field: Id of the PayPal order, used to complete the payment when the customer returns
  * @method \Kirby\Content\Field stripePaymentIntentId() Content field: Id of the Stripe PaymentIntent, used to complete the payment when the customer returns
  * @method \Kirby\Content\Field redirect() Content field: URL the customer is redirected to
@@ -67,6 +66,16 @@ class OrderPage extends Page
 	public function isCacheable(VersionId|null $versionId = null): bool
 	{
 		return false;
+	}
+
+	/**
+	 * Whether the order is paid
+	 *
+	 * An order is paid once it has a `datePaid`.
+	 */
+	public function isPaid(): bool
+	{
+		return $this->datePaid()->isNotEmpty();
 	}
 
 	/**

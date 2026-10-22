@@ -143,8 +143,8 @@ Prefer the boring solution; the burden of proof is on the abstraction.
 
 ## Gotchas
 
-- **Kirby lower cases content keys.** `paymentComplete` and `PaymentComplete`
-  address the same field, so anything filtering client input must compare
+- **Kirby lower cases content keys.** `datePaid` and `DatePaid` address the
+  same field, so anything filtering client input must compare
   case-insensitively. See `Merx::$protectedOrderFields`.
 - **`paymentDetails` is a textarea field**, so its value must be a string.
   `Page::update()` runs through Kirby's form layer and throws

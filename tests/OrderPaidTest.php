@@ -9,12 +9,12 @@ use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
 
 /**
- * `wagnerwagner.merx.paymentCompleted` has to fire for both ways an order can
+ * `wagnerwagner.merx.orderPaid` has to fire for both ways an order can
  * be paid: right away, when the gateway completes the payment before the order
  * page is written, and later, when the payment provider reports the payment
  * through a webhook.
  */
-final class PaymentCompletedTest extends TestCase
+final class OrderPaidTest extends TestCase
 {
 	/** Whether the hooks write to the order they are given */
 	public bool $hooksUpdateOrder = false;
@@ -50,7 +50,7 @@ final class PaymentCompletedTest extends TestCase
 		App::$enableWhoops = false;
 
 		// `/tests/kirby` is ignored by git and used by the test Kirby instance
-		$this->root = __DIR__ . '/kirby/payment-completed';
+		$this->root = __DIR__ . '/kirby/order-paid';
 		Dir::remove($this->root);
 		Dir::make($this->root . '/content');
 
@@ -72,7 +72,6 @@ final class PaymentCompletedTest extends TestCase
 					'paid-right-away' => [
 						'completePayment' => function (OrderPage $virtualOrderPage): OrderPage {
 							$virtualOrderPage->version()->update([
-								'paymentComplete' => true,
 								'datePaid' => date('c'),
 							]);
 							return $virtualOrderPage;
@@ -81,7 +80,7 @@ final class PaymentCompletedTest extends TestCase
 				],
 			],
 			'hooks' => [
-				'wagnerwagner.merx.paymentCompleted' => [
+				'wagnerwagner.merx.orderPaid' => [
 					function (OrderPage $orderPage) use ($test): void {
 						$test->triggered[] = $orderPage->status();
 					},
@@ -133,6 +132,22 @@ final class PaymentCompletedTest extends TestCase
 		$this->assertStringContainsString('Shipped: true', file_get_contents($orderPage->root() . '/order.txt'));
 	}
 
+	/**
+	 * An order is paid once it has a `datePaid`, whoever sets it
+	 */
+	public function testIsPaid(): void
+	{
+		$this->assertTrue($this->checkout('paid-right-away')->isPaid());
+
+		$orderPage = $this->checkout('invoice');
+		$this->assertFalse($orderPage->isPaid());
+
+		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
+			'datePaid' => date('c'),
+		]));
+		$this->assertTrue($orderPage->isPaid());
+	}
+
 	public function testFiresForOrderWhichIsPaidLater(): void
 	{
 		$orderPage = $this->checkout('invoice');
@@ -140,7 +155,6 @@ final class PaymentCompletedTest extends TestCase
 		$this->assertSame([], $this->triggered);
 
 		$this->kirby->impersonate('kirby', fn () => $orderPage->update([
-			'paymentComplete' => true,
 			'datePaid' => date('c'),
 		]));
 
@@ -163,7 +177,6 @@ final class PaymentCompletedTest extends TestCase
 		// A Stripe webhook for a payment which was already completed updates the
 		// order a second time. It must not be reported as a second payment.
 		$this->kirby->impersonate('kirby', fn () => $orderPage->update([
-			'paymentComplete' => true,
 			'datePaid' => date('c'),
 		]));
 
@@ -201,7 +214,6 @@ final class PaymentCompletedTest extends TestCase
 		$orderPage = $this->kirby->page($orderPage->id());
 
 		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
-			'paymentComplete' => true,
 			'datePaid' => date('c'),
 		]));
 

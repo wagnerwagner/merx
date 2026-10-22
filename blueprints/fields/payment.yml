@@ -7,17 +7,16 @@ fields:
     width: 1/2
     disabled: true
     translate: false
-  paymentComplete:
-    label: field.paymentComplete
-    type: toggle
+  datePaid:
+    label: field.datePaid
+    help: field.datePaid.help
+    type: date
     width: 1/2
-    text:
-      -
-        en: "No"
-        de: Nein
-      -
-        en: "Yes"
-        de: Ja
+    time:
+      display: HH:mm:ss
+      step:
+        unit: second
+        size: 1
     translate: false
   paymentDetails:
     label: field.paymentDetails

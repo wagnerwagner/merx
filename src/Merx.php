@@ -34,7 +34,6 @@ class Merx
 		'datepaid',
 		'items',
 		'ordernumber',
-		'paymentcomplete',
 		'paymentdetails',
 		'paypalorderid',
 		'redirect',
@@ -192,8 +191,8 @@ class Merx
 				// leaves the object it was given behind as an outdated copy. Updating
 				// that copy again throws, and Kirby removes the order’s content from
 				// disk while it does. `apply()` hands every hook, and Merx, the current one.
-				if ($orderPage->paymentComplete()->toBool() === true) {
-					$orderPage = $kirby->apply('wagnerwagner.merx.paymentCompleted', ['orderPage' => $orderPage], 'orderPage');
+				if ($orderPage->isPaid() === true) {
+					$orderPage = $kirby->apply('wagnerwagner.merx.orderPaid', ['orderPage' => $orderPage], 'orderPage');
 				}
 
 				// Reset language
@@ -201,7 +200,7 @@ class Merx
 
 				$this->cart->delete();
 
-				// `apply()`, like `paymentCompleted` above, so a caller gets the order
+				// `apply()`, like `orderPaid` above, so a caller gets the order
 				// with what the hooks wrote, not an outdated copy of it
 				return $kirby->apply('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage], 'orderPage');
 			});
@@ -307,8 +306,8 @@ class Merx
 	/**
 	 * Removes the fields Merx sets itself from client submitted order data
 	 *
-	 * Kirby stores content keys in lower case, so `paymentComplete`, `PaymentComplete`
-	 * and `paymentcomplete` all address the same field and all have to be removed.
+	 * Kirby stores content keys in lower case, so `datePaid`, `DatePaid`
+	 * and `datepaid` all address the same field and all have to be removed.
 	 *
 	 * @see Merx::$protectedOrderFields
 	 */
@@ -466,7 +465,7 @@ class Merx
 			}, $data);
 
 			// Drop fields which Merx sets itself. Without this a client could submit
-			// `paymentComplete` and receive a paid order without paying.
+			// `datePaid` and receive a paid order without paying.
 			$data = static::filterOrderData($data);
 
 			// get cart

@@ -63,11 +63,11 @@ final class MerxTest extends TestCase
 
 	public function testFilterOrderDataIsCaseInsensitive(): void
 	{
-		// Kirby lower cases content keys, so these all address `paymentComplete`.
+		// Kirby lower cases content keys, so these all address `datePaid`.
 		$data = Merx::filterOrderData([
-			'PaymentComplete' => true,
-			'PAYMENTCOMPLETE' => true,
-			'paymentcomplete' => true,
+			'DatePaid' => '2026-01-01',
+			'DATEPAID' => '2026-01-01',
+			'datepaid' => '2026-01-01',
 			'PayPalOrderId' => 'forged',
 			'email' => 'customer@example.com',
 		]);
@@ -91,7 +91,6 @@ final class MerxTest extends TestCase
 	{
 		$data = Merx::filterOrderData([
 			'email' => 'customer@example.com',
-			'paymentComplete' => true,
 			'datePaid' => '2026-01-01T00:00:00+00:00',
 			'paymentDetails' => ['amount' => 1],
 			'orderNumber' => 9999,

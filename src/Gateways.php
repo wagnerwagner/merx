@@ -93,7 +93,6 @@ class Gateways
 		];
 
 		if ($paymentIntent->status === 'succeeded') {
-			$update['paymentComplete'] = true;
 			$update['datePaid'] = date('c');
 		}
 
@@ -342,7 +341,6 @@ Gateways::$gateways['paypal'] = [
 		// Mark the order as paid only when PayPal actually captured it.
 		if (Gateways::validatePayPalCapture($paypalResponse) === true) {
 			$virtualOrderPage->version()->update([
-				'paymentComplete' => true,
 				'datePaid' => date('c'),
 			]);
 		}

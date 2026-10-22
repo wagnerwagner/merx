@@ -10,7 +10,7 @@ use Wagnerwagner\Merx\OrderPage;
 
 /**
  * The Stripe webhook is the only path which completes a payment the customer’s
- * browser never confirms, e.g. SEPA debit. It writes `paymentComplete`, so it
+ * browser never confirms, e.g. SEPA debit. It writes `datePaid`, so it
  * has to be sure the event is about the order it is writing to.
  */
 final class StripeWebhookTest extends TestCase
@@ -37,7 +37,6 @@ final class StripeWebhookTest extends TestCase
 				'content' => [
 					'dateCreated' => date('c'),
 					'paymentGateway' => 'stripe-elements',
-					'paymentComplete' => false,
 					'stripePaymentIntentId' => $paymentIntentId,
 				],
 			]);
@@ -71,7 +70,7 @@ final class StripeWebhookTest extends TestCase
 	protected function isPaid(string $slug): bool
 	{
 		$this->kirby->site()->purge();
-		return page('orders/' . $slug)?->paymentComplete()->toBool() === true;
+		return page('orders/' . $slug)?->isPaid() === true;
 	}
 
 	public function setUp(): void
@@ -126,7 +125,7 @@ final class StripeWebhookTest extends TestCase
 		$this->kirby->site()->purge();
 		$page = page('orders/not-an-order');
 		$this->assertNotInstanceOf(OrderPage::class, $page);
-		$this->assertNull($page->content()->get('paymentComplete')->value());
+		$this->assertNull($page->content()->get('datePaid')->value());
 	}
 
 	public function testIgnoresAPaymentIntentWhichBelongsToAnotherOrder(): void
