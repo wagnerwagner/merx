@@ -47,10 +47,18 @@ return [
 
 					$kirby = $orderPage->kirby();
 					$kirby->impersonate('kirby', function () use ($orderPage, $paymentIntent): OrderPage {
-						return $orderPage->update([
+						$update = [
 							'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
-							'datePaid' => date('c'),
-						]);
+						];
+
+						// A card payment is paid when the order is created. Its webhook
+						// arrives later, Stripe retries it for up to three days, and it
+						// must not move the date the order was paid.
+						if ($orderPage->isPaid() === false) {
+							$update['datePaid'] = date('c');
+						}
+
+						return $orderPage->update($update);
 					});
 				} catch (Throwable $ex) {
 					$fail($ex->getMessage());

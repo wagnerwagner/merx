@@ -144,6 +144,24 @@ final class StripeWebhookTest extends TestCase
 		$this->assertTrue($this->isPaid('an-order'));
 	}
 
+	/**
+	 * A card payment is paid when the order is created, and its webhook
+	 * arrives later. It must not move the date the order was paid.
+	 */
+	public function testKeepsTheDateOfAnOrderWhichIsPaidAlready(): void
+	{
+		$orderPage = $this->createOrder('an-order', 'pi_matching');
+		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
+			'datePaid' => '2026-01-01 12:00:00',
+		]));
+		$datePaid = $orderPage->datePaid()->value();
+
+		$this->fireWebhook('pi_matching', 'an-order');
+
+		$this->kirby->site()->purge();
+		$this->assertSame($datePaid, page('orders/an-order')->datePaid()->value());
+	}
+
 	public function testSurvivesAnEventWithoutAnOrderUid(): void
 	{
 		$this->createOrder('an-order', 'pi_matching');
