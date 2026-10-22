@@ -61,11 +61,11 @@ class ProductPageTest extends TestCase
 				'price' => [
 					[
 						'price' => '19.99',
-						'pricingRule' => 'de'
+						'pricingRule' => 'de',
 					],
 					[
 						'price' => '22.99',
-						'pricingRule' => 'en'
+						'pricingRule' => 'en',
 					],
 				],
 			],

@@ -135,7 +135,7 @@ final class OrderPageCartTest extends TestCase
 	{
 		$cart = $this->cart(
 			"-\n  key: nice-shoes\n  page: nice-shoes\n  type: product\n  price: 100\n  currency: EUR\n" .
-			"-\n  key: note\n  page: ''\n  type: custom\n"
+			"-\n  key: note\n  page: ''\n  type: custom\n",
 		);
 
 		$this->assertSame(100.0, $cart->total()?->price);

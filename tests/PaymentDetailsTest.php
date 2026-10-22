@@ -135,7 +135,7 @@ final class PaymentDetailsTest extends TestCase
 	{
 		$this->assertSame(
 			['provider' => 'my-gateway'],
-			PaymentDetails::create(['provider' => 'my-gateway', 'id' => null, 'status' => null])
+			PaymentDetails::create(['provider' => 'my-gateway', 'id' => null, 'status' => null]),
 		);
 	}
 
@@ -206,7 +206,7 @@ final class PaymentDetailsTest extends TestCase
 	public function testStripeRecordDropsPaymentMethodPersonalData(): void
 	{
 		$details = PaymentDetails::fromStripePaymentIntent(
-			self::stripePaymentIntent(['payment_method' => self::stripeCardPaymentMethod()])
+			self::stripePaymentIntent(['payment_method' => self::stripeCardPaymentMethod()]),
 		);
 		$serialized = json_encode($details);
 
@@ -230,7 +230,7 @@ final class PaymentDetailsTest extends TestCase
 	{
 		$this->assertSame(
 			['provider', 'id', 'status', 'amount', 'currency', 'created', 'reference', 'livemode'],
-			array_keys(PaymentDetails::fromStripePaymentIntent(self::stripePaymentIntent()))
+			array_keys(PaymentDetails::fromStripePaymentIntent(self::stripePaymentIntent())),
 		);
 	}
 
@@ -239,7 +239,7 @@ final class PaymentDetailsTest extends TestCase
 		$this->stubStripe(200, self::stripeCardPaymentMethod());
 
 		$details = PaymentDetails::fromStripePaymentIntent(
-			self::stripePaymentIntent(['payment_method' => 'pm_1ABCdef'])
+			self::stripePaymentIntent(['payment_method' => 'pm_1ABCdef']),
 		);
 
 		$this->assertSame(['get https://api.stripe.com/v1/payment_methods/pm_1ABCdef'], $this->stripe->requests);
@@ -264,7 +264,7 @@ final class PaymentDetailsTest extends TestCase
 		]]);
 
 		$details = PaymentDetails::fromStripePaymentIntent(
-			self::stripePaymentIntent(['payment_method' => 'pm_1ABCdef'])
+			self::stripePaymentIntent(['payment_method' => 'pm_1ABCdef']),
 		);
 
 		$this->assertSame('pi_3ABCdef', $details['id']);
@@ -275,7 +275,7 @@ final class PaymentDetailsTest extends TestCase
 	public function testStripeRecordTakesChargeIdFromExpandedCharge(): void
 	{
 		$details = PaymentDetails::fromStripePaymentIntent(
-			self::stripePaymentIntent(['latest_charge' => ['id' => 'ch_expanded', 'object' => 'charge']])
+			self::stripePaymentIntent(['latest_charge' => ['id' => 'ch_expanded', 'object' => 'charge']]),
 		);
 
 		$this->assertSame('ch_expanded', $details['reference']);
@@ -284,7 +284,7 @@ final class PaymentDetailsTest extends TestCase
 	public function testStripeRecordTakesMethodFromExpandedPaymentMethod(): void
 	{
 		$details = PaymentDetails::fromStripePaymentIntent(
-			self::stripePaymentIntent(['payment_method' => self::stripeCardPaymentMethod()])
+			self::stripePaymentIntent(['payment_method' => self::stripeCardPaymentMethod()]),
 		);
 
 		$this->assertSame([], $this->stripe->requests);

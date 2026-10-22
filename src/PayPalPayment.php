@@ -53,9 +53,9 @@ class PayPalPayment
 			'purchase_units' => $purchaseUnits,
 			'payment_source' => [
 				'paypal' => [
-					'experience_context' => $applicationContext
-				]
-			]
+					'experience_context' => $applicationContext,
+				],
+			],
 		];
 
 		$endpoint = '/v2/checkout/orders';

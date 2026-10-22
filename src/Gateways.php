@@ -346,7 +346,7 @@ Gateways::$gateways['paypal'] = [
 		}
 
 		return $virtualOrderPage;
-	}
+	},
 ];
 
 Gateways::$gateways['stripe-elements'] = [

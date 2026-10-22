@@ -18,7 +18,7 @@ class ListItemTest extends TestCase
 			key: $key,
 			title: $title,
 			quantity: $quantity,
-			price: $price
+			price: $price,
 		);
 
 		$this->assertSame($key, $listItem->key);
@@ -59,7 +59,7 @@ class ListItemTest extends TestCase
 		$listItem = new ListItem(
 			key: $key,
 			price: $price,
-			quantity: $quantity
+			quantity: $quantity,
 		);
 
 		$totalPrice = $listItem->total();

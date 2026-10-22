@@ -86,7 +86,7 @@ class Logger
 
 			F::append(
 				$dir . '/' . $filename,
-				'[' . date('c') . '] ' . $level . ' ' . $content . "\n"
+				'[' . date('c') . '] ' . $level . ' ' . $content . "\n",
 			);
 		} catch (Throwable $ex) {
 			if ($kirby->option('debug') === true) {

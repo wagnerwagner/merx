@@ -29,7 +29,7 @@ class ProductList extends ListItems
 	 * @see ListItem
 	 */
 	public function add(
-		string|array|ListItem $data
+		string|array|ListItem $data,
 	): static {
 		$listItem = ListItem::factory($data);
 

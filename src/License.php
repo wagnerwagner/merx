@@ -15,7 +15,7 @@ use Kirby\Toolkit\Str;
 class License extends \Kirby\Plugin\License
 {
 	public function __construct(
-		protected Plugin $plugin
+		protected Plugin $plugin,
 	) {
 		if ($this->licenseKey() !== null) {
 
@@ -26,7 +26,7 @@ class License extends \Kirby\Plugin\License
 					value: 'valid',
 					label: $this->privateLicense(),
 					theme: 'positive',
-					icon: 'check'
+					icon: 'check',
 				);
 			} else {
 				// Masked: the Panel shows this to every user who can see plugins
@@ -36,7 +36,7 @@ class License extends \Kirby\Plugin\License
 					value: 'missing',
 					theme: 'negative',
 					label: 'Check your license key',
-					icon: 'alert'
+					icon: 'alert',
 				);
 			}
 		} else {
@@ -47,7 +47,7 @@ class License extends \Kirby\Plugin\License
 				value: 'valid',
 				label: 'Get a license please',
 				theme: 'love',
-				icon: 'key'
+				icon: 'key',
 			);
 		}
 	}

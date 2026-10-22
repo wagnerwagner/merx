@@ -22,5 +22,5 @@ return [
 				'clientSecret' => $paymentIntent->client_secret,
 			];
 		},
-	]
+	],
 ];

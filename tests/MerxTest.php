@@ -10,7 +10,7 @@ final class MerxTest extends TestCase
 	{
 		$this->assertEquals(
 			31.932773109243698,
-			Merx::calculateTax(200, 0.19)
+			Merx::calculateTax(200, 0.19),
 		);
 	}
 
@@ -19,7 +19,7 @@ final class MerxTest extends TestCase
 		$merx = new Merx();
 		$this->assertInstanceOf(
 			Cart::class,
-			$merx->cart()
+			$merx->cart(),
 		);
 	}
 
@@ -57,7 +57,7 @@ final class MerxTest extends TestCase
 	{
 		$this->assertSame(
 			[],
-			Merx::exceptionDetails(new \RuntimeException('internal failure'))
+			Merx::exceptionDetails(new \RuntimeException('internal failure')),
 		);
 	}
 
@@ -109,7 +109,7 @@ final class MerxTest extends TestCase
 	{
 		$this->assertEquals(
 			'€10.20',
-			Merx::formatCurrency(10.20, 'EUR')
+			Merx::formatCurrency(10.20, 'EUR'),
 		);
 	}
 
@@ -118,7 +118,7 @@ final class MerxTest extends TestCase
 		setlocale(LC_ALL, 'en_US');
 		$this->assertEquals(
 			'$11.99',
-			Merx::formatCurrency(11.99, 'USD')
+			Merx::formatCurrency(11.99, 'USD'),
 		);
 	}
 
@@ -130,7 +130,7 @@ final class MerxTest extends TestCase
 		// German writes the symbol last, separated by a no-break space
 		$this->assertEquals(
 			"10,20\u{00A0}€",
-			Merx::formatCurrency(10.20, 'EUR')
+			Merx::formatCurrency(10.20, 'EUR'),
 		);
 	}
 
@@ -138,7 +138,7 @@ final class MerxTest extends TestCase
 	{
 		$this->assertEquals(
 			'DE89 3704 0044 0532 0130 00',
-			Merx::formatIBAN('DE89370400440532013000')
+			Merx::formatIBAN('DE89370400440532013000'),
 		);
 	}
 
@@ -164,7 +164,7 @@ final class MerxTest extends TestCase
 		// `returnUrl()` is called more than once while a payment is set up
 		$this->assertSame(
 			parse_url(Merx::returnUrl(), PHP_URL_QUERY),
-			parse_url(Merx::returnUrl(), PHP_URL_QUERY)
+			parse_url(Merx::returnUrl(), PHP_URL_QUERY),
 		);
 	}
 }

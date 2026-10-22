@@ -181,7 +181,7 @@ class OrderPage extends Page
 	public function render(
 		array $data = [],
 		$contentType = 'html',
-		VersionId|string|null $versionId = null
+		VersionId|string|null $versionId = null,
 	): string {
 		$response = $this->kirby()->response();
 		$response->header('Cache-Control', 'private, no-store');

@@ -237,7 +237,7 @@ class Merx
 	 * Similar to I18n::decimalNumberFormatter()
 	 */
 	protected static function currencyNumberFormatter(
-		string $locale
+		string $locale,
 	): NumberFormatter|null {
 		if ($formatter = static::$currencyFormatters[$locale] ?? null) {
 			return $formatter;
@@ -260,7 +260,7 @@ class Merx
 	 * price, where `NumberFormatter::DECIMAL` would print 10.20 as `10.2`.
 	 */
 	protected static function decimalNumberFormatter(
-		string $locale
+		string $locale,
 	): NumberFormatter|null {
 		if ($formatter = static::$decimalFormatters[$locale] ?? null) {
 			return $formatter;
@@ -585,7 +585,7 @@ class Merx
 	 * Similar to I18n::decimalNumberFormatter()
 	 */
 	protected static function percentNumberFormatter(
-		string $locale
+		string $locale,
 	): NumberFormatter|null {
 		if ($formatter = static::$percentFormatters[$locale] ?? null) {
 			return $formatter;
@@ -664,7 +664,7 @@ class Merx
 				Merx::$sessionTokenParameterName => $kirby->session()->token(),
 				Merx::$returnNonceParameterName => $nonce,
 				'language' => $kirby->multilang() ? $kirby->currentLanguage()->code() : null,
-			]
+			],
 		], $apiEndpint);
 		return $url;
 	}

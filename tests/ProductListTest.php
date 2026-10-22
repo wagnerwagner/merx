@@ -23,17 +23,17 @@ final class ProductListTest extends TestCase
 
 		$this->assertEquals(
 			99.99,
-			$productList->first()->price()->toFloat()
+			$productList->first()->price()->toFloat(),
 		);
 		$this->assertEquals(
 			99.99,
-			$productList->total()->toFloat()
+			$productList->total()->toFloat(),
 		);
 
 		$productList->add(['key' => 'nice-socks', 'price' => 10]);
 		$this->assertEquals(
 			109.99,
-			$productList->total()->toFloat()
+			$productList->total()->toFloat(),
 		);
 	}
 
@@ -146,13 +146,13 @@ final class ProductListTest extends TestCase
 		$productList->updateItem('nice-shoes', ['price' => new Price(89.99), 'tax' => 10]);
 		$this->assertEquals(
 			89.99,
-			$productList->total()->toFloat()
+			$productList->total()->toFloat(),
 		);
 
 		$productList->updateItem('nice-shoes', ['quantity' => 2]);
 		$this->assertEquals(
 			179.98,
-			$productList->total()->toFloat()
+			$productList->total()->toFloat(),
 		);
 	}
 

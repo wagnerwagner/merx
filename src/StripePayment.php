@@ -55,7 +55,7 @@ class StripePayment
 			return Webhook::constructEvent(
 				$payload,
 				$sig_header,
-				$endpoint_secret
+				$endpoint_secret,
 			);
 		} catch (\UnexpectedValueException | SignatureVerificationException $ex) {
 			// Invalid payload or invalid signature

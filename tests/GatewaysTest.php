@@ -126,7 +126,7 @@ final class GatewaysTest extends TestCase
 	public function testCapturedPaymentIsPaid(): void
 	{
 		$this->assertTrue(
-			Gateways::validatePayPalCapture(self::payPalResponse('COMPLETED'))
+			Gateways::validatePayPalCapture(self::payPalResponse('COMPLETED')),
 		);
 	}
 
@@ -183,7 +183,7 @@ final class GatewaysTest extends TestCase
 		$this->expectException(Exception::class);
 		Gateways::validatePayPalOrderIsUnused(
 			self::payPalOrder('APPROVED', 'someoneelsesorder'),
-			self::virtualOrderPage()
+			self::virtualOrderPage(),
 		);
 	}
 
@@ -193,7 +193,7 @@ final class GatewaysTest extends TestCase
 		$this->expectNotToPerformAssertions();
 		Gateways::validatePayPalOrderIsUnused(
 			self::payPalOrder('APPROVED', null),
-			self::virtualOrderPage()
+			self::virtualOrderPage(),
 		);
 	}
 
@@ -202,14 +202,14 @@ final class GatewaysTest extends TestCase
 		$this->expectException(Exception::class);
 		Gateways::validatePayPalOrderIsUnused(
 			self::payPalOrder('COMPLETED', null),
-			self::virtualOrderPage()
+			self::virtualOrderPage(),
 		);
 	}
 
 	public function testPartlyPendingCaptureIsNotPaidYet(): void
 	{
 		$this->assertFalse(
-			Gateways::validatePayPalCapture(self::payPalResponse('COMPLETED', ['COMPLETED', 'PENDING']))
+			Gateways::validatePayPalCapture(self::payPalResponse('COMPLETED', ['COMPLETED', 'PENDING'])),
 		);
 	}
 
@@ -224,7 +224,7 @@ final class GatewaysTest extends TestCase
 		$this->expectException(Exception::class);
 		Gateways::validatePayPalOrderAmount(
 			self::payPalOrderWithUnits(['49.99', 'USD']),
-			self::orderPageWithCart(49.99, 'EUR')
+			self::orderPageWithCart(49.99, 'EUR'),
 		);
 	}
 
@@ -234,7 +234,7 @@ final class GatewaysTest extends TestCase
 		$this->expectException(Exception::class);
 		Gateways::validatePayPalOrderAmount(
 			self::payPalOrderWithUnits(['10.00']),
-			self::orderPageWithCart(110.00)
+			self::orderPageWithCart(110.00),
 		);
 	}
 
@@ -243,7 +243,7 @@ final class GatewaysTest extends TestCase
 		$this->expectNotToPerformAssertions();
 		Gateways::validatePayPalOrderAmount(
 			self::payPalOrderWithUnits(['49.99']),
-			self::orderPageWithCart(49.99)
+			self::orderPageWithCart(49.99),
 		);
 	}
 
@@ -253,7 +253,7 @@ final class GatewaysTest extends TestCase
 		$this->expectException(Exception::class);
 		Gateways::validatePayPalOrderAmount(
 			['id' => '5O190127TN364715T', 'status' => 'APPROVED'],
-			self::orderPageWithCart(49.99)
+			self::orderPageWithCart(49.99),
 		);
 	}
 
@@ -263,14 +263,14 @@ final class GatewaysTest extends TestCase
 		$this->expectNotToPerformAssertions();
 		Gateways::validatePayPalOrderAmount(
 			self::payPalOrderWithUnits(['40.00'], ['9.99']),
-			self::orderPageWithCart(49.99)
+			self::orderPageWithCart(49.99),
 		);
 	}
 
 	public function testPendingCaptureIsNotPaidYet(): void
 	{
 		$this->assertFalse(
-			Gateways::validatePayPalCapture(self::payPalResponse('COMPLETED', ['PENDING']))
+			Gateways::validatePayPalCapture(self::payPalResponse('COMPLETED', ['PENDING'])),
 		);
 	}
 

@@ -132,22 +132,6 @@ final class OrderPaidTest extends TestCase
 		$this->assertStringContainsString('Shipped: true', file_get_contents($orderPage->root() . '/order.txt'));
 	}
 
-	/**
-	 * An order is paid once it has a `datePaid`, whoever sets it
-	 */
-	public function testIsPaid(): void
-	{
-		$this->assertTrue($this->checkout('paid-right-away')->isPaid());
-
-		$orderPage = $this->checkout('invoice');
-		$this->assertFalse($orderPage->isPaid());
-
-		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
-			'datePaid' => date('c'),
-		]));
-		$this->assertTrue($orderPage->isPaid());
-	}
-
 	public function testFiresForOrderWhichIsPaidLater(): void
 	{
 		$orderPage = $this->checkout('invoice');
@@ -181,6 +165,22 @@ final class OrderPaidTest extends TestCase
 		]));
 
 		$this->assertSame(['listed'], $this->triggered);
+	}
+
+	/**
+	 * An order is paid once it has a `datePaid`, whoever sets it
+	 */
+	public function testIsPaid(): void
+	{
+		$this->assertTrue($this->checkout('paid-right-away')->isPaid());
+
+		$orderPage = $this->checkout('invoice');
+		$this->assertFalse($orderPage->isPaid());
+
+		$orderPage = $this->kirby->impersonate('kirby', fn () => $orderPage->update([
+			'datePaid' => date('c'),
+		]));
+		$this->assertTrue($orderPage->isPaid());
 	}
 
 	public function testKeepsOrderWhichTheHooksUpdate(): void
