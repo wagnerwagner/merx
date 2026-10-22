@@ -111,10 +111,12 @@ class Merx
 	/**
 	 * Stores order page to file system
 	 *
-	 * Calls `completePayment` of the payment gateway
-	 * Deletes cart
+	 * Checks the stock again, calls `completePayment` of the payment gateway,
+	 * lowers the stock of the ordered products while
+	 * `wagnerwagner.merx.production` is true, and deletes the cart.
 	 *
 	 * @param $data Data required for payment gateway’s `completePayment()`
+	 * @throws Exception error.merx.cart.stock or error.merx.cart.soldOut when the stock ran out before the payment was completed
 	 */
 	public function createOrder(array $data = []): OrderPage
 	{
@@ -125,6 +127,10 @@ class Merx
 			$gateway = $this->getGateway($virtualOrderPage->paymentGateway()->toString());
 
 			$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
+
+			// The stock may have run out while the customer was at the payment
+			// provider. Checked before `completePayment` captures the payment.
+			$virtualOrderPage->cart()->validateStock();
 
 			if (is_callable($gateway['completePayment'])) {
 				$gateway['completePayment']($virtualOrderPage, $data);
@@ -179,7 +185,15 @@ class Merx
 
 					/** @var OrderPage $orderPage */
 					$orderPage = $ordersPage->createChild($virtualOrderPageArray);
-					return $orderPage->changeStatus('listed');
+					$orderPage = $orderPage->changeStatus('listed');
+
+					// Inside the lock, so two orders cannot both lower the same stock
+					// from the same number. Test orders leave the stock alone.
+					if (option('wagnerwagner.merx.production') === true) {
+						$orderPage->cart()->reduceStock();
+					}
+
+					return $orderPage;
 				});
 
 				// Gateways which complete the payment right away — PayPal, Stripe
@@ -446,6 +460,7 @@ class Merx
 	 * Creates virtual OrderPage and validates it. Runs the payment gateway’s `initializePayment` function. Saves virtual OrderPage in the customer’s session.
 	 *
 	 * @param $data Content of `OrderPage`. Must contain `paymentGateway`.
+	 * @throws Exception error.merx.cart.stock or error.merx.cart.soldOut when the cart holds more of a product than its stock
 	 * @return string The return URL, or the `redirect` that the gateway’s `initializePayment` set on the virtual order page.
 	 */
 	public function initializeOrder(array $data): string
@@ -483,6 +498,9 @@ class Merx
 					],
 				);
 			}
+
+			// A cart lives in the session for days, while the stock runs out
+			$cart->validateStock();
 
 			// check if paymentGateway exists
 			$paymentGateway = $data['paymentGateway'] ?? null;

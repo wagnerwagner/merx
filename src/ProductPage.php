@@ -23,15 +23,6 @@ class ProductPage extends Page
 	protected Pages $orders;
 
 	/**
-	 * Max amount that could be added to ListItems
-	 */
-	public function maxQuantity(): float|null
-	{
-		$maxQuantity = $this->content()->get('maxQuantity')->or($this->site()->maxQuantity());
-		return $maxQuantity->isEmpty() ? null : $maxQuantity->toFloat();
-	}
-
-	/**
 	 * Summary info string about the orders including this product
 	 * Used for the orders tab in the product page
 	 *
@@ -125,6 +116,41 @@ class ProductPage extends Page
 					tax: $taxRule?->rate(),
 				);
 			});
+	}
+
+	/**
+	 * Lowers the stock by the quantity ordered
+	 *
+	 * Merx calls it for every product of a new order, while
+	 * `wagnerwagner.merx.production` is true. Override it together with
+	 * `stock()` when the stock is kept somewhere else, e.g. in an ERP.
+	 *
+	 * @return static The updated page
+	 */
+	public function reduceStock(float $quantity): static
+	{
+		$stock = $this->stock();
+
+		if ($stock === null) {
+			return $this;
+		}
+
+		return $this->update([
+			'stock' => $stock - $quantity,
+		]);
+	}
+
+	/**
+	 * How many of this product are left, from its `stock` field
+	 *
+	 * The cart and the checkout refuse more than that.
+	 *
+	 * @return float|null Null when the field is empty or not a number: the product is not limited
+	 */
+	public function stock(): float|null
+	{
+		$stock = $this->content()->get('stock')->value();
+		return is_numeric($stock) ? (float)$stock : null;
 	}
 
 	/**

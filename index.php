@@ -71,6 +71,8 @@ App::plugin(
 			'wagnerwagner.merx.fields/personal-data' => __DIR__ . '/blueprints/fields/personal-data.yml',
 			'fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'wagnerwagner.merx.fields/price' => __DIR__ . '/blueprints/fields/price.yml',
+			'fields/stock' => __DIR__ . '/blueprints/fields/stock.yml',
+			'wagnerwagner.merx.fields/stock' => __DIR__ . '/blueprints/fields/stock.yml',
 			'layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
 			'wagnerwagner.merx.layouts/order' => __DIR__ . '/blueprints/layouts/order.yml',
 			'pages/checkout' => __DIR__ . '/blueprints/pages/checkout.yml',

@@ -261,7 +261,7 @@ class Cart extends ProductList
 			$kirby->trigger('wagnerwagner.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			return $this;
 		} catch (\Exception $ex) {
-			// A rejected update (invalid quantity, `maxQuantity`) is a client error and
+			// A rejected update (invalid quantity, not enough stock) is a client error and
 			// must keep its own message instead of being hidden behind merx.cart.update.
 			if ($ex instanceof Exception) {
 				throw $ex;

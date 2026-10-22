@@ -11,5 +11,8 @@ tabs:
         label: field.taxRule
         type: taxrules
         width: 1/2
+      stock:
+        extends: fields/stock
+        width: 1/2
   orders:
     extends: tabs/orders

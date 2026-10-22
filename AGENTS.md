@@ -96,7 +96,7 @@ does not add new ones rather than expecting a clean run.
 - **Named arguments** when throwing Kirby exceptions:
   ```php
   throw new Exception(
-      key: 'merx.cart.maxQuantity',
+      key: 'merx.cart.stock',
       httpCode: 400,
       data: ['title' => $listItem->title],
   );

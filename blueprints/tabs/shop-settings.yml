@@ -15,11 +15,3 @@ fields:
     type: pagelist
     template: shipping
     max: 1
-  maxQuantity:
-    label:
-      en: Max quantity per product
-      de: Maximale Anzahl pro Produkt
-    type: number
-    translate: false
-    required: true
-    width: 1/2

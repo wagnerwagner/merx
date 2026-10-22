@@ -44,15 +44,10 @@ final class ProductListTest extends TestCase
 	public function testRejectedInputIsReportedAsAClientError(): void
 	{
 		$productList = new ProductList();
-		$productList->add([
-			'key' => 'nice-shoes',
-			'price' => 99.99,
-			'data' => ['maxQuantity' => 2.0],
-		]);
+		$productList->add(['key' => 'nice-shoes', 'price' => 99.99]);
 
 		$cases = [
 			'merx.cart.quantity' => fn () => $productList->updateItem('nice-shoes', ['quantity' => -1.0]),
-			'merx.cart.maxQuantity' => fn () => $productList->updateItem('nice-shoes', ['quantity' => 3.0]),
 			'merx.cart.missingItem' => fn () => $productList->updateItem('does-not-exist', ['quantity' => 1.0]),
 		];
 
@@ -154,36 +149,6 @@ final class ProductListTest extends TestCase
 			179.98,
 			$productList->total()->toFloat(),
 		);
-	}
-
-	public function testUpdateItemEnforcesMaxQuantity(): void
-	{
-		$productList = new ProductList();
-		$productList->add([
-			'key' => 'nice-shoes',
-			'price' => 99.99,
-			'data' => ['maxQuantity' => 2.0],
-		]);
-
-		$this->expectException(Exception::class);
-		$productList->updateItem('nice-shoes', ['quantity' => 3.0]);
-	}
-
-	public function testUpdateItemKeepsMaxQuantityWhenDataIsReplaced(): void
-	{
-		$productList = new ProductList();
-		$productList->add([
-			'key' => 'nice-shoes',
-			'price' => 99.99,
-			'data' => ['maxQuantity' => 2.0],
-		]);
-
-		// A client must not be able to lift its own limit by overwriting `data`.
-		$this->expectException(Exception::class);
-		$productList->updateItem('nice-shoes', [
-			'quantity' => 3.0,
-			'data' => ['maxQuantity' => 999.0],
-		]);
 	}
 
 	/**

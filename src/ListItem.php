@@ -98,15 +98,6 @@ class ListItem extends Obj
 			}
 		}
 
-		// Set max amount to data from page
-		if ($this->page instanceof Page) {
-			if (is_float($this->page->maxQuantity())) {
-				$data = array_merge($data ?? [], [
-					'maxQuantity' => $this->page->maxQuantity(),
-				]);
-			}
-		}
-
 		// Set type
 		$type ??= (string)$this->page?->type();
 		if (is_string($type)) {

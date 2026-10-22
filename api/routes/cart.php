@@ -6,25 +6,15 @@ use Wagnerwagner\Merx\Cart;
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 /**
- * Keys of a list item’s `data` which are derived from its page and must never
- * be set by the client. `maxQuantity` would otherwise lift its own limit.
+ * Reduces the request body to the allowed keys and makes sure `quantity` is a
+ * number before it reaches the cart.
  */
-$protectedDataKeys = ['maxQuantity'];
-
-/**
- * Reduces the request body to the allowed keys, drops protected `data` keys and
- * makes sure `quantity` is a number before it reaches the cart.
- */
-$cartRequestData = function (array $requestBody, array $allowedKeys) use ($protectedDataKeys): array {
+$cartRequestData = function (array $requestBody, array $allowedKeys): array {
 	$data = array_filter(
 		$requestBody,
 		fn ($key) => in_array($key, $allowedKeys, true),
 		ARRAY_FILTER_USE_KEY,
 	);
-
-	if (isset($data['data']) === true && is_array($data['data']) === true) {
-		$data['data'] = array_diff_key($data['data'], array_flip($protectedDataKeys));
-	}
 
 	if (array_key_exists('quantity', $data) === true) {
 		if (is_numeric($data['quantity']) === false) {

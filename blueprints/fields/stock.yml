@@ -1,0 +1,4 @@
+label: field.stock
+type: number
+help: field.stock.help
+translate: false
