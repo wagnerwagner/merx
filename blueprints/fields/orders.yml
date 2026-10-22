@@ -12,6 +12,9 @@ columns:
     value: "{{ page.email }}"
   dateCreated:
     value: "{{ page.dateCreated.toDate('c') }}"
+  datePaid:
+    label: field.datePaid
+    value: "{{ page.datePaid.toDate('c') }}"
   total:
     value: "{{ page.total }}"
   payment:
