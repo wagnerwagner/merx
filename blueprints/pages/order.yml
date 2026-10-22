@@ -7,7 +7,7 @@ navigation:
 
 status:
   draft: page.status.error
-  listed: page.status.complete
+  listed: page.status.ordered
 
 options:
   changeSlug: false
