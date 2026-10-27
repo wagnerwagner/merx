@@ -160,11 +160,9 @@ class Merx
 						],
 					]);
 				}
-				$virtualOrderPageArray = $virtualOrderPage->toArray();
-				$virtualOrderPageArray['template'] = 'order';
+				$virtualOrderPageArray = $this->virtualOrderPageToArray($virtualOrderPage);
 				$virtualOrderPageArray['model'] = 'order';
 				$virtualOrderPageArray['draft'] = false;
-				$virtualOrderPageArray['translations'] = null;
 
 				/** @var OrderPage $orderPage */
 				$orderPage = static::lockOrders($ordersPage, function () use ($ordersPage, $virtualOrderPage, $virtualOrderPageArray): OrderPage {
@@ -403,6 +401,18 @@ class Merx
 		return (string)$number;
 	}
 
+	/**
+	 * Returns the virtual OrderPage as array for the session and `createChild()`
+	 */
+	private function virtualOrderPageToArray(OrderPage $virtualOrderPage): array
+	{
+			$array = $virtualOrderPage->toArray();
+			unset($array['translations']);
+			$array['template'] = $virtualOrderPage->template()->name();
+			return $array;
+	}
+
+
 	private function getGateway(string $paymentGateway): array
 	{
 		if (!array_key_exists($paymentGateway, $this->gateways)) {
@@ -544,12 +554,8 @@ class Merx
 					$redirect = (string)$virtualOrderPage->redirect();
 				}
 			}
-
-			$virtualOrderPageArray = $virtualOrderPage->toArray();
-			$virtualOrderPageArray['template'] = $virtualOrderPage->template()->name();
-
 			// save virtual order page as session
-			$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', $virtualOrderPageArray);
+			$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', $this->virtualOrderPageToArray($virtualOrderPage));
 
 			// run hook
 			$kirby->trigger('wagnerwagner.merx.initializeOrder:after', ['virtualOrderPage' => $virtualOrderPage, 'redirect' => $redirect]);
