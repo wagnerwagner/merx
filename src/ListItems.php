@@ -17,6 +17,22 @@ use Kirby\Toolkit\Collection;
 class ListItems extends Collection
 {
 	/**
+	 * @param array $data List of ListItems (or their data), keyed by ListItem::$key if it is a list
+	 */
+	public function __construct(array $data = [], bool $caseSensitive = false)
+	{
+		if (array_is_list($data)) {
+			$listItems = [];
+			foreach ($data as $item) {
+				$listItem = ListItem::factory($item);
+				$listItems[$listItem->key] = $listItem;
+			}
+			$data = $listItems;
+		}
+		parent::__construct($data, $caseSensitive);
+	}
+
+	/**
 	 * Set a ListItem in the list
 	 *
 	 * @param ListItem $value
