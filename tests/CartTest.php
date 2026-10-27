@@ -6,6 +6,22 @@ use PHPUnit\Framework\TestCase;
 
 final class CartTest extends TestCase
 {
+	public function testConstructKeysListByItemKey(): void
+	{
+		$cart = new Cart([
+			['key' => 'nice-shoes', 'price' => new Price(price: 99.99, currency: 'EUR')],
+			['key' => 'nice-socks', 'price' => new Price(price: 10.0, currency: 'EUR')],
+		]);
+
+		$this->assertSame(['nice-shoes', 'nice-socks'], $cart->keys());
+
+		$cart->updateItem('nice-shoes', ['quantity' => 2.0]);
+		$this->assertSame(2.0, $cart->get('nice-shoes')->quantity);
+
+		$cart->remove('nice-socks');
+		$this->assertSame(['nice-shoes'], $cart->keys());
+	}
+
 	public function testPayPalPurchaseUnits(): void
 	{
 		$cart = new Cart([

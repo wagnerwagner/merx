@@ -16,6 +16,28 @@ final class ProductListTest extends TestCase
 		$productList->add(['key' => 'nice-shoes', 'price' => 99.99, 'quantity' => -1.0]);
 	}
 
+	public function testConstructKeysListByItemKey(): void
+	{
+		$productList = new ProductList([
+			['key' => 'nice-shoes', 'price' => 99.99],
+			['page' => 'nice-socks', 'price' => 10],
+		]);
+
+		$this->assertSame(['nice-shoes', 'nice-socks'], $productList->keys());
+
+		$productList->updateItem('nice-shoes', ['quantity' => 2.0]);
+		$this->assertSame(2.0, $productList->get('nice-shoes')->quantity);
+	}
+
+	public function testConstructKeepsAssociativeKeys(): void
+	{
+		$productList = new ProductList([
+			'custom-key' => ['key' => 'nice-shoes', 'price' => 99.99],
+		]);
+
+		$this->assertSame(['custom-key'], $productList->keys());
+	}
+
 	public function testAppend(): void
 	{
 		$productList = new ProductList();
