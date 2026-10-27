@@ -3,7 +3,6 @@ title: field.checkout
 create:
   status: unlisted
 
-
 fields:
   info:
     label: false
