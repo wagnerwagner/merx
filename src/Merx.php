@@ -189,7 +189,7 @@ class Merx
 
 					// Inside the lock, so two orders cannot both lower the same stock
 					// from the same number. Test orders leave the stock alone.
-					if (option('wagnerwagner.merx.production') === true) {
+					if (option('wagnerwagner.merx.production') === true && option('wagnerwagner.merx.reduceStok') === true) {
 						$orderPage->cart()->reduceStock();
 					}
 
