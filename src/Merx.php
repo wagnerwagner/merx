@@ -538,15 +538,18 @@ class Merx
 			// run gateway
 			$gateway = $this->getGateway($paymentGateway);
 			if (is_callable($gateway['initializePayment'])) {
-				/** @var \OrderPage */
+				/** @var \Wagnerwagner\Merx\OrderPage */
 				$virtualOrderPage = $gateway['initializePayment']($virtualOrderPage, $data);
 				if ($virtualOrderPage->redirect()->isNotEmpty()) {
 					$redirect = (string)$virtualOrderPage->redirect();
 				}
 			}
 
+			$virtualOrderPageArray = $virtualOrderPage->toArray();
+			$virtualOrderPageArray['template'] = $virtualOrderPage->template()->name();
+
 			// save virtual order page as session
-			$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', $virtualOrderPage->toArray());
+			$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', $virtualOrderPageArray);
 
 			// run hook
 			$kirby->trigger('wagnerwagner.merx.initializeOrder:after', ['virtualOrderPage' => $virtualOrderPage, 'redirect' => $redirect]);
