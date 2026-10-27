@@ -71,7 +71,8 @@ class ProductPage extends Page
 	 * for the rule returns null, not the price of another rule.
 	 *
 	 * @param $pricingRule Pricing rule to use, or its key as string, or null for the pricing rule that applies to the current visitor
-	 * @param $quantity Quantity used for volume-based pricing
+	 * @param $quantity Quantity of the cart line. Merx passes it but does not use it; override this method in your own page model to make the price depend on it.
+	 * @see https://merx.wagnerwagner.de/cookbook/volume-based-pricing
 	 * @return ?Price Price object, or null if no price is found
 	 */
 	public function price(string|PricingRule|null $pricingRule = null, float|null $quantity = null): Price|null
