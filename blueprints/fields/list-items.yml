@@ -23,7 +23,12 @@ fields:
     required: true
     width: 1/3
   data:
-    type: text
+    type: structure
+    fields:
+      key:
+        type: text
+      value:
+        type: text
     width: 1/3
   type:
     label: field.type
