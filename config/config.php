@@ -7,7 +7,7 @@ return [
 	'ordersPage' => 'orders',
 	'production' => false,
 	'logging' => true,
-	'reduceStok' => true,
+	'reduceStock' => true,
 	'license' => '',
 	'api.endpoint' => 'shop',
 	'taxRules' => [

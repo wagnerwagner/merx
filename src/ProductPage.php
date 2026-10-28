@@ -123,7 +123,7 @@ class ProductPage extends Page
 	 * Lowers the stock by the quantity ordered
 	 *
 	 * Merx calls it for every product of a new order, while
-	 * `wagnerwagner.merx.production` is true. Override it together with
+	 * `wagnerwagner.merx.reduceStock` is true. Override it together with
 	 * `stock()` when the stock is kept somewhere else, e.g. in an ERP.
 	 *
 	 * @return static The updated page

@@ -12,7 +12,7 @@ use Kirby\Toolkit\Collection;
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  *
- * @extends \Kirby\Cms\Collection<ListItem>
+ * @extends \Kirby\Cms\Collection<\Wagnerwagner\Merx\ListItem>
  */
 class ListItems extends Collection
 {

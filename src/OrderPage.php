@@ -30,6 +30,8 @@ class OrderPage extends Page
 {
 	/**
 	 * List of products of the Order
+	 *
+	 * @see https://merx.wagnerwagner.de/guide/getting-started/displaying-order
 	 */
 	public function cart(): ProductList
 	{

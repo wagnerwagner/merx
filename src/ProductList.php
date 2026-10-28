@@ -74,9 +74,11 @@ class ProductList extends ListItems
 	 * Lowers the stock of every product in the list by the quantity ordered
 	 *
 	 * Called by `Merx::createOrder()` once an order is written, while
-	 * `wagnerwagner.merx.production` is true. The order exists by then, so a
+	 * `wagnerwagner.merx.reduceStock` is true. The order exists by then, so a
 	 * product which cannot be updated is logged and skipped rather than failing
 	 * the order.
+	 *
+	 * @see https://merx.wagnerwagner.de/guide/getting-started/stock
 	 */
 	public function reduceStock(): static
 	{

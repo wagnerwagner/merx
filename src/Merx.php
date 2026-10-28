@@ -113,7 +113,7 @@ class Merx
 	 *
 	 * Checks the stock again, calls `completePayment` of the payment gateway,
 	 * lowers the stock of the ordered products while
-	 * `wagnerwagner.merx.production` is true, and deletes the cart.
+	 * `wagnerwagner.merx.reduceStock` is true, and deletes the cart.
 	 *
 	 * @param $data Data required for payment gateway’s `completePayment()`
 	 * @throws Exception error.merx.cart.stock or error.merx.cart.soldOut when the stock ran out before the payment was completed
@@ -187,7 +187,7 @@ class Merx
 
 					// Inside the lock, so two orders cannot both lower the same stock
 					// from the same number. Test orders leave the stock alone.
-					if (option('wagnerwagner.merx.production') === true && option('wagnerwagner.merx.reduceStok') === true) {
+					if (option('wagnerwagner.merx.reduceStock') === true) {
 						$orderPage->cart()->reduceStock();
 					}
 
