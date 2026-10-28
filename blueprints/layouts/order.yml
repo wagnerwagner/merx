@@ -10,9 +10,7 @@ tabs:
     fields:
       payment: fields/payment
   personalData:
-    label:
-      en: Personal Data
-      de: Persönliche Daten
+    label: field.personalData
     icon: user
     fields:
       personalData: fields/personal-data
