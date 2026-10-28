@@ -1,21 +1,18 @@
 label: field.orders
 type: pagelist
-parent: site.ordersPage
-template: order
-flip: true
 layout: table
 create: false
-search: true
 image: false
+search: true
+help: |
+  {{ page.orderInfo }}
 columns:
-  email:
-    value: "{{ page.email }}"
-  dateCreated:
-    value: "{{ page.dateCreated.toDate('c') }}"
-  datePaid:
-    label: field.datePaid
-    value: "{{ page.datePaid.toDate('c') }}"
-  total:
-    value: "{{ page.total }}"
-  payment:
-    value: "{{ page.paymentGateway }}"
+  quantity: true
+  price: true
+  producttotal: true
+  paymentgateway: true
+  email: true
+  city: true
+  date:
+    label: Date
+    value: "{{ page.dateCreated }}"

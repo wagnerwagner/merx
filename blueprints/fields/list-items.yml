@@ -4,45 +4,56 @@ width: 2/3
 translate: false
 disabled: true
 fields:
-  key:
-    label: field.key
-    type: text
-    required: true
-    width: 1/3
   page:
     label: field.page
     type: pages
     multiple: false
+    width: 1/3
+  title:
+    type: text
+    width: 1/3
+  key:
+    label: field.key
+    type: text
+    required: true
     width: 1/3
   quantity:
     label: field.quantity
     type: number
     required: true
     width: 1/3
-  currency:
-    label: field.currency
+  data:
     type: text
     width: 1/3
-  price:
-    extends: fields/price
-    before: null
-    required: true
-    min: null
-    width: 1/3
-  priceNet:
-    extends: fields/price
-    label: field.priceNet
-    before: null
-    min: null
-    required: false
-    width: 1/3
-  taxRate:
-    label: field.taxRate
-    type: number
-    step: 0.001
-    width: 1/3
-    translate: false
   type:
     label: field.type
     type: text
     width: 1/3
+  currency:
+    label: field.currency
+    type: text
+    width: 1/4
+  price:
+    label: field.price
+    type: number
+    step: .01
+    required: true
+    width: 1/4
+  priceNet:
+    label: field.priceNet
+    type: number
+    step: .01
+    required: false
+    width: 1/4
+  taxRate:
+    label: field.taxRate
+    type: number
+    step: 0.001
+    width: 1/4
+    translate: false
+columns:
+  page: true
+  quantity: true
+  currency: true
+  price: true
+  type: true

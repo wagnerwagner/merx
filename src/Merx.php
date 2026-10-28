@@ -345,7 +345,7 @@ class Merx
 		string|null $locale = null,
 		int|null $maxFractionDigits = null,
 	): string {
-		$locale ??= Locale::get(LC_NUMERIC);
+		$locale ??= static::getLocale(LC_NUMERIC);
 
 		// Without a currency code there is no symbol to place. `formatCurrency()`
 		// would use the generic currency sign (¤), so the number is formatted on
@@ -392,13 +392,27 @@ class Merx
 		string|null $locale = null,
 		int|null $maxFractionDigits = null,
 	): string {
-		$locale ??= Locale::get(LC_NUMERIC);
+		$locale ??= static::getLocale(LC_NUMERIC);
+
 		$formatter = static::percentNumberFormatter($locale);
 		if (is_int($maxFractionDigits)) {
 			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
 		}
 		$number = $formatter?->format($number) ?? $number;
 		return (string)$number;
+	}
+
+	/**
+	 * Get locale with fallback for `C` locale
+	 */
+	private static function getLocale(int|string $category = LC_ALL): string
+	{
+		$locale ??= Locale::get($category);
+		if ($locale === 'C') {
+			App::instance()->setCurrentLanguage();
+			$locale = Locale::get($category);
+		}
+		return $locale;
 	}
 
 	/**

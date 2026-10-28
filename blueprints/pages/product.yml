@@ -1,18 +1,28 @@
 title: page.title.product
 
+fields:
+  price:
+    extends: fields/price
+    width: 1/2
+  taxRule:
+    extends: fields/tax-rule
+    width: 1/2
+  stock:
+    extends: fields/stock
+    width: 1/2
+
 tabs:
   content:
+    label: field.content
+    icon: draft
     fields:
-      price:
-        label: field.price
-        type: prices
-        width: 1/2
-      taxRule:
-        label: field.taxRule
-        type: taxrules
-        width: 1/2
-      stock:
-        extends: fields/stock
-        width: 1/2
+      - price
+      - taxRule
+      - stock
   orders:
-    extends: tabs/orders
+    label: field.orders
+    icon: list-numbers
+    fields:
+      orders:
+        extends: fields/orders
+        query: page.orders.flip

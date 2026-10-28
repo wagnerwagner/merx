@@ -1,5 +1,2 @@
 label: field.price
-type: number
-step: .01
-required: true
-translate: false
+type: prices

@@ -1,4 +1,4 @@
 label: field.stock
 type: number
-help: field.stock.help
+placeholder: field.stock.placeholder
 translate: false
