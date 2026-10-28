@@ -4,7 +4,7 @@
 		"Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
 		"This file is @generated automatically"
 	],
-	"content-hash": "b00d98f16a9a5a6aeec4d3fa1d3d2ae9",
+	"content-hash": "65c868799a2c0ff9175acdf2fd397fac",
 	"packages": [
 		{
 			"name": "getkirby/composer-installer",
@@ -55,16 +55,16 @@
 		},
 		{
 			"name": "stripe/stripe-php",
-			"version": "v21.3.2",
+			"version": "v21.3.3",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/stripe/stripe-php.git",
-				"reference": "0d8b075e1a97d15c5324353a5277d0ea686ea525"
+				"reference": "3d52008ffeab02763b02462802393f3d4da2aa51"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/stripe/stripe-php/zipball/0d8b075e1a97d15c5324353a5277d0ea686ea525",
-				"reference": "0d8b075e1a97d15c5324353a5277d0ea686ea525",
+				"url": "https://api.github.com/repos/stripe/stripe-php/zipball/3d52008ffeab02763b02462802393f3d4da2aa51",
+				"reference": "3d52008ffeab02763b02462802393f3d4da2aa51",
 				"shasum": ""
 			},
 			"require": {
@@ -111,9 +111,9 @@
 			],
 			"support": {
 				"issues": "https://github.com/stripe/stripe-php/issues",
-				"source": "https://github.com/stripe/stripe-php/tree/v21.3.2"
+				"source": "https://github.com/stripe/stripe-php/tree/v21.3.3"
 			},
-			"time": "2026-09-09T20:40:43+00:00"
+			"time": "2026-10-27T19:47:35+00:00"
 		}
 	],
 	"packages-dev": [
@@ -2079,21 +2079,21 @@
 		},
 		{
 			"name": "league/uri",
-			"version": "7.9.0",
+			"version": "7.9.1",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/thephpleague/uri.git",
-				"reference": "fcc872a3d872aa13f935e0cd1887b9abb06da07f"
+				"reference": "40403f5c3141457a61f7f1aba6706e8fa4a0ece5"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/thephpleague/uri/zipball/fcc872a3d872aa13f935e0cd1887b9abb06da07f",
-				"reference": "fcc872a3d872aa13f935e0cd1887b9abb06da07f",
+				"url": "https://api.github.com/repos/thephpleague/uri/zipball/40403f5c3141457a61f7f1aba6706e8fa4a0ece5",
+				"reference": "40403f5c3141457a61f7f1aba6706e8fa4a0ece5",
 				"shasum": ""
 			},
 			"require": {
 				"ext-mbstring": "*",
-				"league/uri-interfaces": "^7.9.0",
+				"league/uri-interfaces": "^7.9.1",
 				"php": "^8.1",
 				"psr/http-factory": "^1"
 			},
@@ -2166,7 +2166,7 @@
 				"docs": "https://uri.thephpleague.com",
 				"forum": "https://thephpleague.slack.com",
 				"issues": "https://github.com/thephpleague/uri-src/issues",
-				"source": "https://github.com/thephpleague/uri/tree/7.9.0"
+				"source": "https://github.com/thephpleague/uri/tree/7.9.1"
 			},
 			"funding": [
 				{
@@ -2174,20 +2174,20 @@
 					"type": "github"
 				}
 			],
-			"time": "2026-10-16T15:19:33+00:00"
+			"time": "2026-10-27T07:14:23+00:00"
 		},
 		{
 			"name": "league/uri-interfaces",
-			"version": "7.9.0",
+			"version": "7.9.1",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/thephpleague/uri-interfaces.git",
-				"reference": "eb5f6d24e6a4fe0a8e9c78ded4eb1dfff1404f58"
+				"reference": "994300a79e17f179112dc259f8df0c4de982f736"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/thephpleague/uri-interfaces/zipball/eb5f6d24e6a4fe0a8e9c78ded4eb1dfff1404f58",
-				"reference": "eb5f6d24e6a4fe0a8e9c78ded4eb1dfff1404f58",
+				"url": "https://api.github.com/repos/thephpleague/uri-interfaces/zipball/994300a79e17f179112dc259f8df0c4de982f736",
+				"reference": "994300a79e17f179112dc259f8df0c4de982f736",
 				"shasum": ""
 			},
 			"require": {
@@ -2250,7 +2250,7 @@
 				"docs": "https://uri.thephpleague.com",
 				"forum": "https://thephpleague.slack.com",
 				"issues": "https://github.com/thephpleague/uri-src/issues",
-				"source": "https://github.com/thephpleague/uri-interfaces/tree/7.9.0"
+				"source": "https://github.com/thephpleague/uri-interfaces/tree/7.9.1"
 			},
 			"funding": [
 				{
@@ -2258,7 +2258,7 @@
 					"type": "github"
 				}
 			],
-			"time": "2026-10-16T15:19:33+00:00"
+			"time": "2026-10-27T07:14:23+00:00"
 		},
 		{
 			"name": "michelf/php-smartypants",
@@ -2865,16 +2865,16 @@
 		},
 		{
 			"name": "phpstan/phpdoc-parser",
-			"version": "2.3.8",
+			"version": "2.3.9",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/phpstan/phpdoc-parser.git",
-				"reference": "ec4293f7caf9936acce286b589ccb84faf1aa88d"
+				"reference": "2c122d2f890ae4b9e6ede898a9ac36b2c07e2a17"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/ec4293f7caf9936acce286b589ccb84faf1aa88d",
-				"reference": "ec4293f7caf9936acce286b589ccb84faf1aa88d",
+				"url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/2c122d2f890ae4b9e6ede898a9ac36b2c07e2a17",
+				"reference": "2c122d2f890ae4b9e6ede898a9ac36b2c07e2a17",
 				"shasum": ""
 			},
 			"require": {
@@ -2906,9 +2906,9 @@
 			"description": "PHPDoc parser with support for nullable, intersection and generic types",
 			"support": {
 				"issues": "https://github.com/phpstan/phpdoc-parser/issues",
-				"source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.8"
+				"source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.9"
 			},
-			"time": "2026-10-26T20:24:50+00:00"
+			"time": "2026-10-27T22:32:31+00:00"
 		},
 		{
 			"name": "phpunit/php-code-coverage",
@@ -5869,16 +5869,16 @@
 		},
 		{
 			"name": "vimeo/psalm",
-			"version": "6.20.2",
+			"version": "6.20.3",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/vimeo/psalm.git",
-				"reference": "0706376ff62923efb11946b74bcb4be35daf8e7d"
+				"reference": "23d217da099cc4a9a3bd03b644c1adf520022375"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/vimeo/psalm/zipball/0706376ff62923efb11946b74bcb4be35daf8e7d",
-				"reference": "0706376ff62923efb11946b74bcb4be35daf8e7d",
+				"url": "https://api.github.com/repos/vimeo/psalm/zipball/23d217da099cc4a9a3bd03b644c1adf520022375",
+				"reference": "23d217da099cc4a9a3bd03b644c1adf520022375",
 				"shasum": ""
 			},
 			"require": {
@@ -5983,7 +5983,7 @@
 				"issues": "https://github.com/vimeo/psalm/issues",
 				"source": "https://github.com/vimeo/psalm"
 			},
-			"time": "2026-10-27T10:38:48+00:00"
+			"time": "2026-10-27T17:55:32+00:00"
 		},
 		{
 			"name": "webmozart/assert",
