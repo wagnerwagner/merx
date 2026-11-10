@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
+use Kirby\Exception\Exception;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\Obj;
 
@@ -38,7 +39,7 @@ class ListItem extends Obj
 	 *
 	 * @param $title Will be overwritten by $page’s title
 	 * @param $page Page object or page slug
-	 * @param $price Will be overwritten by $page’s price when $price is float or null
+	 * @param $price Will be overwritten by $page’s price when $price is float or null. An array is a price as `toSessionArray()` stores it.
 	 * @param $quantity Quantity of the ListItem. E.g. 3.0 for 3 items.
 	 * @param $quantifier Multiplier for the price. Could be used when the item has a price per meter.
 	 * @param $type Type of ListItem. See ListItem::$allowedTypes for allowed types.
@@ -50,7 +51,7 @@ class ListItem extends Obj
 		string $key,
 		string|null $title = null,
 		string|Page|null $page = null,
-		float|Price|null $price = null,
+		float|Price|array|null $price = null,
 		float $quantity = 1.0,
 		float|null $quantifier = null,
 		string|null $type = 'product',
@@ -70,8 +71,11 @@ class ListItem extends Obj
 		}
 
 		// Set price
+		$priceFromSession = is_array($price);
 		if ($price instanceof Price) {
 			$this->price = $price;
+		} elseif ($priceFromSession === true) {
+			$this->price = new Price(...$price);
 		} elseif (is_float($price)) {
 			$this->price = new Price(price: $price);
 		} else {
@@ -81,7 +85,9 @@ class ListItem extends Obj
 			}
 		}
 
-		if (is_float($quantifier)) {
+		// A price from the session is the price of the line as it was stored,
+		// quantifier included. Applied again, it would grow with every request.
+		if (is_float($quantifier) && $priceFromSession === false) {
 			$price = $this->price;
 			$this->price = $price->quantify($quantifier);
 		}
@@ -126,6 +132,16 @@ class ListItem extends Obj
 				// Use page id or uuid as key
 				$page = $data['page'] ?? null;
 				$data['key'] = ($page instanceof Page) ? $page->uuid() : $page;
+			}
+			if ($data['key'] === null || $data['key'] === '') {
+				// Neither `key` nor `page`: nothing to add
+				throw new Exception(
+					key: 'merx.cart.add',
+					httpCode: 400,
+					data: [
+						'key' => '',
+					],
+				);
 			}
 			$listItem = new ListItem(...$data);
 		} elseif ($data instanceof ListItem) {
@@ -193,6 +209,20 @@ class ListItem extends Obj
 		if ($array['page'] instanceof Page) {
 			unset($array['price']);
 			$array['page'] = (string)$array['page']->uuid();
+		} elseif ($array['price'] instanceof Price) {
+			// An item without a page, e.g. shipping, has no other source for its
+			// price. Kirby reads the session without classes, so a `Price` object
+			// would come back as `__PHP_Incomplete_Class`, and its pricing rule
+			// holds a closure, which cannot be written at all. Stored as the
+			// arguments `Price` is built from instead.
+			/** @var Price $price */
+			$price = $array['price'];
+			$array['price'] = [
+				'price' => $price->taxIncluded() === false ? $price->priceNet : $price->price,
+				'tax' => $price->tax?->rate,
+				'pricingRule' => $price->pricingRule?->key,
+				'currency' => $price->currency,
+			];
 		}
 
 		return $array;

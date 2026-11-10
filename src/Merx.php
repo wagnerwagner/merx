@@ -219,7 +219,10 @@ class Merx
 
 			return $orderPage;
 		} catch (\Exception $ex) {
-			if ($ex::class !== 'Kirby\Exception\Exception') {
+			// Kirby’s exceptions carry a translated message and a status code,
+			// also the ones a hook throws to refuse an order, e.g.
+			// `InvalidArgumentException`. Everything else is an internal error.
+			if ($ex instanceof Exception === false) {
 				$ex = new Exception(
 					key: 'merx.createOrder',
 					httpCode: 500,
@@ -430,7 +433,13 @@ class Merx
 	private function getGateway(string $paymentGateway): array
 	{
 		if (!array_key_exists($paymentGateway, $this->gateways)) {
-			throw new \Exception('No payment gateway named ' . $paymentGateway);
+			throw new Exception(
+				key: 'merx.noPaymentGateway',
+				httpCode: 400,
+				details: [
+					'paymentGateway' => $paymentGateway,
+				],
+			);
 		}
 		$gateway = $this->gateways[$paymentGateway];
 		if (!is_array($gateway)) {
@@ -517,6 +526,7 @@ class Merx
 			if ($cart->count() <= 0) {
 				throw new Exception(
 					key: 'merx.emptycart',
+					httpCode: 400,
 					data: [
 						'cart' => $cart->toArray(),
 					],
@@ -576,7 +586,10 @@ class Merx
 
 			return $redirect;
 		} catch (\Exception $ex) {
-			if ($ex::class !== 'Kirby\Exception\Exception') {
+			// Kirby’s exceptions carry a translated message and a status code,
+			// also the ones a hook throws to refuse an order, e.g.
+			// `InvalidArgumentException`. Everything else is an internal error.
+			if ($ex instanceof Exception === false) {
 				$ex = new Exception(
 					key: 'merx.initializeOrder',
 					httpCode: 500,

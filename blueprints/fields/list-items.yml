@@ -22,13 +22,11 @@ fields:
     type: number
     required: true
     width: 1/3
+  # Whatever a shop keeps with an item, e.g. `data[name]`: a map of its own
+  # keys. A structure would validate every value as a row and fail on a string.
+  # Extend this field with the `fields` to show, see the personalized products cookbook.
   data:
-    type: structure
-    fields:
-      key:
-        type: text
-      value:
-        type: text
+    type: object
     width: 1/3
   type:
     label: field.type

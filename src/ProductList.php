@@ -23,7 +23,7 @@ class ProductList extends ListItems
 	 * $productList->add('products/nice-shoes'); // ID of a ProductPage
 	 * $productList->add('page://L1cJEiOOQI3VzljV'); // UUID of a ProductPage
 	 * $productList->add(['key' => 'individual-shoes', 'page' => 'products/nice-shoes']); // Array including key
-	 * $productList->add(new ListItem(key: 'nice-socks', price: 10])); // Custom LitItem
+	 * $productList->add(new ListItem(key: 'nice-socks', price: 10.0)); // Custom ListItem
 	 * ```
 	 *
 	 * @see ListItem
@@ -37,6 +37,7 @@ class ProductList extends ListItems
 			$listItem->quantity += $existingItem->quantity;
 		}
 
+		static::validateProduct($listItem);
 		static::validateQuantity($listItem);
 		$this->validateStockOf($listItem);
 
@@ -161,6 +162,33 @@ class ProductList extends ListItems
 	 *
 	 * @throws Exception error.merx.cart.quantity when the quantity is negative or not a finite number
 	 */
+	/**
+	 * Makes sure a product is something that can be sold
+	 *
+	 * A key or page which is no product page, a typo for example, would be
+	 * added as a line without title and price, which keeps the whole list from
+	 * being ordered. Items of your own are fine as long as they have a price,
+	 * and so is every other type, e.g. shipping.
+	 *
+	 * @throws Exception error.merx.cart.add when the item is a product without product page and without price
+	 */
+	protected static function validateProduct(ListItem $listItem): void
+	{
+		if (
+			$listItem->type === 'product' &&
+			$listItem->page instanceof ProductPage === false &&
+			$listItem->price === null
+		) {
+			throw new Exception(
+				key: 'merx.cart.add',
+				httpCode: 400,
+				data: [
+					'key' => $listItem->key,
+				],
+			);
+		}
+	}
+
 	protected static function validateQuantity(ListItem $listItem): void
 	{
 		if (is_finite($listItem->quantity) === false || $listItem->quantity < 0) {

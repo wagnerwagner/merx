@@ -3,6 +3,7 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\App;
+use Kirby\Cms\Page;
 use Kirby\Exception\Exception;
 use PHPUnit\Framework\TestCase;
 
@@ -14,6 +15,55 @@ final class ProductListTest extends TestCase
 
 		$this->expectException(Exception::class);
 		$productList->add(['key' => 'nice-shoes', 'price' => 99.99, 'quantity' => -1.0]);
+	}
+
+	public function testAddAcceptsAnItemWithoutPageWhichHasAPrice(): void
+	{
+		$productList = new ProductList();
+		$productList->add(['key' => 'gift-wrap', 'price' => 0.0]);
+		$productList->add(['key' => 'shipping', 'type' => 'shipping']);
+
+		$this->assertSame(['gift-wrap', 'shipping'], $productList->keys());
+	}
+
+	public function testAddRejectsAPageWhichIsNoProduct(): void
+	{
+		$productList = new ProductList();
+
+		try {
+			// A page, but nothing to buy
+			$productList->add(['key' => 'about', 'page' => new Page(['slug' => 'about'])]);
+			$this->fail('A page which is no product was added');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.cart.add', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+		}
+
+		$this->assertCount(0, $productList);
+	}
+
+	public function testAddRejectsAnUnknownPage(): void
+	{
+		$productList = new ProductList();
+
+		try {
+			$productList->add('no-such-product');
+			$this->fail('An unknown page was added');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.cart.add', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+		}
+
+		$this->assertCount(0, $productList);
+	}
+
+	public function testAddRejectsInputWithoutKeyAndPage(): void
+	{
+		$productList = new ProductList();
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionCode('error.merx.cart.add');
+		$productList->add(['quantity' => 2.0]);
 	}
 
 	public function testConstructKeysListByItemKey(): void

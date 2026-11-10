@@ -5,9 +5,11 @@ namespace Wagnerwagner\Merx\Tests;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Exception\Exception;
+use Kirby\Exception\InvalidArgumentException;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use PHPUnit\Framework\TestCase;
+use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
 
@@ -87,6 +89,15 @@ final class OrderModelTest extends TestCase
 				],
 			],
 			'hooks' => [
+				'wagnerwagner.merx.initializeOrder:before' => function (Cart $cart, array $data): void {
+					if (($data['company'] ?? null) === 'Banned') {
+						throw new InvalidArgumentException(
+							key: 'shop.banned',
+							httpCode: 400,
+							fallback: 'We don’t deliver to this company.',
+						);
+					}
+				},
 				'wagnerwagner.merx.initializeOrder:after' => function (OrderPage $virtualOrderPage) use ($test): void {
 					$test->classes['initializeOrder:after'] = $virtualOrderPage::class;
 				},
@@ -109,6 +120,51 @@ final class OrderModelTest extends TestCase
 		App::$enableWhoops = true;
 		Dir::remove($this->root);
 		App::instance($this->app);
+	}
+
+	public function testAnEmptyCartIsAClientError(): void
+	{
+		cart()->delete();
+
+		try {
+			merx()->initializeOrder(['paymentGateway' => 'probe']);
+			$this->fail('An empty cart was ordered');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.emptycart', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+		}
+	}
+
+	public function testAnOrderRefusedByAHookKeepsItsMessage(): void
+	{
+		try {
+			merx()->initializeOrder([
+				'paymentGateway' => 'probe',
+				'email' => 'customer@example.com',
+				'company' => 'Banned',
+			]);
+			$this->fail('The hook did not refuse the order');
+		} catch (Exception $exception) {
+			$this->assertSame('error.shop.banned', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+			$this->assertSame('We don’t deliver to this company.', $exception->getMessage());
+		}
+	}
+
+	public function testAnUnknownGatewayIsAClientError(): void
+	{
+		try {
+			merx()->initializeOrder([
+				'paymentGateway' => 'no-such-gateway',
+				'email' => 'customer@example.com',
+				'company' => 'ACME',
+			]);
+			$this->fail('An unknown gateway was accepted');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.noPaymentGateway', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+			$this->assertSame(['paymentGateway' => 'no-such-gateway'], $exception->getDetails());
+		}
 	}
 
 	public function testGatewayAndHooksGetTheOwnModel(): void

@@ -70,7 +70,7 @@ class Cart extends ProductList
 	 * $cart->add('products/nice-shoes'); // ID of a ProductPage
 	 * $cart->add('page://L1cJEiOOQI3VzljV'); // UUID of a ProductPage
 	 * $cart->add(['key' => 'individual-shoes', 'page' => 'products/nice-shoes']); // Array including key
-	 * $cart->add(new ListItem(key: 'nice-socks', price: 10])); // Custom LitItem
+	 * $cart->add(new ListItem(key: 'nice-socks', price: 10.0)); // Custom ListItem
 	 * ```
 	 *
 	 * @throws Exception error.merx.cart.add

@@ -1,6 +1,6 @@
 # Working on Merx
 
-Merx is a commercial Kirby 5 plugin that adds a cart, checkout, orders and
+Merx is a commercial Kirby 6 plugin that adds a cart, checkout, orders and
 payments (Stripe, PayPal) to a Kirby site. This file is for agents and
 developers working **on the plugin**. It is not user documentation.
 

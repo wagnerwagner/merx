@@ -15,7 +15,7 @@ use Wagnerwagner\Merx\ProductList;
 
 /**
  * A product with a `stock` field cannot be put into the cart, or ordered, more
- * often than the field allows. In production, every order lowers it.
+ * often than the field allows. Every order lowers it, unless `reduceStock` is off.
  */
 final class StockTest extends TestCase
 {
@@ -47,7 +47,7 @@ final class StockTest extends TestCase
 	 * Socks have three in stock, the shirt has no `stock` field, and the mug
 	 * has one which is not a number.
 	 */
-	protected function boot(bool $production = false, bool $logging = false): void
+	protected function boot(bool $production = false, bool $logging = false, bool $reduceStock = true): void
 	{
 		$this->kirby = new App([
 			'roots' => [
@@ -58,6 +58,7 @@ final class StockTest extends TestCase
 			'options' => [
 				'wagnerwagner.merx.logging' => $logging,
 				'wagnerwagner.merx.production' => $production,
+				'wagnerwagner.merx.reduceStock' => $reduceStock,
 				'wagnerwagner.merx.gateways' => [
 					'recorded' => [
 						'completePayment' => function (OrderPage $virtualOrderPage): OrderPage {
@@ -215,8 +216,10 @@ final class StockTest extends TestCase
 		$this->assertSame(3.0, cart()->quantity());
 	}
 
-	public function testCreateOrderLeavesTheStockAloneOutsideProduction(): void
+	public function testCreateOrderLeavesTheStockAloneWhenReduceStockIsOff(): void
 	{
+		$this->boot(reduceStock: false);
+
 		cart()->add(['page' => 'socks', 'quantity' => 2.0]);
 		$this->checkout();
 
@@ -224,10 +227,8 @@ final class StockTest extends TestCase
 		$this->assertSame('3', $this->stockOnDisk('socks'));
 	}
 
-	public function testCreateOrderReducesTheStockInProduction(): void
+	public function testCreateOrderReducesTheStock(): void
 	{
-		$this->boot(production: true);
-
 		$cart = cart();
 		$cart->add(['key' => 'socks-anna', 'page' => 'socks', 'quantity' => 1.0]);
 		$cart->add(['key' => 'socks-ben', 'page' => 'socks', 'quantity' => 1.0]);
