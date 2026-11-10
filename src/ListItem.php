@@ -81,7 +81,7 @@ class ListItem extends Obj
 		} else {
 			// Update price by page’s definition
 			if ($this->page instanceof ProductPage && $refreshPrice === true) {
-				$this->price = $this->page->price(quantity: $quantity);
+				$this->price = $this->page->price(quantity: $quantity, data: $data);
 			}
 		}
 
@@ -165,7 +165,7 @@ class ListItem extends Obj
 	public function refreshPrice(): self
 	{
 		if ($this->page instanceof ProductPage) {
-			$this->price = $this->page->price(pricingRule: $this->price->pricingRule, quantity: $this->quantity);
+			$this->price = $this->page->price(pricingRule: $this->price?->pricingRule, quantity: $this->quantity, data: $this->data);
 			if (is_float($this->quantifier)) {
 				$this->price = $this->price?->quantify($this->quantifier);
 			}
