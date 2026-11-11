@@ -17,6 +17,11 @@ use Kirby\Exception\Exception;
 class ProductList extends ListItems
 {
 	/**
+	 * How large the `data` of an item may be, in bytes of its JSON
+	 */
+	public static int $maxDataSize = 4096;
+
+	/**
 	 * Adds a new product to the list.
 	 *
 	 * ```php
@@ -39,6 +44,7 @@ class ProductList extends ListItems
 
 		static::validateProduct($listItem);
 		static::validateQuantity($listItem);
+		static::validateData($listItem);
 		$this->validateStockOf($listItem);
 
 		$this->set($listItem->key, $listItem);
@@ -139,6 +145,7 @@ class ProductList extends ListItems
 		}
 
 		static::validateQuantity($updatedItem);
+		static::validateData($updatedItem);
 
 		// A change which does not raise the quantity always goes through, so a
 		// cart can be brought back within a stock which has dropped since.
@@ -184,6 +191,34 @@ class ProductList extends ListItems
 				httpCode: 400,
 				data: [
 					'key' => $listItem->key,
+				],
+			);
+		}
+	}
+
+	/**
+	 * Makes sure the `data` of $listItem stays small
+	 *
+	 * `data` comes from visitors who are not logged in and is kept in their
+	 * session, and later in the order.
+	 *
+	 * @throws Exception error.merx.cart.data when `data` is larger than `ProductList::$maxDataSize` or nested deeper than 8 levels
+	 */
+	protected static function validateData(ListItem $listItem): void
+	{
+		if ($listItem->data === null) {
+			return;
+		}
+
+		// False when nested too deep, or when it cannot be written at all
+		$json = json_encode($listItem->data, depth: 8);
+
+		if ($json === false || strlen($json) > static::$maxDataSize) {
+			throw new Exception(
+				key: 'merx.cart.data',
+				httpCode: 400,
+				data: [
+					'title' => $listItem->title,
 				],
 			);
 		}

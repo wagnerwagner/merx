@@ -56,11 +56,17 @@ class ListItems extends Collection
 		$currency = null;
 		foreach ($this as $listItem) {
 			/** @var ListItem $listItem */
-			$price = $listItem->price;
-			if (is_string($currency) && $currency !== $price?->currency) {
+			$itemCurrency = $listItem->price?->currency;
+
+			// An item without a price has no currency, and takes none away
+			if ($itemCurrency === null) {
+				continue;
+			}
+
+			if (is_string($currency) && $currency !== $itemCurrency) {
 				return false;
 			}
-			$currency = $price?->currency;
+			$currency = $itemCurrency;
 		}
 		return $currency;
 	}

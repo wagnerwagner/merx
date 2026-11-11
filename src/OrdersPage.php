@@ -13,18 +13,17 @@ use Kirby\Cms\Pages;
  */
 class OrdersPage extends Page
 {
-	public static $allowedRoles = ['admin'];
-
 	/**
 	 * Prevent index of all orders
 	 *
 	 * SECURITY/PRIVACY
 	 * An index of all orders could reveal the secret order page urls.
+	 * Panel users may read orders, so they get it.
 	 */
 	public function index(bool $drafts = false): Pages
 	{
-		if (in_array($this->kirby()->user()?->role()->id(), self::$allowedRoles)) {
-			return parent::index();
+		if ($this->kirby()->user() !== null) {
+			return parent::index($drafts);
 		}
 
 		return new Pages();

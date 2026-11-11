@@ -26,6 +26,56 @@ final class ProductListTest extends TestCase
 		$this->assertSame(['gift-wrap', 'shipping'], $productList->keys());
 	}
 
+	/**
+	 * `data` comes from visitors and is kept in their session
+	 */
+	public function testAddRejectsDataWhichIsTooLargeOrTooDeep(): void
+	{
+		$productList = new ProductList();
+
+		$deep = 'name';
+		for ($level = 0; $level < 9; $level++) {
+			$deep = ['level' => $deep];
+		}
+
+		foreach ([['text' => str_repeat('a', 5000)], $deep] as $data) {
+			try {
+				$productList->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0, 'data' => $data]);
+				$this->fail('Data which is too extensive was added');
+			} catch (Exception $exception) {
+				$this->assertSame('error.merx.cart.data', $exception->getKey());
+				$this->assertSame(400, $exception->getHttpCode());
+			}
+		}
+
+		$productList->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0, 'data' => ['name' => 'Anna', 'options' => ['thread' => 'red']]]);
+		$this->assertCount(1, $productList);
+
+		try {
+			$productList->updateItem('socks', ['data' => ['text' => str_repeat('a', 5000)]]);
+			$this->fail('Data which is too extensive was stored');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.cart.data', $exception->getKey());
+		}
+
+		$this->assertSame('Anna', $productList->get('socks')->data['name']);
+	}
+
+	/**
+	 * Only a cart is bound to one currency. A wishlist may hold several.
+	 */
+	public function testAddAcceptsAnotherCurrency(): void
+	{
+		$productList = new ProductList();
+		$productList->add(['key' => 'socks', 'price' => new Price(price: 10.0, currency: 'EUR')]);
+		$productList->add(['key' => 'shirt', 'price' => new Price(price: 20.0, currency: 'USD')]);
+
+		$this->assertSame(['socks', 'shirt'], $productList->keys());
+		$this->assertSame('USD', $productList->get('shirt')->price->currency);
+		$this->assertFalse($productList->currency());
+		$this->assertNull($productList->total());
+	}
+
 	public function testAddRejectsAPageWhichIsNoProduct(): void
 	{
 		$productList = new ProductList();

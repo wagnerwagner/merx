@@ -125,6 +125,21 @@ class ListItemTest extends TestCase
 		});
 	}
 
+	/**
+	 * A cart is read from the session with every request. The title of a
+	 * product is read from its page then, in the language of that request.
+	 */
+	public function testTitleOfAPageIsNotStoredInTheSession(): void
+	{
+		$page = new Page([
+			'slug' => 'shoes',
+			'content' => ['title' => 'Nice shoes', 'price' => 200],
+		]);
+
+		$this->assertArrayNotHasKey('title', (new ListItem(key: 'shoes', page: $page))->toSessionArray());
+		$this->assertSame('Shipping', (new ListItem(key: 'shipping', title: 'Shipping', price: 5.0, type: 'shipping'))->toSessionArray()['title']);
+	}
+
 	public function testTitleFallbackToPageTitle()
 	{
 		$key = 'item3';

@@ -69,6 +69,23 @@ final class ApiTest extends TestCase
 		]);
 	}
 
+	/**
+	 * A quantity may be a fraction, e.g. metres. The cart reports what it
+	 * calculates with.
+	 */
+	public function testCartAddWithAFractionAsQuantity(): void
+	{
+		$response = kirby()->api()->call('shop/cart', 'POST', [
+			'body' => [
+				'key' => 'ipsum',
+				'quantity' => 1.5,
+			],
+		]);
+
+		$this->assertSame(1.5, $response['data']['quantity']);
+		$this->assertSame(1.5, $response['data']['products']['items'][0]['quantity']);
+	}
+
 	public function testCartAddWithQuantity(): void
 	{
 		$kirby = kirby();

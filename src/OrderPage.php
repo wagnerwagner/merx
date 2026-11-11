@@ -5,6 +5,7 @@ namespace Wagnerwagner\Merx;
 use DateTimeImmutable;
 use DateTimeZone;
 use Kirby\Cms\Page;
+use Kirby\Cms\Pages;
 use Kirby\Content\Field;
 use Kirby\Content\VersionId;
 
@@ -204,6 +205,23 @@ class OrderPage extends Page
 		$this->logRender();
 
 		return parent::render($data, $contentType, $versionId);
+	}
+
+	/**
+	 * Hides the other orders from everybody but Panel users
+	 *
+	 * SECURITY/PRIVACY
+	 * The siblings of an order are the orders of other customers. `prev()`
+	 * and `next()` in an order template would link to them, with their
+	 * secret urls. `OrdersPage::index()` does the same for the index.
+	 */
+	protected function siblingsCollection(): Pages
+	{
+		if ($this->kirby()->user() !== null) {
+			return parent::siblingsCollection();
+		}
+
+		return new Pages([$this]);
 	}
 
 	/**

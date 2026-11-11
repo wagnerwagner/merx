@@ -37,7 +37,7 @@ class ListItem extends Obj
 	/**
 	 * Create a new ListItem
 	 *
-	 * @param $title Will be overwritten by $page’s title
+	 * @param $title Title of an item without a page. The cart reads the title of an item with a page from the page.
 	 * @param $page Page object or page slug
 	 * @param $price Will be overwritten by $page’s price when $price is float or null. An array is a price as `toSessionArray()` stores it.
 	 * @param $quantity Quantity of the ListItem. E.g. 3.0 for 3 items.
@@ -126,12 +126,24 @@ class ListItem extends Obj
 	public static function factory(string|array|ListItem $data): ListItem
 	{
 		if (is_string($data)) {
-			$listItem = new ListItem(key: $data);
-		} elseif (is_array($data)) {
+			$data = ['page' => $data];
+		}
+
+		if (is_array($data)) {
 			if (!array_key_exists('key', $data)) {
-				// Use page id or uuid as key
+				// The uuid of the page is the key, whether the page is named by
+				// its id, its uuid or as an object. Otherwise the same product
+				// would get one line per spelling.
 				$page = $data['page'] ?? null;
-				$data['key'] = ($page instanceof Page) ? $page->uuid() : $page;
+				if (is_string($page)) {
+					$page = page($page) ?? $page;
+				}
+				if ($page instanceof Page) {
+					$data['page'] = $page;
+					$data['key'] = $page->uuid()?->toString() ?? $page->id();
+				} else {
+					$data['key'] = $page;
+				}
 			}
 			if ($data['key'] === null || $data['key'] === '') {
 				// Neither `key` nor `page`: nothing to add
@@ -208,9 +220,10 @@ class ListItem extends Obj
 	{
 		$array = (array)$this;
 
-		// remove price definition, when page is present
+		// Price and title of an item with a page are read from the page with
+		// every request, so they follow its content and the current language
 		if ($array['page'] instanceof Page) {
-			unset($array['price']);
+			unset($array['price'], $array['title']);
 			$array['page'] = (string)$array['page']->uuid();
 		} elseif ($array['price'] instanceof Price) {
 			// An item without a page, e.g. shipping, has no other source for its

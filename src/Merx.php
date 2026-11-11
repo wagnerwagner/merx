@@ -618,6 +618,14 @@ class Merx
 				);
 			}
 
+			// E.g. a shipping line added before the customer switched the currency
+			if ($cart->currency() === false) {
+				throw new Exception(
+					key: 'merx.mixedCurrencies.total',
+					httpCode: 400,
+				);
+			}
+
 			// A cart lives in the session for days, while the stock runs out
 			$cart->validateStock();
 

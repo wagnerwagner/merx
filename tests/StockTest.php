@@ -163,6 +163,24 @@ final class StockTest extends TestCase
 	/**
 	 * The limit comes from the page, so nothing a client sends can lift it
 	 */
+	/**
+	 * A product is one line, however the page is named
+	 */
+	public function testAddFindsTheLineOfAProductByIdUuidAndPage(): void
+	{
+		$cart = cart();
+		$cart->add('shirt');
+		$cart->add(['page' => 'page://shirt']);
+		$cart->add(['page' => $this->kirby->page('shirt'), 'quantity' => 2.0]);
+
+		$this->assertSame(['page://shirt'], $cart->keys());
+		$this->assertSame(4.0, $cart->quantity());
+
+		// A key of the shop’s own stays a line of its own
+		$cart->add(['key' => 'shirt-anna', 'page' => 'shirt']);
+		$this->assertSame(['page://shirt', 'shirt-anna'], cart()->keys());
+	}
+
 	public function testAddIgnoresALimitInTheItemData(): void
 	{
 		$this->assertStockError(

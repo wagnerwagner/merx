@@ -8,8 +8,10 @@ use Kirby\Filesystem\Dir;
 use Kirby\Http\Url;
 use PHPUnit\Framework\TestCase;
 use Stripe\Event;
+use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
+use Wagnerwagner\Merx\Price;
 
 /**
  * `initializeOrder()` writes the order as a draft, `createOrder()` publishes
@@ -161,6 +163,23 @@ final class OrderDraftTest extends TestCase
 		$this->assertNotSame($first->uid(), $second->uid());
 		$this->assertSame(2, $this->kirby->site()->ordersPage()->children()->listed()->count());
 		$this->assertSame([], $this->drafts());
+	}
+
+	/**
+	 * `prev()` and `next()` in an order template must not lead to the
+	 * orders of other customers
+	 */
+	public function testAnOrderHasNoSiblingsForAVisitor(): void
+	{
+		$first = merx()->createOrder($this->checkout());
+		$second = merx()->createOrder($this->checkout());
+
+		$this->assertSame([$second->id()], $second->siblings()->keys());
+		$this->assertNull($second->prev());
+		$this->assertNull($first->next());
+
+		$siblings = $this->kirby->impersonate('kirby', fn () => $second->siblings()->keys());
+		$this->assertSame([$first->id(), $second->id()], $siblings);
 	}
 
 	public function testANewCheckoutReplacesTheDraftOfTheSession(): void
@@ -354,6 +373,48 @@ final class OrderDraftTest extends TestCase
 		$this->assertSame($return['order'], $orderPage->uid());
 		$this->assertSame(1, $this->completed);
 		$this->assertSame(0, cart()->count());
+	}
+
+	/**
+	 * A price in another currency is refused, not dropped
+	 */
+	public function testCartRefusesAnItemInAnotherCurrency(): void
+	{
+		$cart = cart();
+		$cart->add(['key' => 'socks', 'title' => 'Socks', 'price' => new Price(price: 10.0, currency: 'EUR')]);
+		$cart->add(['key' => 'gift-wrap', 'title' => 'Gift wrap', 'type' => 'custom']);
+
+		try {
+			$cart->add(['key' => 'shipping', 'title' => 'Shipping', 'type' => 'shipping', 'price' => new Price(price: 5.0, currency: 'USD')]);
+			$this->fail('A price in another currency was added');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.mixedCurrencies.add', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+		}
+
+		$this->assertSame(['socks', 'gift-wrap'], cart()->keys());
+		$this->assertSame('EUR', cart()->currency());
+	}
+
+	/**
+	 * E.g. a shipping line which was added before the customer switched the currency
+	 */
+	public function testInitializeOrderRefusesACartWithTwoCurrencies(): void
+	{
+		new Cart([
+			['key' => 'socks', 'title' => 'Socks', 'price' => new Price(price: 10.0, currency: 'EUR')],
+			['key' => 'shipping', 'title' => 'Shipping', 'type' => 'shipping', 'price' => new Price(price: 5.0, currency: 'USD')],
+		]);
+
+		try {
+			merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'customer@example.com']);
+			$this->fail('A cart with two currencies was ordered');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.mixedCurrencies.total', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+		}
+
+		$this->assertSame([], $this->drafts());
 	}
 
 	public function testInitializeOrderWritesADraft(): void

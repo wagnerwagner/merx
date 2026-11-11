@@ -37,33 +37,6 @@ class Cart extends ProductList
 	}
 
 	/**
-	 * @param ListItem $value
-	 * @internal
-	 * @throws Exception When currency of new item does not match existing currency
-	 */
-	public function __set(string $key, $value): void
-	{
-		$listItem = ListItem::factory($value);
-		$currency = $this->currency();
-
-		// Check currencies
-		if (is_string($currency) && $listItem->price?->currency !== $currency) {
-			$listItem->price = null;
-			parent::__set($key, $listItem);
-		// throw new Exception([
-		// 	'key' => 'merx.mixedCurrencies.add',
-		// 	'data' => [
-		// 		'key' => $listItem->key,
-		// 		'currency' => $currency,
-		// 		'newCurrency' => $listItem->price?->currency,
-		// 	],
-		// ]);
-		} else {
-			parent::__set($key, $listItem);
-		}
-	}
-
-	/**
 	 * Adds item to cart.
 	 *
 	 * ```php
@@ -74,13 +47,16 @@ class Cart extends ProductList
 	 * ```
 	 *
 	 * @throws Exception error.merx.cart.add
+	 * @throws Exception error.merx.mixedCurrencies.add when the item has another currency than the cart
 	 */
 	public function add(string|array|ListItem $data): static
 	{
 		$kirby = App::instance();
 		try {
 			$kirby->trigger('wagnerwagner.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
-			parent::add($data);
+			$listItem = ListItem::factory($data);
+			$this->validateCurrencyOf($listItem);
+			parent::add($listItem);
 			$this->save();
 			$kirby->trigger('wagnerwagner.merx.cart.add:after', ['cart' => $this]);
 			return $this;
@@ -273,6 +249,32 @@ class Cart extends ProductList
 				key: 'merx.cart.update',
 				details: Merx::exceptionDetails($ex),
 				previous: $ex,
+			);
+		}
+	}
+
+	/**
+	 * Makes sure the price of $listItem is in the currency of the cart
+	 *
+	 * A cart is paid in one currency. A product list, e.g. a wishlist, may
+	 * hold more than one.
+	 *
+	 * @throws Exception error.merx.mixedCurrencies.add
+	 */
+	protected function validateCurrencyOf(ListItem $listItem): void
+	{
+		$currency = $this->currency();
+		$newCurrency = $listItem->price?->currency;
+
+		if (is_string($currency) === true && is_string($newCurrency) === true && $currency !== $newCurrency) {
+			throw new Exception(
+				key: 'merx.mixedCurrencies.add',
+				httpCode: 400,
+				data: [
+					'key' => $listItem->key,
+					'currency' => $currency,
+					'newCurrency' => $newCurrency,
+				],
 			);
 		}
 	}

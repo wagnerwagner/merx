@@ -22,7 +22,7 @@ return [
 				'total' => $this->model('price', $listItems->total())->toArray(),
 			];
 		},
-		'quantity' => fn (ProductList $productList): int => $productList->quantity(),
+		'quantity' => fn (ProductList $productList): float => $productList->quantity(),
 		'taxRates' => fn (ProductList $productList): array => array_values(array_map(function (Tax $tax) {
 			/** @var \Kirby\Api\Api $this */
 			return $this->model('tax', $tax)->toArray();
