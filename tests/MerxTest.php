@@ -23,36 +23,6 @@ final class MerxTest extends TestCase
 		);
 	}
 
-	public function testCreateOrderRefusesAReturnWithoutTheNonce(): void
-	{
-		$kirby = kirby();
-		$kirby->session()->set(Merx::$returnNonceSessionKey, 'a1b2c3');
-		$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', [
-			'slug' => 'probe-order',
-			'template' => 'order',
-			'content' => ['paymentGateway' => 'invoice'],
-		]);
-
-		$merx = new Merx();
-		$this->expectExceptionCode('error.merx.invalidReturn');
-		$merx->createOrder(['PayerID' => 'forged']);
-	}
-
-	public function testCreateOrderRefusesAReturnWithTheWrongNonce(): void
-	{
-		$kirby = kirby();
-		$kirby->session()->set(Merx::$returnNonceSessionKey, 'a1b2c3');
-		$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', [
-			'slug' => 'probe-order',
-			'template' => 'order',
-			'content' => ['paymentGateway' => 'invoice'],
-		]);
-
-		$merx = new Merx();
-		$this->expectExceptionCode('error.merx.invalidReturn');
-		$merx->createOrder([Merx::$returnNonceParameterName => 'wrong']);
-	}
-
 	public function testErrorIsReadOnce(): void
 	{
 		$error = ['key' => 'error.merx.paymentCanceled', 'message' => 'Payment canceled.'];
@@ -160,22 +130,21 @@ final class MerxTest extends TestCase
 		$merx->initializeOrder([]);
 	}
 
-	public function testReturnUrlCarriesASessionTokenAndANonce(): void
+	public function testReturnUrlCarriesTheOrder(): void
 	{
+		$url = Merx::returnUrl();
 		$query = [];
-		parse_str(parse_url(Merx::returnUrl(), PHP_URL_QUERY) ?? '', $query);
+		parse_str(parse_url($url, PHP_URL_QUERY) ?? '', $query);
 
-		$this->assertArrayHasKey(Merx::$sessionTokenParameterName, $query);
-		$this->assertArrayHasKey(Merx::$returnNonceParameterName, $query);
-		$this->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $query[Merx::$returnNonceParameterName]);
+		$this->assertMatchesRegularExpression('/^[a-z0-9]{16}$/', $query[Merx::$orderParameterName]);
+
+		// Nothing which would let somebody else take over the visitor’s session
+		$this->assertStringNotContainsString((string)kirby()->session()->token(), $url);
 	}
 
-	public function testReturnUrlKeepsTheNonceWithinOneCheckout(): void
+	public function testReturnUrlKeepsTheOrderWithinOneCheckout(): void
 	{
 		// `returnUrl()` is called more than once while a payment is set up
-		$this->assertSame(
-			parse_url(Merx::returnUrl(), PHP_URL_QUERY),
-			parse_url(Merx::returnUrl(), PHP_URL_QUERY),
-		);
+		$this->assertSame(Merx::returnUrl(), Merx::returnUrl());
 	}
 }

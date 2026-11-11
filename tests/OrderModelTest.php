@@ -8,6 +8,7 @@ use Kirby\Exception\Exception;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
+use Kirby\Http\Url;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\Merx;
@@ -178,9 +179,7 @@ final class OrderModelTest extends TestCase
 			'email' => 'customer@example.com',
 			'company' => "  O'Brien & Söhne <b>GmbH</b>  ",
 		]);
-		$orderPage = $merx->createOrder([
-			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
-		]);
+		$orderPage = $merx->createOrder(Url::toObject(Merx::returnUrl())->query()->toArray());
 
 		$this->assertSame("O'Brien & Söhne <b>GmbH</b>", $orderPage->company()->value());
 		$this->assertSame('O&#039;Brien &amp; Söhne &lt;b&gt;GmbH&lt;/b&gt;', $orderPage->company()->escape()->value());
@@ -194,9 +193,7 @@ final class OrderModelTest extends TestCase
 			'email' => 'customer@example.com',
 			'company' => 'ACME',
 		]);
-		$orderPage = $merx->createOrder([
-			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
-		]);
+		$orderPage = $merx->createOrder(Url::toObject(Merx::returnUrl())->query()->toArray());
 		$this->classes['createOrder'] = $orderPage::class;
 
 		$this->assertSame([

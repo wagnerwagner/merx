@@ -8,7 +8,6 @@ use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Exception\Exception;
 use Kirby\Http\Url;
-use Kirby\Session\Session;
 use Kirby\Toolkit\Locale;
 use Kirby\Toolkit\Str;
 use NumberFormatter;
@@ -40,13 +39,15 @@ class Merx
 		'stripepaymentintentid',
 		'uuid',
 	];
-	public static string $returnNonceParameterName = 'nonce';
-
 	/**
-	 * Session key of the one-time nonce which ties a return from the payment
-	 * provider to the checkout that started it
+	 * Session key of the uid of the order draft of the current checkout
+	 *
+	 * Not used to find the order of a return, which the return url names.
+	 * `returnUrl()` needs the uid before the draft is written, and the next
+	 * checkout of the session needs it to replace a draft which was left open.
 	 */
-	public static string $returnNonceSessionKey = 'wagnerwagner.merx.returnNonce';
+	public static string $orderDraftSessionKey = 'wagnerwagner.merx.orderDraft';
+	public static string $orderParameterName = 'order';
 
 	/**
 	 * Session key of the error which sent the customer back to the checkout
@@ -54,7 +55,6 @@ class Merx
 	 * @see Merx::error()
 	 */
 	public static string $errorSessionKey = 'wagnerwagner.merx.error';
-	public static string $sessionTokenParameterName = 'sessionToken';
 
 	protected Cart $cart;
 
@@ -115,13 +115,21 @@ class Merx
 	}
 
 	/**
-	 * Stores order page to file system
+	 * Turns the order draft of a checkout into an order
 	 *
 	 * Checks the stock again, calls `completePayment` of the payment gateway,
-	 * lowers the stock of the ordered products while
-	 * `wagnerwagner.merx.reduceStock` is true, and deletes the cart.
+	 * publishes the draft `initializeOrder()` wrote, lowers the stock of the
+	 * ordered products while `wagnerwagner.merx.reduceStock` is true, and
+	 * deletes the cart.
 	 *
-	 * @param $data Data required for payment gateway’s `completePayment()`
+	 * The draft is found by the `order` of the return url, so a customer may
+	 * come back in another browser or after their session ended. The uid is
+	 * random and only known to the customer and the payment provider, and a
+	 * payment gateway verifies the payment before the order is written.
+	 * A return to an order which is completed already gets that order.
+	 *
+	 * @param $data Query of the return url, and whatever the payment gateway’s `completePayment()` needs
+	 * @throws Exception error.merx.invalidReturn when there is no draft for the return
 	 * @throws Exception error.merx.cart.stock or error.merx.cart.soldOut when the stock ran out before the payment was completed
 	 */
 	public function createOrder(array $data = []): OrderPage
@@ -129,75 +137,102 @@ class Merx
 		$kirby = App::instance();
 
 		try {
-			$virtualOrderPage = $this->getVirtualOrderPageFromSession($data);
-			$gateway = $this->getGateway($virtualOrderPage->paymentGateway()->toString());
+			$uid = $data[static::$orderParameterName] ?? null;
+			$ordersPage = $kirby->site()->ordersPage();
 
-			$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
-
-			// The stock may have run out while the customer was at the payment
-			// provider. Checked before `completePayment` captures the payment.
-			$virtualOrderPage->cart()->validateStock();
-
-			if (is_callable($gateway['completePayment'])) {
-				$gateway['completePayment']($virtualOrderPage, $data);
+			// The uid ends up in the name of a lock file
+			if (is_string($uid) === false || preg_match('/^[a-z0-9]{1,64}$/', $uid) !== 1 || $ordersPage === null) {
+				throw new Exception(
+					key: 'merx.invalidReturn',
+					httpCode: 400,
+				);
 			}
 
-			// Set to default language to make sure content is saved in default language
-			$currentLanguageCode = null;
-			if ($kirby->multilang()) {
-				$currentLanguageCode = $kirby->languageCode();
-				$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
-			}
+			// One return per order at a time. A second one, e.g. a reload, waits
+			// here and then finds the order instead of the draft.
+			$orderPage = static::lock($ordersPage, '.merx-order-' . $uid . '.lock', function () use ($kirby, $ordersPage, $uid, $data): OrderPage {
+				$ordersPage->purge();
+				$draft = $ordersPage->draft($uid);
 
-			// Creating the order requires admin permissions. The callback makes sure the
-			// impersonation is always reset, even when an error occurs. Without it the
-			// `kirby` super user would stay active for the rest of the request.
-			/** @var OrderPage $orderPage */
-			$orderPage = $kirby->impersonate('kirby', function () use ($kirby, $virtualOrderPage, $currentLanguageCode): OrderPage {
-				$ordersPage = $kirby->site()->ordersPage();
-				if ($ordersPage === null) {
-					// create orders page if it does not exist
-					$ordersPage = $kirby->site()->createChild([
-						'slug' => option('wagnerwagner.merx.ordersPage'),
-						'template' => 'orders',
-						'draft' => false,
-						'content' => [
-							'title' => t('field.orders'),
-						],
-					]);
+				if ($draft instanceof OrderPage === false) {
+					$orderPage = $ordersPage->find($uid);
+
+					if ($orderPage instanceof OrderPage) {
+						return $orderPage;
+					}
+
+					throw new Exception(
+						key: 'merx.invalidReturn',
+						httpCode: 400,
+					);
 				}
-				$virtualOrderPageArray = $this->virtualOrderPageToArray($virtualOrderPage);
-				$virtualOrderPageArray['model'] = 'order';
-				$virtualOrderPageArray['draft'] = false;
 
+				// A copy in memory, which the gateway and the hooks may change
+				// freely. The draft is only written once the payment is completed.
+				$content = $draft->content($kirby->defaultLanguage()?->code())->toArray();
+
+				$virtualOrderPage = OrderPage::factory([
+					'slug' => $uid,
+					'template' => 'order',
+					'model' => 'order',
+					'content' => $content,
+					'parent' => $ordersPage,
+				]);
+
+				$gateway = $this->getGateway($virtualOrderPage->paymentGateway()->toString());
+
+				$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
+
+				// The stock may have run out while the customer was at the payment
+				// provider. Checked before `completePayment` captures the payment.
+				$virtualOrderPage->cart()->validateStock();
+
+				if (is_callable($gateway['completePayment'])) {
+					$gateway['completePayment']($virtualOrderPage, $data);
+				}
+
+				// Set to default language to make sure content is saved in default language
+				$currentLanguageCode = null;
+				if ($kirby->multilang()) {
+					$currentLanguageCode = $kirby->languageCode();
+					$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
+				}
+
+				// Publishing the order requires admin permissions. The callback makes sure the
+				// impersonation is always reset, even when an error occurs. Without it the
+				// `kirby` super user would stay active for the rest of the request.
 				/** @var OrderPage $orderPage */
-				$orderPage = static::lockOrders($ordersPage, function () use ($ordersPage, $virtualOrderPage, $virtualOrderPageArray): OrderPage {
-					// `orderNumber` reads the orders through the virtual order page’s parent.
-					// They may have been read before the lock was taken, and another
-					// checkout may have written one since.
-					$virtualOrderPage->parentModel()->purge();
+				$orderPage = $kirby->impersonate('kirby', function () use ($ordersPage, $draft, $virtualOrderPage): OrderPage {
+					return static::lock($ordersPage, '.merx-orders.lock', function () use ($draft, $virtualOrderPage): OrderPage {
+						// `orderNumber` reads the orders through the virtual order page’s parent.
+						// They may have been read before the lock was taken, and another
+						// checkout may have written one since.
+						$virtualOrderPage->parentModel()->purge();
 
-					// Taken inside the lock, so the orders sort in the order they got their number
-					$now = new DateTimeImmutable();
-					$virtualOrderPageArray['content']['dateCreated'] = $now->format('c');
-					// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
-					$virtualOrderPageArray['content']['sortingNumber'] = (string)OrderPage::sortingNumberFromDate($now);
+						$content = $virtualOrderPage->content()->toArray();
 
-					if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
-						$virtualOrderPageArray['content']['orderNumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
-					}
+						// Taken inside the lock, so the orders sort in the order they got their number
+						$now = new DateTimeImmutable();
+						$content['datecreated'] = $now->format('c');
+						// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
+						$content['sortingnumber'] = (string)OrderPage::sortingNumberFromDate($now);
 
-					/** @var OrderPage $orderPage */
-					$orderPage = $ordersPage->createChild($virtualOrderPageArray);
-					$orderPage = $orderPage->changeStatus('listed');
+						if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
+							$content['ordernumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
+						}
 
-					// Inside the lock, so two orders cannot both lower the same stock
-					// from the same number. Test orders leave the stock alone.
-					if (option('wagnerwagner.merx.reduceStock') === true) {
-						$orderPage->cart()->reduceStock();
-					}
+						/** @var OrderPage $orderPage */
+						$orderPage = $draft->save($content, null, true);
+						$orderPage = $orderPage->changeStatus('listed');
 
-					return $orderPage;
+						// Inside the lock, so two orders cannot both lower the same stock
+						// from the same number.
+						if (option('wagnerwagner.merx.reduceStock') === true) {
+							$orderPage->cart()->reduceStock();
+						}
+
+						return $orderPage;
+					});
 				});
 
 				// Gateways which complete the payment right away — PayPal, Stripe
@@ -210,18 +245,19 @@ class Merx
 				// that copy again throws, and Kirby removes the order’s content from
 				// disk while it does. `apply()` hands every hook, and Merx, the current one.
 				if ($orderPage->isPaid() === true) {
-					$orderPage = $kirby->apply('wagnerwagner.merx.orderPaid', ['orderPage' => $orderPage], 'orderPage');
+					$orderPage = $kirby->impersonate('kirby', fn () => $kirby->apply('wagnerwagner.merx.orderPaid', ['orderPage' => $orderPage], 'orderPage'));
 				}
 
 				// Reset language
 				$kirby->setCurrentLanguage($currentLanguageCode);
 
+				$kirby->session()->remove(static::$orderDraftSessionKey);
 				$this->cart->delete();
 
 				// `apply()`, like `orderPaid` above, so a caller gets the order
 				// with what the hooks wrote, not an outdated copy of it
-				return $kirby->apply('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage], 'orderPage');
-			});
+				return $kirby->impersonate('kirby', fn () => $kirby->apply('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage], 'orderPage'));
+			}, true);
 
 			return $orderPage;
 		} catch (\Exception $ex) {
@@ -447,18 +483,6 @@ class Merx
 		return $locale;
 	}
 
-	/**
-	 * Returns the virtual OrderPage as array for the session and `createChild()`
-	 */
-	private function virtualOrderPageToArray(OrderPage $virtualOrderPage): array
-	{
-			$array = $virtualOrderPage->toArray();
-			unset($array['translations']);
-			$array['template'] = $virtualOrderPage->template()->name();
-			return $array;
-	}
-
-
 	private function getGateway(string $paymentGateway): array
 	{
 		if (!array_key_exists($paymentGateway, $this->gateways)) {
@@ -483,43 +507,59 @@ class Merx
 		return $gateway;
 	}
 
-	private function getVirtualOrderPageFromSession(array $data = []): OrderPage
+	/**
+	 * Orders page, created when the shop gets its first order
+	 */
+	private static function ordersPage(): Page
 	{
 		$kirby = App::instance();
-		$session = $kirby->session();
-		$orderPageFromSession = $session->get('wagnerwagner.merx.virtualOrderPage');
 
-		if (!$orderPageFromSession) {
-			// The visitor may return in a different browser, where the session
-			// cookie is not available. The session token names the session then.
-			$sessionToken = $data[static::$sessionTokenParameterName] ?? $_GET[static::$sessionTokenParameterName] ?? null;
-
-			if (is_string($sessionToken) === false || $sessionToken === '') {
-				throw new \Exception('Session "wagnerwagner.merx.virtualOrderPage" does not exist.');
-			}
-
-			$session = $kirby->sessionHandler()->getManually($sessionToken);
-			$orderPageFromSession = $session->get('wagnerwagner.merx.virtualOrderPage');
-
-			if (!$orderPageFromSession) {
-				throw new \Exception('Session "wagnerwagner.merx.virtualOrderPage" does not exist.');
-			}
-		}
-
-		// The nonce lives in the same session as the order it belongs to
-		static::validateReturnNonce($session, $data);
-
-		$session->remove('wagnerwagner.merx.virtualOrderPage');
-
-		$orderPageFromSession['parent'] = $kirby->site()->ordersPage();
-		// The session holds no model, see `initializeOrder()`
-		$orderPageFromSession['model'] = 'order';
-
-		return OrderPage::factory((array)$orderPageFromSession);
+		return $kirby->site()->ordersPage() ?? $kirby->site()->createChild([
+			'slug' => option('wagnerwagner.merx.ordersPage'),
+			'template' => 'orders',
+			'draft' => false,
+			'content' => [
+				'title' => t('field.orders'),
+			],
+		]);
 	}
 
 	/**
-	 * Creates virtual OrderPage and validates it. Runs the payment gateway’s `initializePayment` function. Saves virtual OrderPage in the customer’s session.
+	 * Deletes order drafts which were never completed
+	 *
+	 * A draft is written with every checkout and published when the customer
+	 * returns from the payment. One who never returns leaves it behind, with
+	 * their personal data in it.
+	 *
+	 * @param $threshold Relative date string. Drafts which were not changed since are deleted.
+	 */
+	public static function deleteOldOrderDrafts(string $threshold = '-1 week'): void
+	{
+		$kirby = App::instance();
+		$ordersPage = $kirby->site()->ordersPage();
+		$threshold = (new DateTimeImmutable($threshold))->getTimestamp();
+
+		if ($ordersPage === null) {
+			return;
+		}
+
+		// Orders are written in the default language. Asked in another one,
+		// a draft has no content file and would look infinitely old.
+		$languageCode = $kirby->defaultLanguage()?->code();
+
+		$kirby->impersonate('kirby', function () use ($ordersPage, $threshold, $languageCode): void {
+			foreach ($ordersPage->drafts() as $draft) {
+				$modified = $draft instanceof OrderPage ? $draft->modified(languageCode: $languageCode) : null;
+
+				if (is_int($modified) === true && $modified > 0 && $modified < $threshold) {
+					$draft->delete(true);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Creates virtual OrderPage and validates it. Runs the payment gateway’s `initializePayment` function. Saves the order as a draft, which `createOrder()` publishes when the customer returns from the payment.
 	 *
 	 * @param $data Content of `OrderPage`. Must contain `paymentGateway`.
 	 * @throws Exception error.merx.cart.stock or error.merx.cart.soldOut when the cart holds more of a product than its stock
@@ -530,9 +570,10 @@ class Merx
 		try {
 			$kirby = App::instance();
 
-			// Start a new nonce for this checkout, so a return url handed out
-			// earlier cannot complete this order.
-			$kirby->session()->remove(static::$returnNonceSessionKey);
+			// Start a new order for this checkout, so a return url handed out
+			// earlier cannot complete this order. A draft of an earlier attempt
+			// in this session is replaced by the new one.
+			$previousUid = $kirby->session()->pull(static::$orderDraftSessionKey);
 
 			$redirect = $this->returnUrl();
 
@@ -583,7 +624,7 @@ class Merx
 			// `new OrderPage()`, so the shop’s own `/site/models/order.php`
 			// validates the order and is what the gateway and the hooks get.
 			$virtualOrderPage = OrderPage::factory([
-				'slug' => Str::random(16),
+				'slug' => static::orderUid(),
 				'template' => 'order',
 				'model' => 'order',
 				'content' => $data,
@@ -609,8 +650,41 @@ class Merx
 					$redirect = (string)$virtualOrderPage->redirect();
 				}
 			}
-			// save virtual order page as session
-			$kirby->session()->set('wagnerwagner.merx.virtualOrderPage', $this->virtualOrderPageToArray($virtualOrderPage));
+			// Save the order as a draft. Not in the session: the customer may
+			// return in another browser, or after their session has ended.
+			$content = $virtualOrderPage->content()->toArray();
+
+			$kirby->impersonate('kirby', function () use ($kirby, $virtualOrderPage, $content, $previousUid): void {
+				// Set to default language to make sure content is saved in default language
+				$currentLanguageCode = null;
+				if ($kirby->multilang()) {
+					$currentLanguageCode = $kirby->languageCode();
+					$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
+				}
+
+				try {
+					$ordersPage = static::ordersPage();
+
+					if (is_string($previousUid) === true) {
+						$previousDraft = $ordersPage->draft($previousUid);
+						if ($previousDraft instanceof OrderPage) {
+							$previousDraft->delete(true);
+						}
+					}
+
+					$ordersPage->createChild([
+						'slug' => $virtualOrderPage->slug(),
+						'template' => 'order',
+						'model' => 'order',
+						'draft' => true,
+						'content' => $content,
+					]);
+				} finally {
+					$kirby->setCurrentLanguage($currentLanguageCode);
+				}
+			});
+
+			static::deleteOldOrderDrafts();
 
 			// run hook
 			$kirby->trigger('wagnerwagner.merx.initializeOrder:after', ['virtualOrderPage' => $virtualOrderPage, 'redirect' => $redirect]);
@@ -636,18 +710,22 @@ class Merx
 	}
 
 	/**
-	 * Runs $callback while no other checkout can write an order
+	 * Runs $callback while it holds a lock file in the orders page’s folder
 	 *
-	 * The default `orderNumber` counts on from the last order, so two checkouts
-	 * completing at the same moment would both read the same one. The lock is a
-	 * file in the orders page’s folder; Kirby ignores files with a leading dot.
+	 * `.merx-orders.lock` is held while an order gets its number: the default
+	 * `orderNumber` counts on from the last order, so two checkouts completing
+	 * at the same moment would both read the same one. A lock per order keeps
+	 * two returns of the same order from completing the payment twice. Kirby
+	 * ignores files with a leading dot.
 	 *
 	 * The payment has gone through by the time an order is written. When the
-	 * lock cannot be taken, the order is written anyway and the failure logged.
+	 * lock cannot be taken, the callback runs anyway and the failure is logged.
+	 *
+	 * @param $remove Removes the lock file afterwards. For locks which are used for one order only.
 	 */
-	protected static function lockOrders(Page $ordersPage, Closure $callback): OrderPage
+	protected static function lock(Page $ordersPage, string $filename, Closure $callback, bool $remove = false): OrderPage
 	{
-		$lockFile = $ordersPage->root() . '/.merx-orders.lock';
+		$lockFile = $ordersPage->root() . '/' . $filename;
 		$handle = @fopen($lockFile, 'c');
 		$locked = $handle !== false && flock($handle, LOCK_EX);
 
@@ -661,6 +739,9 @@ class Merx
 			if ($handle !== false) {
 				flock($handle, LOCK_UN);
 				fclose($handle);
+			}
+			if ($remove === true) {
+				@unlink($lockFile);
 			}
 		}
 	}
@@ -709,45 +790,41 @@ class Merx
 	}
 
 	/**
-	 * One-time nonce for the return url, created once per checkout
+	 * Uid of the order of the current checkout
 	 *
-	 * `returnUrl()` is called more than once while a payment is set up, so the
-	 * nonce is kept in the session and reused until `initializeOrder()` starts
-	 * the next checkout.
+	 * Known before the order is written, because the return url carries it
+	 * and the payment gateway needs that url to set up the payment. Kept in
+	 * the session until `initializeOrder()` starts the next checkout.
 	 */
-	protected static function returnNonce(): string
+	protected static function orderUid(): string
 	{
 		$kirby = App::instance();
-		$nonce = $kirby->session()->get(static::$returnNonceSessionKey);
+		$uid = $kirby->session()->get(static::$orderDraftSessionKey);
 
-		if (is_string($nonce) === false || $nonce === '') {
-			$nonce = bin2hex(random_bytes(16));
-			$kirby->session()->set(static::$returnNonceSessionKey, $nonce);
+		if (is_string($uid) === false || $uid === '') {
+			// Lower case, as Kirby writes a slug
+			$uid = Str::lower(Str::random(16, 'alphaNum'));
+			$kirby->session()->set(static::$orderDraftSessionKey, $uid);
 		}
 
-		return $nonce;
+		return $uid;
 	}
 
 	/**
 	 * Url to be used to complete the payment
 	 *
-	 * Includes the session token, a one-time nonce and the language code (for
-	 * multilang pages)
+	 * Includes the uid of the order and the language code (for multilang
+	 * pages). Nothing in it identifies the customer’s session.
 	 *
-	 * @return string e.g. https://example.com/api/shop/success?token=1753995556.cefe4a8da2189499186c.476d9b4d2e97335dd1f094d1f696b2618fadb2e4a11e39d7bf64563bc8b650f6&language=de
+	 * @return string e.g. https://example.com/api/shop/success?order=k3m9x1p0q7w2e5r8&language=de
 	 */
 	public static function returnUrl(): string
 	{
 		$kirby = App::instance();
 		$apiEndpint = $kirby->url('api') . '/' . $kirby->option('wagnerwagner.merx.api.endpoint', 'shop') . '/success';
-		// Creating the nonce writes to the session, which starts it. Without that
-		// `token()` below is null until something else has written to it.
-		$nonce = static::returnNonce();
-
 		$url = Url::build([
 			'query' => [
-				Merx::$sessionTokenParameterName => $kirby->session()->token(),
-				Merx::$returnNonceParameterName => $nonce,
+				Merx::$orderParameterName => static::orderUid(),
 				'language' => $kirby->multilang() ? $kirby->currentLanguage()->code() : null,
 			],
 		], $apiEndpint);
@@ -769,36 +846,5 @@ class Merx
 	public static function taxRules(array $options = []): TaxRules
 	{
 		return new TaxRules(option('wagnerwagner.merx.taxRules', $options));
-	}
-
-	/**
-	 * Makes sure a return actually belongs to the checkout stored in $session
-	 *
-	 * `/api/shop/success` completes the payment on a GET request, and session
-	 * cookies are sent with a top-level GET even across sites. Without this a
-	 * link on any page could complete a pending payment of a visitor who
-	 * approved it at the provider but never returned.
-	 *
-	 * @throws Exception merx.invalidReturn when the nonce is missing or does not match
-	 */
-	protected static function validateReturnNonce(Session $session, array $data): void
-	{
-		$nonce = $session->get(static::$returnNonceSessionKey);
-
-		// Checkouts started before the nonce existed carry none
-		if (is_string($nonce) === false || $nonce === '') {
-			return;
-		}
-
-		$given = $data[static::$returnNonceParameterName] ?? null;
-
-		if (is_string($given) === false || hash_equals($nonce, $given) === false) {
-			throw new Exception(
-				key: 'merx.invalidReturn',
-				httpCode: 400,
-			);
-		}
-
-		$session->remove(static::$returnNonceSessionKey);
 	}
 }

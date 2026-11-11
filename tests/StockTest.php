@@ -8,6 +8,7 @@ use Kirby\Data\Data;
 use Kirby\Exception\Exception;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
+use Kirby\Http\Url;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
@@ -85,9 +86,7 @@ final class StockTest extends TestCase
 			$beforeReturn();
 		}
 
-		return $merx->createOrder([
-			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
-		]);
+		return $merx->createOrder(Url::toObject(Merx::returnUrl())->query()->toArray());
 	}
 
 	/**

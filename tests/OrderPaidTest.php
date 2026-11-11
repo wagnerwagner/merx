@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx\Tests;
 
 use Kirby\Cms\App;
 use Kirby\Filesystem\Dir;
+use Kirby\Http\Url;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
@@ -36,9 +37,7 @@ final class OrderPaidTest extends TestCase
 		$merx = merx();
 		$merx->initializeOrder(['paymentGateway' => $paymentGateway, 'email' => 'customer@example.com']);
 
-		return $merx->createOrder([
-			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
-		]);
+		return $merx->createOrder(Url::toObject(Merx::returnUrl())->query()->toArray());
 	}
 
 	public function setUp(): void

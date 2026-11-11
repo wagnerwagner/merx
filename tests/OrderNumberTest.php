@@ -5,6 +5,7 @@ namespace Wagnerwagner\Merx\Tests;
 use DateTimeImmutable;
 use Kirby\Cms\App;
 use Kirby\Filesystem\Dir;
+use Kirby\Http\Url;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
@@ -31,9 +32,7 @@ final class OrderNumberTest extends TestCase
 		$merx = merx();
 		$merx->initializeOrder(['paymentGateway' => 'invoice', 'email' => 'customer@example.com']);
 
-		$orderPage = $merx->createOrder([
-			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
-		]);
+		$orderPage = $merx->createOrder(Url::toObject(Merx::returnUrl())->query()->toArray());
 
 		// The next checkout is another request, which reads the orders from disk
 		$this->kirby->site()->purge();
