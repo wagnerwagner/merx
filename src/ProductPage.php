@@ -36,7 +36,7 @@ class ProductPage extends Page
 		foreach ($this->orders() as $order) {
 			$quantity += $order->quantity()->toFloat();
 		}
-		$quantityPerOrder = round($quantity / $count, 1);
+		$quantityPerOrder = $count > 0 ? round($quantity / $count, 1) : 0;
 		return tt('section.orders.info', null, compact('quantity', 'count', 'quantityPerOrder'));
 	}
 
@@ -55,12 +55,16 @@ class ProductPage extends Page
 			$listItem = $page->cart()->filter(function (ListItem $listItem) {
 				return (string)$listItem->page?->uuid() === (string)$this->uuid();
 			})->first();
-			$page->content()->update([
-				'quantity' => $listItem?->quantity,
-				'price' => $listItem?->price->toString(),
-				'productTotal' => $listItem?->total()->toString(),
+			// A copy which holds the figures of this product in memory.
+			// `$page->content()` is read anew with every call, so values set on
+			// it would be gone by the time the Panel asks for them.
+			return $page->clone([
+				'content' => array_merge($page->content()->toArray(), [
+					'quantity' => $listItem?->quantity,
+					'price' => $listItem?->price?->toString(),
+					'producttotal' => $listItem?->total()?->toString(),
+				]),
 			]);
-			return $page;
 		});
 	}
 

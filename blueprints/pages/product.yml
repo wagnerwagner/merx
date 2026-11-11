@@ -26,3 +26,11 @@ tabs:
       orders:
         extends: fields/orders
         query: page.orders.flip
+        # What the order holds of this product, see `ProductPage::orders()`
+        columns:
+          quantity:
+            label: field.quantity
+          price:
+            label: field.price
+          producttotal:
+            label: field.total

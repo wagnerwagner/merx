@@ -1,5 +1,8 @@
 <?php
 
+use Kirby\Exception\Exception as KirbyException;
+use Wagnerwagner\Merx\Merx;
+
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [
@@ -23,6 +26,13 @@ return [
 				if ($this->kirby()->visitor()->acceptedMimeType()?->type() === 'application/json') {
 					throw $exception;
 				}
+
+				// Kept for the checkout page, which shows it with `merx()->error()`
+				$this->kirby()->session()->set(Merx::$errorSessionKey, [
+					'key' => $exception instanceof KirbyException ? $exception->getKey() : null,
+					'message' => $exception->getMessage(),
+				]);
+
 				go(site()->checkoutPage());
 			}
 		},

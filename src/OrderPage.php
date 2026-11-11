@@ -41,7 +41,17 @@ class OrderPage extends Page
 			$page = is_string($page) ? $page : ($page[0] ?? null);
 			$page = $page === '' ? null : $page;
 			$price = $item['price'] ?? null;
-			$price = $price ? new Price(price: $price, currency: $item['currency'] ?? null, tax: $item['taxrate'] ?? null) : null;
+			if ($price && ($item['taxincluded'] ?? true) === false) {
+				// Ordered under a pricing rule with net prices: shown the way the
+				// customer saw it in the cart
+				$price = new Price(
+					price: $item['pricenet'] ?? $price,
+					tax: $item['taxrate'] ?? null,
+					pricingRule: new PricingRule(key: 'order', currency: $item['currency'] ?? null, taxIncluded: false),
+				);
+			} else {
+				$price = $price ? new Price(price: $price, currency: $item['currency'] ?? null, tax: $item['taxrate'] ?? null) : null;
+			}
 			$listItem = new ListItem(
 				key: $item['key'],
 				title: $item['title'] ?? null,

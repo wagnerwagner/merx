@@ -53,6 +53,17 @@ final class MerxTest extends TestCase
 		$merx->createOrder([Merx::$returnNonceParameterName => 'wrong']);
 	}
 
+	public function testErrorIsReadOnce(): void
+	{
+		$error = ['key' => 'error.merx.paymentCanceled', 'message' => 'Payment canceled.'];
+		kirby()->session()->set(Merx::$errorSessionKey, $error);
+
+		$merx = new Merx();
+
+		$this->assertSame($error, $merx->error());
+		$this->assertNull($merx->error());
+	}
+
 	public function testExceptionDetailsAreHiddenWithoutDebug(): void
 	{
 		$this->assertSame(

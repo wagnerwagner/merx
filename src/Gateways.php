@@ -68,8 +68,9 @@ class Gateways
 			$paymentIntent = $paymentIntent->capture([
 				'metadata' => $metadata,
 			]);
-		} else {
-			// Update Payment Intent
+		} elseif (in_array($paymentIntent->status, ['succeeded', 'processing'])) {
+			// Update Payment Intent. One which is not paid is left untouched: with
+			// the `order_uid` set, the customer could not try again with it.
 			$paymentIntent = $paymentIntent->update($paymentIntentId, [
 				'metadata' => $metadata,
 			]);

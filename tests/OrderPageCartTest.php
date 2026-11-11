@@ -7,6 +7,8 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\OrderPage;
+use Wagnerwagner\Merx\Price;
+use Wagnerwagner\Merx\PricingRule;
 use Wagnerwagner\Merx\ProductList;
 
 /**
@@ -108,6 +110,47 @@ final class OrderPageCartTest extends TestCase
 		$cart = $this->cart("-\n  key: other-key\n  page: nice-shoes\n  type: product\n  price: 100\n");
 
 		$this->assertSame('nice-shoes', $cart->first()->page?->id());
+	}
+
+	/**
+	 * An order placed under a pricing rule with net prices shows net prices
+	 */
+	public function testNetPricesStayNet(): void
+	{
+		$listItems = new ProductList([
+			new ListItem(
+				key: 'board',
+				price: new Price(
+					price: 45.0,
+					tax: 0.08,
+					pricingRule: new PricingRule(key: 'us', currency: 'USD', taxIncluded: false),
+				),
+				quantity: 2.0,
+			),
+		]);
+
+		$cart = $this->cart($listItems->toYaml());
+		$price = $cart->first()->price;
+
+		$this->assertFalse($price->taxIncluded());
+		$this->assertSame(45.0, $price->priceNet);
+		$this->assertSame(48.6, $price->price);
+		$this->assertSame('USD', $price->currency);
+		$this->assertSame(97.2, $cart->total()->price);
+		$this->assertSame(90.0, $cart->total()->priceNet);
+	}
+
+	public function testPricesIncludingTaxStayGross(): void
+	{
+		$listItems = new ProductList([
+			new ListItem(key: 'board', price: new Price(price: 49.0, tax: 0.19, currency: 'EUR')),
+		]);
+
+		$price = $this->cart($listItems->toYaml())->first()->price;
+
+		$this->assertNotFalse($price->taxIncluded());
+		$this->assertSame(49.0, $price->price);
+		$this->assertSame(41.18, $price->priceNet);
 	}
 
 	/**

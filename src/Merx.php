@@ -9,7 +9,6 @@ use Kirby\Cms\Page;
 use Kirby\Exception\Exception;
 use Kirby\Http\Url;
 use Kirby\Session\Session;
-use Kirby\Toolkit\Escape;
 use Kirby\Toolkit\Locale;
 use Kirby\Toolkit\Str;
 use NumberFormatter;
@@ -48,6 +47,13 @@ class Merx
 	 * provider to the checkout that started it
 	 */
 	public static string $returnNonceSessionKey = 'wagnerwagner.merx.returnNonce';
+
+	/**
+	 * Session key of the error which sent the customer back to the checkout
+	 *
+	 * @see Merx::error()
+	 */
+	public static string $errorSessionKey = 'wagnerwagner.merx.error';
 	public static string $sessionTokenParameterName = 'sessionToken';
 
 	protected Cart $cart;
@@ -235,6 +241,29 @@ class Merx
 			}
 			throw $ex;
 		}
+	}
+
+	/**
+	 * Why the customer is back on the checkout page
+	 *
+	 * When an order cannot be completed after the payment, e.g. because the
+	 * customer canceled at PayPal, they are redirected to the checkout page.
+	 * This returns the error of that attempt, once: it is removed from the
+	 * session as it is read.
+	 *
+	 * ```php
+	 * <?php if ($error = merx()->error()): ?>
+	 *   <p role="alert"><?= esc($error['message']) ?></p>
+	 * <?php endif ?>
+	 * ```
+	 *
+	 * @return array{key: string|null, message: string}|null Translation key and translated message, or null when there was no error
+	 */
+	public function error(): array|null
+	{
+		$error = App::instance()->session()->pull(static::$errorSessionKey);
+
+		return is_array($error) ? $error : null;
 	}
 
 	/**
@@ -507,9 +536,11 @@ class Merx
 
 			$redirect = $this->returnUrl();
 
-			// cleaning up and secure post data
+			// Stored as the customer entered it. Escaping belongs to the output:
+			// an order is printed as HTML, sent as plain text and exported, and
+			// a value escaped here would be escaped a second time by a template.
 			$data = array_map(function ($item) {
-				return is_string($item) ? Escape::html(Str::trim($item)) : $item;
+				return is_string($item) ? Str::trim($item) : $item;
 			}, $data);
 
 			// Drop fields which Merx sets itself. Without this a client could submit

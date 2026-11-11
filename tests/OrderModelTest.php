@@ -167,6 +167,25 @@ final class OrderModelTest extends TestCase
 		}
 	}
 
+	/**
+	 * Escaping is up to the template which prints the order
+	 */
+	public function testCustomerDataIsStoredAsEntered(): void
+	{
+		$merx = merx();
+		$merx->initializeOrder([
+			'paymentGateway' => 'probe',
+			'email' => 'customer@example.com',
+			'company' => "  O'Brien & Söhne <b>GmbH</b>  ",
+		]);
+		$orderPage = $merx->createOrder([
+			Merx::$returnNonceParameterName => $this->kirby->session()->get(Merx::$returnNonceSessionKey),
+		]);
+
+		$this->assertSame("O'Brien & Söhne <b>GmbH</b>", $orderPage->company()->value());
+		$this->assertSame('O&#039;Brien &amp; Söhne &lt;b&gt;GmbH&lt;/b&gt;', $orderPage->company()->escape()->value());
+	}
+
 	public function testGatewayAndHooksGetTheOwnModel(): void
 	{
 		$merx = merx();

@@ -50,6 +50,7 @@ return [
 	'field.tax' => 'Steuer',
 	'field.taxRate' => 'Steuersatz',
 	'field.taxRule' => 'Steuerregel',
+	'field.total' => 'Summe',
 	'field.type' => 'Typ',
 	'page.status.error' => 'Fehler',
 	'page.status.ordered' => 'Bestellt',

@@ -7,12 +7,11 @@ search: true
 help: |
   {{ page.orderInfo }}
 columns:
-  quantity: true
-  price: true
-  producttotal: true
-  paymentgateway: true
-  email: true
+  paymentgateway:
+    label: field.paymentGateway
+  email:
+    label: email
   city: true
   date:
-    label: Date
+    label: date
     value: "{{ page.dateCreated }}"

@@ -49,6 +49,7 @@ return [
 	'field.tax' => 'Tax',
 	'field.taxRate' => 'Tax rate',
 	'field.taxRule' => 'Tax rule',
+	'field.total' => 'Total',
 	'field.type' => 'Type',
 	'page.status.error' => 'Error',
 	'page.status.ordered' => 'Ordered',
