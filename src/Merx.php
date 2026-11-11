@@ -654,7 +654,7 @@ class Merx
 			// return in another browser, or after their session has ended.
 			$content = $virtualOrderPage->content()->toArray();
 
-			$kirby->impersonate('kirby', function () use ($kirby, $virtualOrderPage, $content, $previousUid): void {
+			$orderPage = $kirby->impersonate('kirby', function () use ($kirby, $virtualOrderPage, $content, $previousUid): OrderPage {
 				// Set to default language to make sure content is saved in default language
 				$currentLanguageCode = null;
 				if ($kirby->multilang()) {
@@ -672,7 +672,7 @@ class Merx
 						}
 					}
 
-					$ordersPage->createChild([
+					return $ordersPage->createChild([
 						'slug' => $virtualOrderPage->slug(),
 						'template' => 'order',
 						'model' => 'order',
@@ -687,7 +687,7 @@ class Merx
 			static::deleteOldOrderDrafts();
 
 			// run hook
-			$kirby->trigger('wagnerwagner.merx.initializeOrder:after', ['virtualOrderPage' => $virtualOrderPage, 'redirect' => $redirect]);
+			$kirby->trigger('wagnerwagner.merx.initializeOrder:after', ['orderPage' => $orderPage, 'redirect' => $redirect]);
 
 			return $redirect;
 		} catch (\Exception $ex) {

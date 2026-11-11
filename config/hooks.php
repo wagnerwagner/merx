@@ -91,7 +91,7 @@ return [
 	},
 	'wagnerwagner.merx.createOrder:before' => function (OrderPage $virtualOrderPage, array $gateway, array $data): void {
 	},
-	'wagnerwagner.merx.initializeOrder:after' => function (OrderPage $virtualOrderPage, string $redirect): void {
+	'wagnerwagner.merx.initializeOrder:after' => function (OrderPage $orderPage, string $redirect): void {
 	},
 	'wagnerwagner.merx.initializeOrder:before' => function (Cart $cart, array $data): void {
 	},
