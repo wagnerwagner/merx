@@ -5,23 +5,24 @@ use Stripe\Event;
 use Wagnerwagner\Merx\Cart;
 use Wagnerwagner\Merx\ListItem;
 use Wagnerwagner\Merx\Logger;
+use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
 use Wagnerwagner\Merx\PaymentDetails;
 
 return [
 	'wagnerwagner.merx.stripe-hooks' => function (Event $stripeEvent): void {
 		switch ($stripeEvent->type) {
+			// A payment which is captured manually is authorized, not succeeded,
+			// when the customer has paid
+			case 'payment_intent.amount_capturable_updated':
 			case 'payment_intent.succeeded':
 				/** @var \Stripe\PaymentIntent $paymentIntent */
 				$paymentIntent = $stripeEvent->data->object;
 
 				// Set by `Gateways::completeStripePayment()` when it captures
 				$orderUid = $paymentIntent->metadata->order_uid ?? null;
-				if (!$orderUid) {
-					break;
-				}
 
-				$fail = function (string $reason) use ($orderUid): void {
+				$fail = function (string $reason) use (&$orderUid): void {
 					// This is the only path which completes payments the customer’s
 					// browser never confirms, e.g. SEPA debit. Failing here silently
 					// leaves an order unpaid with nobody knowing.
@@ -29,6 +30,26 @@ return [
 						Logger::log('Stripe webhook for order "' . $orderUid . '" ignored: ' . $reason, 'error');
 					}
 				};
+
+				if (!$orderUid) {
+					// The customer paid, but did not return to the shop, e.g. because
+					// they closed the browser. Their order is still a draft.
+					try {
+						$draft = site()->ordersPage()?->drafts()->findBy('stripePaymentIntentId', $paymentIntent->id);
+
+						if ($draft instanceof OrderPage) {
+							$orderUid = $draft->uid();
+							merx()->createOrder([Merx::$orderParameterName => $orderUid]);
+						}
+					} catch (Throwable $ex) {
+						$fail($ex->getMessage());
+					}
+					break;
+				}
+
+				if ($stripeEvent->type !== 'payment_intent.succeeded') {
+					break;
+				}
 
 				try {
 					$orderPage = page(option('wagnerwagner.merx.ordersPage') . '/' . $orderUid);

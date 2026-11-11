@@ -31,6 +31,7 @@ class Merx
 		'datecreated',
 		'datepaid',
 		'items',
+		'language',
 		'ordernumber',
 		'paymentdetails',
 		'paypalorderid',
@@ -117,10 +118,13 @@ class Merx
 	/**
 	 * Turns the order draft of a checkout into an order
 	 *
-	 * Checks the stock again, calls `completePayment` of the payment gateway,
-	 * publishes the draft `initializeOrder()` wrote, lowers the stock of the
-	 * ordered products while `wagnerwagner.merx.reduceStock` is true, and
-	 * deletes the cart.
+	 * Calls `completePayment` of the payment gateway, publishes the draft
+	 * `initializeOrder()` wrote, lowers the stock of the ordered products while
+	 * `wagnerwagner.merx.reduceStock` is true, and deletes the cart.
+	 *
+	 * The stock is not checked again: the customer may have paid by now, and
+	 * an order which is paid has to exist. A product which ran out since the
+	 * checkout gets a negative stock, which is logged.
 	 *
 	 * The draft is found by the `order` of the return url, so a customer may
 	 * come back in another browser or after their session ended. The uid is
@@ -130,7 +134,6 @@ class Merx
 	 *
 	 * @param $data Query of the return url, and whatever the payment gateway’s `completePayment()` needs
 	 * @throws Exception error.merx.invalidReturn when there is no draft for the return
-	 * @throws Exception error.merx.cart.stock or error.merx.cart.soldOut when the stock ran out before the payment was completed
 	 */
 	public function createOrder(array $data = []): OrderPage
 	{
@@ -158,6 +161,18 @@ class Merx
 					$orderPage = $ordersPage->find($uid);
 
 					if ($orderPage instanceof OrderPage) {
+						static::useLanguageOf($orderPage);
+
+						// This is the customer returning, with their session, to an
+						// order the payment provider’s webhook has completed before
+						// them. The webhook has no session, so the cart they ordered
+						// is still theirs. Only the session which started the order
+						// is emptied, not one which merely opens the return url.
+						if ($kirby->session()->get(static::$orderDraftSessionKey) === $uid) {
+							$kirby->session()->remove(static::$orderDraftSessionKey);
+							$this->cart->delete();
+						}
+
 						return $orderPage;
 					}
 
@@ -166,6 +181,8 @@ class Merx
 						httpCode: 400,
 					);
 				}
+
+				static::useLanguageOf($draft);
 
 				// A copy in memory, which the gateway and the hooks may change
 				// freely. The draft is only written once the payment is completed.
@@ -182,10 +199,6 @@ class Merx
 				$gateway = $this->getGateway($virtualOrderPage->paymentGateway()->toString());
 
 				$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
-
-				// The stock may have run out while the customer was at the payment
-				// provider. Checked before `completePayment` captures the payment.
-				$virtualOrderPage->cart()->validateStock();
 
 				if (is_callable($gateway['completePayment'])) {
 					$gateway['completePayment']($virtualOrderPage, $data);
@@ -620,6 +633,12 @@ class Merx
 			// add cart to content
 			$data['items'] = $cart->toYaml();
 
+			// The language the customer orders in. Neither the return url nor
+			// a payment provider’s webhook, which complete the order, have one.
+			if ($kirby->multilang() === true) {
+				$data['language'] = $kirby->languageCode();
+			}
+
 			// create virtual order page. Through the model registry rather than
 			// `new OrderPage()`, so the shop’s own `/site/models/order.php`
 			// validates the order and is what the gateway and the hooks get.
@@ -813,10 +832,10 @@ class Merx
 	/**
 	 * Url to be used to complete the payment
 	 *
-	 * Includes the uid of the order and the language code (for multilang
-	 * pages). Nothing in it identifies the customer’s session.
+	 * Includes the uid of the order. Nothing in it identifies the customer’s
+	 * session.
 	 *
-	 * @return string e.g. https://example.com/api/shop/success?order=k3m9x1p0q7w2e5r8&language=de
+	 * @return string e.g. https://example.com/api/shop/success?order=k3m9x1p0q7w2e5r8
 	 */
 	public static function returnUrl(): string
 	{
@@ -825,10 +844,26 @@ class Merx
 		$url = Url::build([
 			'query' => [
 				Merx::$orderParameterName => static::orderUid(),
-				'language' => $kirby->multilang() ? $kirby->currentLanguage()->code() : null,
 			],
 		], $apiEndpint);
 		return $url;
+	}
+
+	/**
+	 * Switches to the language the customer ordered in
+	 *
+	 * The return url and a payment provider’s webhook have no language. The
+	 * hooks, error messages and the url of the order use the one of the order.
+	 */
+	protected static function useLanguageOf(OrderPage $orderPage): void
+	{
+		$kirby = App::instance();
+		$languageCode = $orderPage->content($kirby->defaultLanguage()?->code())->get('language')->value();
+
+		if (is_string($languageCode) === true && $kirby->languages()->has($languageCode) === true) {
+			$kirby->setCurrentLanguage($languageCode);
+			$kirby->setCurrentTranslation($languageCode);
+		}
 	}
 
 	/**

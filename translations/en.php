@@ -51,7 +51,7 @@ return [
 	'field.taxRule' => 'Tax rule',
 	'field.total' => 'Total',
 	'field.type' => 'Type',
-	'page.status.error' => 'Error',
+	'page.status.open' => 'Not completed',
 	'page.status.ordered' => 'Ordered',
 	'page.title.product' => 'Product',
 	'product.price.onRequest' => 'Price on request',

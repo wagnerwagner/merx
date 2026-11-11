@@ -197,22 +197,21 @@ final class StockTest extends TestCase
 		$this->assertSame(3.0, $cart->quantity());
 	}
 
-	public function testCreateOrderChecksTheStockBeforeThePaymentIsCompleted(): void
+	/**
+	 * The customer may have paid by the time they return. An order which is
+	 * paid has to exist, so the shortfall is the shop’s to sort out.
+	 */
+	public function testCreateOrderCompletesAnOrderWhoseStockRanOut(): void
 	{
 		cart()->add(['page' => 'socks', 'quantity' => 3.0]);
 
 		// Somebody else buys one while the customer is at the payment provider
-		$this->assertStockError(
-			'merx.cart.stock',
-			'Only 2 of “Socks” left.',
-			fn () => $this->checkout(fn () => $this->setStock('socks', 2)),
-		);
+		$orderPage = $this->checkout(fn () => $this->setStock('socks', 2));
 
-		$this->assertFalse($this->paymentCompleted);
-		$this->assertSame(0, $this->kirby->site()->ordersPage()?->children()->count() ?? 0);
-
-		// The customer can correct the cart and try again
-		$this->assertSame(3.0, cart()->quantity());
+		$this->assertTrue($this->paymentCompleted);
+		$this->assertSame('listed', $orderPage->status());
+		$this->assertSame(3.0, $orderPage->cart()->quantity());
+		$this->assertSame(-1.0, (float)$this->stockOnDisk('socks'));
 	}
 
 	public function testCreateOrderLeavesTheStockAloneWhenReduceStockIsOff(): void

@@ -5,7 +5,9 @@ namespace Wagnerwagner\Merx\Tests;
 use Kirby\Cms\App;
 use Kirby\Exception\Exception;
 use Kirby\Filesystem\Dir;
+use Kirby\Http\Url;
 use PHPUnit\Framework\TestCase;
+use Stripe\Event;
 use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\OrderPage;
 
@@ -19,11 +21,14 @@ final class OrderDraftTest extends TestCase
 	/** How often the gateway completed a payment */
 	public int $completed = 0;
 
+	/** Language a hook of the test ran in */
+	public string|null $languageOfHook = null;
+
 	protected App $app;
 	protected App $kirby;
 	protected string $root;
 
-	protected function boot(array $languages = []): void
+	protected function boot(array $languages = [], array $hooks = []): void
 	{
 		$test = $this;
 
@@ -34,6 +39,7 @@ final class OrderDraftTest extends TestCase
 				'site' => $this->root . '/site',
 			],
 			'languages' => $languages,
+			'hooks' => $hooks,
 			'options' => [
 				'wagnerwagner.merx.logging' => false,
 				'wagnerwagner.merx.gateways' => [
@@ -76,6 +82,47 @@ final class OrderDraftTest extends TestCase
 		$ordersPage?->purge();
 
 		return $ordersPage?->drafts()->keys() ?? [];
+	}
+
+	/**
+	 * What `/api/shop/hooks/stripe` does with a verified event
+	 *
+	 * @param $deleteCart false keeps the cart of the session: the webhook is a request of Stripe, which has none
+	 */
+	protected function fireWebhook(string $paymentIntentId, bool $deleteCart = true): void
+	{
+		$event = Event::constructFrom([
+			'id' => 'evt_1',
+			'type' => 'payment_intent.succeeded',
+			'data' => [
+				'object' => [
+					'id' => $paymentIntentId,
+					'object' => 'payment_intent',
+					'status' => 'succeeded',
+					'metadata' => [],
+				],
+			],
+		]);
+
+		$cart = $this->kirby->session()->get('wagnerwagner.merx.cartItems');
+		$draft = $this->kirby->session()->get(Merx::$orderDraftSessionKey);
+
+		$this->kirby->trigger('wagnerwagner.merx.stripe-hooks', ['stripeEvent' => $event]);
+
+		if ($deleteCart === false) {
+			$this->kirby->session()->set('wagnerwagner.merx.cartItems', $cart);
+			$this->kirby->session()->set(Merx::$orderDraftSessionKey, $draft);
+		}
+	}
+
+	protected function linkPaymentIntent(string $uid, string $paymentIntentId): void
+	{
+		$this->kirby->impersonate('kirby', function () use ($uid, $paymentIntentId): void {
+			$draft = $this->kirby->site()->ordersPage()->draft($uid);
+			// Like the gateway, which writes it before the draft is saved in the default language
+			$draft->save(['stripePaymentIntentId' => $paymentIntentId], $this->kirby->defaultLanguage()?->code());
+		});
+		$this->kirby->site()->ordersPage()->purge();
 	}
 
 	public function setUp(): void
@@ -196,6 +243,117 @@ final class OrderDraftTest extends TestCase
 		$this->assertSame('listed', $orderPage->status());
 		$this->assertFileExists($orderPage->root() . '/order.de.txt');
 		$this->assertFileDoesNotExist($orderPage->root() . '/order.en.txt');
+	}
+
+	/**
+	 * The customer paid and closed the browser: Stripe’s webhook is the only
+	 * one who tells the shop
+	 */
+	public function testAStripeWebhookCompletesTheDraftOfItsPayment(): void
+	{
+		$return = $this->checkout();
+		$this->linkPaymentIntent($return['order'], 'pi_paid');
+
+		// Stripe has no cookie
+		$this->kirby->session()->destroy();
+		$this->boot();
+
+		$this->fireWebhook('pi_of_another_shop');
+		$this->assertSame(0, $this->completed);
+
+		$this->fireWebhook('pi_paid');
+		$this->fireWebhook('pi_paid');
+
+		$this->assertSame(1, $this->completed);
+		$this->assertSame([], $this->drafts());
+		$this->assertSame('listed', $this->kirby->site()->ordersPage()->find($return['order'])?->status());
+	}
+
+	/**
+	 * The return url names the order and nothing else. The customer gets
+	 * the order in the language they ordered in.
+	 */
+	public function testAReturnUsesTheLanguageOfTheOrder(): void
+	{
+		$languages = [
+			['code' => 'de', 'default' => true],
+			['code' => 'en'],
+		];
+
+		$this->kirby->session()->destroy();
+		$this->boot($languages);
+		$this->kirby->setCurrentLanguage('en');
+
+		$return = $this->checkout();
+		$this->assertSame(['order'], array_keys($return + Url::toObject(Merx::returnUrl())->query()->toArray()));
+
+		$this->kirby->session()->destroy();
+		$this->boot($languages);
+		$this->assertSame('de', $this->kirby->languageCode());
+
+		$orderPage = merx()->createOrder($return);
+		$this->assertSame('en', $this->kirby->languageCode());
+		$this->assertStringContainsString('/en/', $orderPage->url());
+
+		// And again, to the order which is completed
+		$this->kirby->session()->destroy();
+		$this->boot($languages);
+		merx()->createOrder($return);
+		$this->assertSame('en', $this->kirby->languageCode());
+	}
+
+	/**
+	 * Stripe’s request has no language. The hooks of an order the webhook
+	 * completes run in the one the customer ordered in.
+	 */
+	public function testAStripeWebhookCompletesTheOrderInTheLanguageOfTheCustomer(): void
+	{
+		$languages = [
+			['code' => 'de', 'default' => true],
+			['code' => 'en'],
+		];
+
+		$this->kirby->session()->destroy();
+		$this->boot($languages);
+		$this->kirby->setCurrentLanguage('en');
+
+		$return = $this->checkout();
+		$this->linkPaymentIntent($return['order'], 'pi_paid');
+
+		$test = $this;
+
+		$this->kirby->session()->destroy();
+		$this->boot($languages, [
+			// Kirby binds a hook to the App, so `$this` is not the test
+			'wagnerwagner.merx.createOrder:after' => function () use ($test) {
+				$test->languageOfHook = kirby()->languageCode();
+			},
+		]);
+		$this->assertSame('de', $this->kirby->languageCode());
+
+		$this->fireWebhook('pi_paid');
+
+		$this->assertSame('en', $this->languageOfHook);
+		$this->assertSame('en', $this->kirby->site()->ordersPage()->find($return['order'])->content('de')->get('language')->value());
+	}
+
+	/**
+	 * The webhook was faster than the customer. They get their order, and
+	 * the cart they ordered is emptied.
+	 */
+	public function testAReturnAfterTheWebhookEmptiesTheCart(): void
+	{
+		$return = $this->checkout();
+		$this->linkPaymentIntent($return['order'], 'pi_paid');
+
+		$this->fireWebhook('pi_paid', deleteCart: false);
+		$this->assertSame(1, cart()->count());
+
+		$orderPage = merx()->createOrder($return);
+
+		$this->assertSame($return['order'], $orderPage->uid());
+		$this->assertSame(1, $this->completed);
+		$this->assertSame(0, cart()->count());
 	}
 
 	public function testInitializeOrderWritesADraft(): void

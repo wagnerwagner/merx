@@ -52,7 +52,7 @@ return [
 	'field.taxRule' => 'Steuerregel',
 	'field.total' => 'Summe',
 	'field.type' => 'Typ',
-	'page.status.error' => 'Fehler',
+	'page.status.open' => 'Nicht abgeschlossen',
 	'page.status.ordered' => 'Bestellt',
 	'page.title.product' => 'Produkt',
 	'product.price.onRequest' => 'Preis auf Anfrage',

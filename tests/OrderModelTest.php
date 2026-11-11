@@ -99,8 +99,8 @@ final class OrderModelTest extends TestCase
 						);
 					}
 				},
-				'wagnerwagner.merx.initializeOrder:after' => function (OrderPage $virtualOrderPage) use ($test): void {
-					$test->classes['initializeOrder:after'] = $virtualOrderPage::class;
+				'wagnerwagner.merx.initializeOrder:after' => function (OrderPage $orderPage) use ($test): void {
+					$test->classes['initializeOrder:after'] = $orderPage::class;
 				},
 				'wagnerwagner.merx.createOrder:before' => function (OrderPage $virtualOrderPage) use ($test): void {
 					$test->classes['createOrder:before'] = $virtualOrderPage::class;

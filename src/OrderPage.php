@@ -21,6 +21,7 @@ use Kirby\Content\VersionId;
  * @method \Kirby\Content\Field redirect() Content field: URL the customer is redirected to
  * @method \Kirby\Content\Field orderNumber() Content field: Sequential number for each order. Can be customized with wagnerwagner.merx.orderNumber option.
  * @method \Kirby\Content\Field items() Content field: Cart items as YAML
+ * @method \Kirby\Content\Field language() Content field: Code of the language the customer ordered in. Only on multi-language sites.
  *
  * @see https://merx.wagnerwagner.de/guide/getting-started/displaying-order
  * @author Tobias Wolf

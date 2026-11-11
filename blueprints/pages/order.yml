@@ -6,7 +6,7 @@ navigation:
   sortBy: num desc
 
 status:
-  draft: page.status.error
+  draft: page.status.open
   listed: page.status.ordered
 
 options:

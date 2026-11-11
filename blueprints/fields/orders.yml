@@ -1,6 +1,7 @@
 label: field.orders
 type: pagelist
 layout: table
+status: listed
 create: false
 image: false
 search: true
