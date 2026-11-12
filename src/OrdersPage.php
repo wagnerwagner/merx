@@ -22,7 +22,8 @@ class OrdersPage extends Page
 	 */
 	public function index(bool $drafts = false): Pages
 	{
-		if ($this->kirby()->user() !== null) {
+		$user = $this->kirby()->user();
+		if ($user !== null && !$user->isNobody()) {
 			return parent::index($drafts);
 		}
 

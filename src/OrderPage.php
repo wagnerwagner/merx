@@ -234,7 +234,8 @@ class OrderPage extends Page
 	 */
 	protected function siblingsCollection(): Pages
 	{
-		if ($this->kirby()->user() !== null) {
+		$user = $this->kirby()->user();
+		if ($user !== null && !$user->isNobody()) {
 			return parent::siblingsCollection();
 		}
 
