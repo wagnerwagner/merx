@@ -2,6 +2,7 @@
 
 use Kirby\Exception\InvalidArgumentException;
 use Wagnerwagner\Merx\Cart;
+use Wagnerwagner\Merx\Merx;
 
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
@@ -40,7 +41,7 @@ return [
 		 */
 		'action' => function (): Cart {
 			/** @var \Kirby\Api\Api $this */
-			$this->kirby()->setCurrentTranslation($this->language());
+			Merx::setApiTranslation($this);
 
 			/** @var \Wagnerwagner\Merx\Cart $cart */
 			$cart = $this->cart();
@@ -57,7 +58,7 @@ return [
 		 */
 		'action' => function () use ($cartRequestData): Cart {
 			/** @var \Kirby\Api\Api $this */
-			$this->kirby()->setCurrentTranslation($this->language());
+			Merx::setApiTranslation($this);
 
 			$cartData = $cartRequestData($this->requestBody(), ['key', 'page', 'quantity', 'data']);
 
@@ -77,7 +78,7 @@ return [
 		 */
 		'action' => function () use ($cartRequestData): Cart {
 			/** @var \Kirby\Api\Api $this */
-			$this->kirby()->setCurrentTranslation($this->language());
+			Merx::setApiTranslation($this);
 
 			$key = $this->requestBody('key');
 
@@ -100,7 +101,7 @@ return [
 		 */
 		'action' => function (): Cart {
 			/** @var \Kirby\Api\Api $this */
-			$this->kirby()->setCurrentTranslation($this->language());
+			Merx::setApiTranslation($this);
 
 			$key = $this->requestBody('key');
 

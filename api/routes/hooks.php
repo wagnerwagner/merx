@@ -1,6 +1,7 @@
 <?php
 
 use Kirby\Exception\InvalidArgumentException;
+use Wagnerwagner\Merx\Merx;
 use Wagnerwagner\Merx\StripePayment;
 
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
@@ -16,7 +17,7 @@ return [
 		 */
 		'action' => function (): array {
 			/** @var \Kirby\Api\Api $this */
-			$this->kirby()->setCurrentTranslation($this->language());
+			Merx::setApiTranslation($this);
 
 			$payload = file_get_contents('php://input');
 			if (is_string($payload) === false || $payload === '') {

@@ -6,6 +6,7 @@ use Kirby\Cms\App;
 use Kirby\Exception\Exception;
 use Kirby\Filesystem\Dir;
 use Kirby\Http\Url;
+use Kirby\Toolkit\I18n;
 use PHPUnit\Framework\TestCase;
 use Stripe\Event;
 use Wagnerwagner\Merx\Cart;
@@ -370,6 +371,24 @@ final class OrderDraftTest extends TestCase
 		$this->boot($languages);
 		merx()->createOrder($return);
 		$this->assertSame('en', $this->kirby->languageCode());
+	}
+
+	/**
+	 * An API request without a language answers in the default language of
+	 * the site, like its content does, and not in English.
+	 */
+	public function testTheApiAnswersInTheDefaultLanguage(): void
+	{
+		$this->boot([
+			['code' => 'de', 'default' => true],
+			['code' => 'en'],
+		]);
+
+		$this->kirby->api()->call('shop/cart', 'GET');
+		$this->assertSame('de', I18n::locale());
+
+		$this->kirby->api()->call('shop/cart', 'GET', ['query' => ['language' => 'en']]);
+		$this->assertSame('en', I18n::locale());
 	}
 
 	/**

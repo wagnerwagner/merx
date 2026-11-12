@@ -131,7 +131,7 @@ class ListItems extends Collection
 	/**
 	 * List of Tax items
 	 *
-	 * @return Wagnerwagner\Merx\Tax[] List of `Tax` items sorted by tax rate, lowest first, with the total tax amount for each tax rate.
+	 * @return \Wagnerwagner\Merx\Tax[] List of `Tax` items sorted by tax rate, lowest first, with the total tax amount for each tax rate.
 	 */
 	public function taxRates(): array
 	{

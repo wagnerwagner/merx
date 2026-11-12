@@ -3,6 +3,7 @@
 namespace Wagnerwagner\Merx;
 
 use Closure;
+use Kirby\Api\Api;
 use DateTimeImmutable;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
@@ -859,6 +860,20 @@ class Merx
 			],
 		], $apiEndpint);
 		return $url;
+	}
+
+	/**
+	 * Sets the translation of an API request
+	 *
+	 * The requested language (`X-Language` header or `language` query),
+	 * otherwise the current language of the site, which is the default one.
+	 *
+	 * @internal
+	 */
+	public static function setApiTranslation(Api $api): void
+	{
+		$kirby = App::instance();
+		$kirby->setCurrentTranslation($api->language() ?? $kirby->language()?->code());
 	}
 
 	/**

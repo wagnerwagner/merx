@@ -15,7 +15,7 @@ return [
 		 */
 		'action' => function () {
 			/** @var \Kirby\Api\Api $this */
-			$this->kirby()->setCurrentTranslation($this->language());
+			Merx::setApiTranslation($this);
 
 			try {
 				$merx = merx();

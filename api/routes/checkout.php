@@ -1,5 +1,7 @@
 <?php
 
+use Wagnerwagner\Merx\Merx;
+
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [
@@ -16,7 +18,7 @@ return [
 		 */
 		'action' => function (): array {
 			/** @var \Kirby\Cms\Api $this */
-			$this->kirby()->setCurrentTranslation($this->language());
+			Merx::setApiTranslation($this);
 
 			$data = $this->requestBody();
 
