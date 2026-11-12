@@ -3,7 +3,6 @@ type: pagelist
 layout: table
 status: listed
 create: false
-image: false
 search: true
 help: |
   {{ page.orderInfo }}
@@ -16,3 +15,10 @@ columns:
   date:
     label: date
     value: "{{ page.dateCreated }}"
+  total:
+    label: field.total
+    value: "{{ page.total }}"
+    align: right
+  datePaid:
+    label: field.datePaid
+    value: "{{ page.datePaid }}"

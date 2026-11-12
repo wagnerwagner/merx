@@ -2,6 +2,11 @@ title: field.order
 
 num: '{{ page.sortingNumber }}'
 
+image:
+  icon: '{{ page.isPaid ? "check" : "clock" }}'
+  color: '{{ page.isPaid ? "green-700" : "orange-700" }}'
+  back: transparent
+
 navigation:
   sortBy: num desc
 
