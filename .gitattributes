@@ -14,3 +14,6 @@
 /phpunit.xml        export-ignore
 /psalm.xml          export-ignore
 /tests              export-ignore
+
+# Fingerprints of the license keys, ten bytes each
+/config/licenses.bin binary

@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Filesystem\F;
 use Kirby\Plugin\LicenseStatus;
 use Kirby\Plugin\Plugin;
 use Kirby\Toolkit\Str;
@@ -52,28 +53,39 @@ class License extends \Kirby\Plugin\License
 		}
 	}
 
-	private function crossfoot(int $int): string
+	/**
+	 * What Merx knows of a license key
+	 *
+	 * The keys are issued by merx.wagnerwagner.de, from a secret which never
+	 * leaves it. Merx ships the fingerprints of all of them, which is enough
+	 * to recognize a key and not enough to make one.
+	 */
+	public static function fingerprint(string $licenseKey): string
 	{
-		$r = 0;
-		foreach (str_split($int) as $v) {
-			$r += $v;
-		}
-		return $r;
+		return substr(hash('sha256', Str::upper(trim($licenseKey)), true), 0, 10);
+	}
+
+	/**
+	 * The fingerprints of all license keys, ten bytes each
+	 */
+	protected function fingerprints(): string
+	{
+		return F::read(dirname(__DIR__) . '/config/licenses.bin') ?: '';
 	}
 
 	public function isValid(): bool
 	{
-		$licenseArr = Str::split(Str::after($this->licenseKey(), 'MERX2-'), '-');
-		return self::crossfoot(hexdec($licenseArr[0] ?? 0)) + self::crossfoot(hexdec($licenseArr[1] ?? 0)) === 90;
+		return in_array(static::fingerprint($this->licenseKey()), str_split($this->fingerprints(), 10), true);
 	}
 
 	public function licenseKey(): string|null
 	{
-		return option('wagnerwagner.merx.license');
+		// The default is an empty string, which is no license key
+		return option('wagnerwagner.merx.license') ?: null;
 	}
 
 	public function privateLicense(): string
 	{
-		return 'MERX2-XXXXXXX-XXXX' . Str::substr($this->licenseKey(), -4);
+		return 'MERX2-XXXXXXXX-XXXX' . Str::substr($this->licenseKey(), -4);
 	}
 }

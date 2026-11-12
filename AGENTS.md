@@ -158,3 +158,7 @@ Prefer the boring solution; the burden of proof is on the abstraction.
   `createOrder()`. Content written before `createOrder()` uses
   `$virtualOrderPage->version()->update()`.
 - The plugin is proprietary and checks a license key; see `src/License.php`.
+  `config/licenses.bin` holds the fingerprints of all keys. It is written by
+  `composer license-keys` in the merx.wagnerwagner.de repository, from a secret
+  which only the shop has. Never edit it, and never write a real key into a
+  test or a fixture — this repository is public.
