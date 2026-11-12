@@ -9,6 +9,7 @@ use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Exception\Exception;
 use Kirby\Http\Url;
+use Kirby\Toolkit\I18n;
 use Kirby\Toolkit\Locale;
 use Kirby\Toolkit\Str;
 use NumberFormatter;
@@ -208,47 +209,57 @@ class Merx
 
 				// Set to default language to make sure content is saved in default language
 				$currentLanguageCode = null;
+				$currentTranslationCode = I18n::locale();
 				if ($kirby->multilang()) {
 					$currentLanguageCode = $kirby->languageCode();
 					$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
 				}
 
-				// Publishing the order requires admin permissions. The callback makes sure the
-				// impersonation is always reset, even when an error occurs. Without it the
-				// `kirby` super user would stay active for the rest of the request.
-				/** @var OrderPage $orderPage */
-				$orderPage = $kirby->impersonate('kirby', function () use ($ordersPage, $draft, $virtualOrderPage): OrderPage {
-					return static::lock($ordersPage, '.merx-orders.lock', function () use ($draft, $virtualOrderPage): OrderPage {
-						// `orderNumber` reads the orders through the virtual order page’s parent.
-						// They may have been read before the lock was taken, and another
-						// checkout may have written one since.
-						$virtualOrderPage->parentModel()->purge();
+				try {
+					// Publishing the order requires admin permissions. The callback makes sure the
+					// impersonation is always reset, even when an error occurs. Without it the
+					// `kirby` super user would stay active for the rest of the request.
+					/** @var OrderPage $orderPage */
+					$orderPage = $kirby->impersonate('kirby', function () use ($ordersPage, $draft, $virtualOrderPage): OrderPage {
+						return static::lock($ordersPage, '.merx-orders.lock', function () use ($draft, $virtualOrderPage): OrderPage {
+							// `orderNumber` reads the orders through the virtual order page’s parent.
+							// They may have been read before the lock was taken, and another
+							// checkout may have written one since.
+							$virtualOrderPage->parentModel()->purge();
 
-						$content = $virtualOrderPage->content()->toArray();
+							$content = $virtualOrderPage->content()->toArray();
 
-						// Taken inside the lock, so the orders sort in the order they got their number
-						$now = new DateTimeImmutable();
-						$content['datecreated'] = $now->format('c');
-						// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
-						$content['sortingnumber'] = (string)OrderPage::sortingNumberFromDate($now);
+							// Taken inside the lock, so the orders sort in the order they got their number
+							$now = new DateTimeImmutable();
+							$content['datecreated'] = $now->format('c');
+							// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
+							$content['sortingnumber'] = (string)OrderPage::sortingNumberFromDate($now);
 
-						if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
-							$content['ordernumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
-						}
+							if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
+								$content['ordernumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
+							}
 
-						/** @var OrderPage $orderPage */
-						$orderPage = $draft->save($content, null, true);
-						$orderPage = $orderPage->changeStatus('listed');
+							/** @var OrderPage $orderPage */
+							$orderPage = $draft->save($content, null, true);
+							$orderPage = $orderPage->changeStatus('listed');
 
-						// Inside the lock, so two orders cannot both lower the same stock
-						// from the same number.
-						if (option('wagnerwagner.merx.reduceStock') === true) {
-							$orderPage->cart()->reduceStock();
-						}
+							// Inside the lock, so two orders cannot both lower the same stock
+							// from the same number.
+							if (option('wagnerwagner.merx.reduceStock') === true) {
+								$orderPage->cart()->reduceStock();
+							}
 
-						return $orderPage;
+							return $orderPage;
+						});
 					});
-				});
+				} finally {
+					// Back to the language of the customer, for the hooks and
+					// the error messages. The translation as well: for the sorting
+					// number of the order Kirby clones the App, which sets the
+					// translation back to the default language.
+					$kirby->setCurrentLanguage($currentLanguageCode);
+					$kirby->setCurrentTranslation($currentTranslationCode);
+				}
 
 				// Gateways which complete the payment right away — PayPal, Stripe
 				// Elements — create an order which is already paid. This is reported
@@ -262,9 +273,6 @@ class Merx
 				if ($orderPage->isPaid() === true) {
 					$orderPage = $kirby->impersonate('kirby', fn () => $kirby->apply('wagnerwagner.merx.orderPaid', ['orderPage' => $orderPage], 'orderPage'));
 				}
-
-				// Reset language
-				$kirby->setCurrentLanguage($currentLanguageCode);
 
 				$kirby->session()->remove(static::$orderDraftSessionKey);
 				$this->cart->delete();

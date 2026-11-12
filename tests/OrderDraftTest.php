@@ -27,6 +27,9 @@ final class OrderDraftTest extends TestCase
 	/** Language a hook of the test ran in */
 	public string|null $languageOfHook = null;
 
+	/** Language and translation the hooks of the test ran in, by hook */
+	public array $localesOfHooks = [];
+
 	protected App $app;
 	protected App $kirby;
 	protected string $root;
@@ -142,6 +145,7 @@ final class OrderDraftTest extends TestCase
 		Dir::make($this->root . '/content');
 
 		$this->completed = 0;
+		$this->localesOfHooks = [];
 		$this->boot();
 	}
 
@@ -371,6 +375,52 @@ final class OrderDraftTest extends TestCase
 		$this->boot($languages);
 		merx()->createOrder($return);
 		$this->assertSame('en', $this->kirby->languageCode());
+	}
+
+	/**
+	 * `t()` in a hook answers in the language of the customer, too. For the
+	 * sorting number of an order Kirby clones the App, which sets the
+	 * translation back to the default language.
+	 */
+	public function testHooksRunInTheTranslationOfTheCustomer(): void
+	{
+		$languages = [
+			['code' => 'de', 'default' => true],
+			['code' => 'en'],
+		];
+
+		$this->kirby->session()->destroy();
+		$this->boot($languages);
+		$this->kirby->setCurrentLanguage('en');
+
+		$return = $this->checkout();
+
+		$test = $this;
+		$locales = fn (): array => [kirby()->languageCode(), I18n::locale()];
+
+		// The return url has no language: the request starts in the default one
+		$this->kirby->session()->destroy();
+		$this->boot($languages, [
+			// Paid right away, the way PayPal and Stripe Elements complete a payment
+			'wagnerwagner.merx.createOrder:before' => function (OrderPage $virtualOrderPage) {
+				$virtualOrderPage->version()->update(['datePaid' => date('c')]);
+			},
+			'wagnerwagner.merx.orderPaid' => function () use ($test, $locales) {
+				$test->localesOfHooks['orderPaid'] = $locales();
+			},
+			'wagnerwagner.merx.createOrder:after' => function () use ($test, $locales) {
+				$test->localesOfHooks['createOrder:after'] = $locales();
+			},
+		]);
+		$this->assertSame(['de', 'de'], $locales());
+
+		merx()->createOrder($return);
+
+		$this->assertSame([
+			'orderPaid' => ['en', 'en'],
+			'createOrder:after' => ['en', 'en'],
+		], $this->localesOfHooks);
+		$this->assertSame(['en', 'en'], $locales());
 	}
 
 	/**
