@@ -101,11 +101,15 @@ class ListItems extends Collection
 	/**
 	 * Checks whether the list can be ordered.
 	 *
-	 * A list is orderable if it contains no ListItem with a null total price and the total price is greater than 0.
+	 * It has to hold at least one item, every item needs a price, all in
+	 * one currency, and the total must not be negative. A total of zero can
+	 * be ordered, e.g. with a coupon which covers the whole cart.
 	 */
 	public function isOrderable(): bool
 	{
-		return $this->isFromPrice() === false && $this->total()->price > 0;
+		$total = $this->total();
+
+		return $this->count() > 0 && $this->isFromPrice() === false && $total !== null && $total->price >= 0;
 	}
 
 	/**

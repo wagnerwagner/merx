@@ -89,7 +89,8 @@ return [
 	},
 	'wagnerwagner.merx.cart.add:after' => function (Cart $cart): void {
 	},
-	'wagnerwagner.merx.cart.add:before' => function (Cart $cart, string|array|ListItem $data): void {
+	'wagnerwagner.merx.cart.add:before' => function (Cart $cart, string|array|ListItem $data): string|array|ListItem|null {
+		return $data;
 	},
 	'wagnerwagner.merx.cart.create:after' => function (Cart $cart): void {
 	},
@@ -108,7 +109,7 @@ return [
 	'wagnerwagner.merx.cart.updateItem:before' => function (Cart $cart, string $key, array $data): void {
 	},
 	'wagnerwagner.merx.createOrder:after' => function (OrderPage $orderPage): OrderPage|null {
-		return null;
+		return $orderPage;
 	},
 	'wagnerwagner.merx.createOrder:before' => function (OrderPage $virtualOrderPage, array $gateway, array $data): void {
 	},
@@ -117,7 +118,7 @@ return [
 	'wagnerwagner.merx.initializeOrder:before' => function (Cart $cart, array $data): void {
 	},
 	'wagnerwagner.merx.orderPaid' => function (OrderPage $orderPage): OrderPage|null {
-		return null;
+		return $orderPage;
 	},
 
 	/**

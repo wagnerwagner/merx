@@ -48,6 +48,7 @@ class Merx
 	 * checkout of the session needs it to replace a draft which was left open.
 	 */
 	public static string $orderDraftSessionKey = 'wagnerwagner.merx.orderDraft';
+	/** Query parameter of the return url which names the order */
 	public static string $orderParameterName = 'order';
 
 	/**
@@ -574,7 +575,8 @@ class Merx
 	/**
 	 * Creates virtual OrderPage and validates it. Runs the payment gateway’s `initializePayment` function. Saves the order as a draft, which `createOrder()` publishes when the customer returns from the payment.
 	 *
-	 * @param $data Content of `OrderPage`. Must contain `paymentGateway`.
+	 * @param $data The fields of the checkout form: `paymentGateway`, the key of a payment gateway, and the fields of your order blueprint, e.g. `email`. Fields Merx sets itself, such as `datePaid`, are dropped.
+	 * @throws Exception error.merx.cart.notOrderable when the cart has an item without a price, prices in two currencies or a negative total
 	 * @throws Exception error.merx.cart.stock or error.merx.cart.soldOut when the cart holds more of a product than its stock
 	 * @return string The return URL, or the `redirect` that the gateway’s `initializePayment` set on the virtual order page.
 	 */
@@ -618,10 +620,12 @@ class Merx
 				);
 			}
 
-			// E.g. a shipping line added before the customer switched the currency
-			if ($cart->currency() === false) {
+			// A line without a price, prices in two currencies, e.g. a shipping
+			// line added before the customer switched the currency, or a
+			// discount which is worth more than the cart
+			if ($cart->isOrderable() === false) {
 				throw new Exception(
-					key: 'merx.mixedCurrencies.total',
+					key: 'merx.cart.notOrderable',
 					httpCode: 400,
 				);
 			}

@@ -182,6 +182,29 @@ final class OrderDraftTest extends TestCase
 		$this->assertSame([$first->id(), $second->id()], $siblings);
 	}
 
+	/**
+	 * A hook may hand back the item it wants added, e.g. one line per name
+	 */
+	public function testCartAddBeforeMayChangeTheItem(): void
+	{
+		$this->kirby->session()->destroy();
+		$this->boot(hooks: [
+			'wagnerwagner.merx.cart.add:before' => function ($cart, $data) {
+				if (is_array($data) === true && isset($data['data']['name']) === true) {
+					$data['key'] = $data['key'] . '-' . strtolower($data['data']['name']);
+					return $data;
+				}
+			},
+		]);
+
+		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0, 'data' => ['name' => 'Anna']]);
+		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0, 'data' => ['name' => 'Ben']]);
+		// A hook which returns nothing leaves the item as it is
+		cart()->add(['key' => 'shirt', 'title' => 'Shirt', 'price' => 20.0]);
+
+		$this->assertSame(['socks-anna', 'socks-ben', 'shirt'], cart()->keys());
+	}
+
 	public function testANewCheckoutReplacesTheDraftOfTheSession(): void
 	{
 		$first = $this->checkout();
@@ -238,6 +261,34 @@ final class OrderDraftTest extends TestCase
 		}
 
 		$this->assertSame(0, $this->completed);
+	}
+
+	/**
+	 * A hook runs in the language of the customer. What it writes belongs
+	 * into the one content file of the order.
+	 */
+	public function testAnOrderIsUpdatedInTheDefaultLanguage(): void
+	{
+		$this->kirby->session()->destroy();
+		$this->boot(
+			[
+				['code' => 'de', 'default' => true],
+				['code' => 'en'],
+			],
+			[
+				'wagnerwagner.merx.createOrder:after' => function (OrderPage $orderPage): OrderPage {
+					return $orderPage->update(['datePaid' => '2026-11-11 12:00:00', 'note' => 'From the hook']);
+				},
+			],
+		);
+		$this->kirby->setCurrentLanguage('en');
+
+		$orderPage = merx()->createOrder($this->checkout());
+
+		$this->assertSame('en', $this->kirby->languageCode());
+		$this->assertTrue($orderPage->isPaid());
+		$this->assertFileDoesNotExist($orderPage->root() . '/order.en.txt');
+		$this->assertSame('From the hook', $orderPage->content('de')->get('note')->value());
 	}
 
 	/**
@@ -397,24 +448,55 @@ final class OrderDraftTest extends TestCase
 	}
 
 	/**
-	 * E.g. a shipping line which was added before the customer switched the currency
+	 * Two currencies, e.g. a shipping line which was added before the
+	 * customer switched the currency, or a discount worth more than the cart
 	 */
-	public function testInitializeOrderRefusesACartWithTwoCurrencies(): void
+	public function testInitializeOrderRefusesACartWhichIsNotOrderable(): void
 	{
-		new Cart([
-			['key' => 'socks', 'title' => 'Socks', 'price' => new Price(price: 10.0, currency: 'EUR')],
-			['key' => 'shipping', 'title' => 'Shipping', 'type' => 'shipping', 'price' => new Price(price: 5.0, currency: 'USD')],
-		]);
+		$carts = [
+			[
+				['key' => 'socks', 'title' => 'Socks', 'price' => new Price(price: 10.0, currency: 'EUR')],
+				['key' => 'shipping', 'title' => 'Shipping', 'type' => 'shipping', 'price' => new Price(price: 5.0, currency: 'USD')],
+			],
+			[
+				['key' => 'socks', 'title' => 'Socks', 'price' => 10.0],
+				['key' => 'coupon', 'title' => 'Coupon', 'type' => 'discount', 'price' => -15.0],
+			],
+		];
 
-		try {
-			merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'customer@example.com']);
-			$this->fail('A cart with two currencies was ordered');
-		} catch (Exception $exception) {
-			$this->assertSame('error.merx.mixedCurrencies.total', $exception->getKey());
-			$this->assertSame(400, $exception->getHttpCode());
+		foreach ($carts as $items) {
+			cart()->delete();
+			new Cart($items);
+
+			try {
+				merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'customer@example.com']);
+				$this->fail('A cart which is not orderable was ordered');
+			} catch (Exception $exception) {
+				$this->assertSame('error.merx.cart.notOrderable', $exception->getKey());
+				$this->assertSame(400, $exception->getHttpCode());
+			}
 		}
 
 		$this->assertSame([], $this->drafts());
+	}
+
+	/**
+	 * A coupon may cover the whole cart
+	 */
+	public function testAFreeOrderIsCompleted(): void
+	{
+		new Cart([
+			['key' => 'socks', 'title' => 'Socks', 'price' => 10.0],
+			['key' => 'coupon', 'title' => 'Coupon', 'type' => 'discount', 'price' => -10.0],
+		]);
+
+		$redirect = merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'customer@example.com']);
+		$query = [];
+		parse_str(parse_url($redirect, PHP_URL_QUERY) ?? '', $query);
+		$orderPage = merx()->createOrder($query);
+
+		$this->assertSame('listed', $orderPage->status());
+		$this->assertSame(0.0, $orderPage->total()->price);
 	}
 
 	public function testInitializeOrderWritesADraft(): void

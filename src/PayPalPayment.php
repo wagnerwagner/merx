@@ -161,7 +161,7 @@ class PayPalPayment
 				[
 					'description' => (string)site()->title(),
 					'amount' => [
-						'value' => number_format($virtualOrderPage->cart()->total()->toFloat(), 2, '.', ''),
+						'value' => number_format($virtualOrderPage->cart()->total()->price, 2, '.', ''),
 						'currency_code' => $currency,
 					],
 				],

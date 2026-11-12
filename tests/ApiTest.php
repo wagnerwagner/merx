@@ -100,6 +100,23 @@ final class ApiTest extends TestCase
 		$this->assertEquals(3, $response['data']['quantity']);
 	}
 
+	/**
+	 * A cart shows what lowers its total
+	 */
+	public function testCartListsDiscounts(): void
+	{
+		$kirby = kirby();
+		$kirby->api()->call('shop/cart', 'POST', ['body' => ['key' => 'ipsum']]);
+		$this->assertNull($kirby->api()->call('shop/cart', 'GET')['data']['discounts']);
+
+		cart()->add(['key' => 'coupon', 'title' => 'Coupon', 'type' => 'discount', 'price' => -1.0]);
+		$response = $kirby->api()->call('shop/cart', 'GET');
+
+		$this->assertSame('coupon', $response['data']['discounts']['items'][0]['key']);
+		$this->assertSame(1, count($response['data']['products']['items']));
+		$this->assertSame(-1.0, $response['data']['discounts']['total']['priceRaw']);
+	}
+
 	public function testCartDelete(): void
 	{
 		$kirby = kirby();

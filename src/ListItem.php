@@ -16,7 +16,8 @@ use Kirby\Toolkit\Obj;
  */
 class ListItem extends Obj
 {
-	public static $allowedTypes = [
+	/** What a list item can be */
+	public static array $allowedTypes = [
 		'credit',
 		'custom',
 		'discount',
@@ -25,13 +26,28 @@ class ListItem extends Obj
 		'shipping',
 	];
 
+	/** Your own values for the item, e.g. a name to embroider */
 	public array|null $data = null;
+
+	/** Identifies the item in its list. The UUID of the page, unless you set one. */
 	public string $key;
+
+	/** The product page, or null for an item without one, e.g. shipping */
 	public Page|ProductPage|null $page = null;
+
+	/** Price per item, or null for a product without a price */
 	public Price|null $price = null;
+
+	/** Multiplier of the price, e.g. the length of a product sold by the meter */
 	public float|null $quantifier = null;
+
+	/** How many of the item. E.g. 3.0 */
 	public float $quantity = 1.0;
+
+	/** Title of the page, or the one you set for an item without a page */
 	public string|null $title = null;
+
+	/** One of `ListItem::$allowedTypes` */
 	public string $type = 'product';
 
 	/**
@@ -234,7 +250,7 @@ class ListItem extends Obj
 			/** @var Price $price */
 			$price = $array['price'];
 			$array['price'] = [
-				'price' => $price->taxIncluded() === false ? $price->priceNet : $price->price,
+				'price' => $price->toFloat(),
 				'tax' => $price->tax?->rate,
 				'pricingRule' => $price->pricingRule?->key,
 				'currency' => $price->currency,
@@ -250,11 +266,9 @@ class ListItem extends Obj
 	 */
 	public function total(): Price|null
 	{
-		// A price without a pricing rule includes its tax, the same way `Price`
-		// itself treats it. Without the fallback the total would be built from the
-		// net price while the item’s own price is a gross one.
-		$taxIncluded = $this->price?->pricingRule?->taxIncluded ?? true;
-		$pricePerItem = $taxIncluded ? $this->price?->price : $this->price?->priceNet;
+		// Net under a pricing rule without tax, gross otherwise: the amount
+		// `Price` expects for that pricing rule
+		$pricePerItem = $this->price?->toFloat();
 
 		if (!is_float($pricePerItem)) {
 			return null;

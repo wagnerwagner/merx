@@ -92,6 +92,22 @@ final class PriceTest extends TestCase
 		$this->assertEquals(42.5, $price->toFloat());
 	}
 
+	/**
+	 * `toFloat()` is the number `toString()` formats
+	 */
+	public function testToFloatFollowsThePricingRule(): void
+	{
+		$gross = new Price(price: 119.0, tax: 0.19, currency: 'EUR');
+		$net = new Price(price: 100.0, tax: 0.19, pricingRule: new PricingRule(key: 'b2b', currency: 'EUR', taxIncluded: false));
+
+		$this->assertSame(119.0, $gross->toFloat());
+		$this->assertSame(100.0, $gross->toFloat('priceNet'));
+
+		$this->assertSame(100.0, $net->toFloat());
+		$this->assertSame(119.0, $net->toFloat('price'));
+		$this->assertSame((string)$net, $net->toString('priceNet'));
+	}
+
 	public function testToStringFormatsCurrency()
 	{
 		$pricingRule = $this->createMock(PricingRule::class);

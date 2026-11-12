@@ -53,7 +53,9 @@ class Cart extends ProductList
 	{
 		$kirby = App::instance();
 		try {
-			$kirby->trigger('wagnerwagner.merx.cart.add:before', ['cart' => $this, 'data' => $data]);
+			// `apply()`: a hook may return the item it wants added instead,
+			// e.g. with a key or a quantifier derived from its `data`
+			$data = $kirby->apply('wagnerwagner.merx.cart.add:before', ['cart' => $this, 'data' => $data], 'data');
 			$listItem = ListItem::factory($data);
 			$this->validateCurrencyOf($listItem);
 			parent::add($listItem);
@@ -100,7 +102,7 @@ class Cart extends ProductList
 	 */
 	public function getStripePaymentIntent(array|null $params = [], $options = []): object
 	{
-		$amount = $this->total()->toFloat();
+		$amount = $this->total()->price;
 		if ($amount === 0.0) {
 			throw new Exception(
 				key: 'merx.emptycart',
@@ -134,14 +136,14 @@ class Cart extends ProductList
 	public function payPalPurchaseUnits(): array
 	{
 		$currencyCode = $this->currency();
-		$total = $this->total()?->toFloat() ?? 0.0;
+		$total = $this->total()?->price ?? 0.0;
 
 		$items = [];
 		$itemTotal = 0.0;
 
 		foreach ($this->values() as $listItem) {
 			/** @var ListItem $listItem */
-			$unitAmount = $listItem->price?->toFloat();
+			$unitAmount = $listItem->price?->price;
 
 			if ($unitAmount === null || $unitAmount <= 0) {
 				continue;

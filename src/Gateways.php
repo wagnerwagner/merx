@@ -120,7 +120,7 @@ class Gateways
 		$total = $virtualOrderPage->cart()->total();
 
 		// Same factor `StripePayment::createStripePaymentIntent()` uses
-		if ($amount !== (int)round($total->toFloat() * 100)) {
+		if ($amount !== (int)round($total->price * 100)) {
 			throw new Exception(
 				key: 'merx.amountMismatch',
 				httpCode: 400,

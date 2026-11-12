@@ -23,13 +23,13 @@ class Price extends Obj
 	/** Gross price, including tax. E.g. 119.00 */
 	public float $price;
 
-	/** E.g. 100.00 */
+	/** Net price, without tax. E.g. 100.00 */
 	public float $priceNet;
 
 	/** Pricing rule used for this price */
 	public PricingRule|null $pricingRule = null;
 
-	/** E.g. 0.19 for 19 % */
+	/** Tax of the price, with its rate and amount */
 	public Tax|null $tax = null;
 
 	/**
@@ -101,11 +101,21 @@ class Price extends Obj
 	}
 
 	/**
-	 * Returns the gross price as unformatted string
+	 * Returns the price as formatted string, e.g. "119,00 €"
+	 *
+	 * @see Price::toString()
 	 */
 	public function __toString(): string
 	{
 		return (string)$this->toString();
+	}
+
+	/**
+	 * The price a customer is shown: net under a pricing rule without tax, gross otherwise
+	 */
+	private function key(): string
+	{
+		return $this->pricingRule?->taxIncluded === false ? 'priceNet' : 'price';
 	}
 
 	/**
@@ -115,13 +125,8 @@ class Price extends Obj
 	 */
 	public function quantify(float $quantifier = 1): self
 	{
-		$basePrice = $this->price;
-		if ($this->pricingRule?->taxIncluded === false) {
-			$basePrice = $this->priceNet;
-		}
-		$price = $basePrice * $quantifier;
 		return new self(
-			price: $price,
+			price: $this->toFloat() * $quantifier,
 			tax: $this->tax?->rate,
 			pricingRule: $this->pricingRule,
 			currency: $this->currency,
@@ -150,10 +155,15 @@ class Price extends Obj
 
 	/**
 	 * Returns the price as float
+	 *
+	 * The same amount `toString()` formats: net or gross, depending on the
+	 * tax inclusion of the pricing rule.
+	 *
+	 * @param $key `price` for the gross price, `priceNet` for the net price, whatever the pricing rule says.
 	 */
-	public function toFloat(): float|null
+	public function toFloat(string|null $key = null): float
 	{
-		return $this->price;
+		return $this->{$key ?? $this->key()};
 	}
 
 	/**
@@ -168,13 +178,7 @@ class Price extends Obj
 	 */
 	public function toString(string|null $key = null): string
 	{
-		if ($key === null) {
-			$key = 'price';
-			if ($this->pricingRule?->taxIncluded === false) {
-				$key = 'priceNet';
-			}
-		}
-		return Merx::formatCurrency($this->$key ?? 0, $this->currency);
+		return Merx::formatCurrency($this->toFloat($key), $this->currency);
 	}
 
 	/**

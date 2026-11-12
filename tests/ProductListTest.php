@@ -76,6 +76,36 @@ final class ProductListTest extends TestCase
 		$this->assertNull($productList->total());
 	}
 
+	/**
+	 * A coupon may cover the whole cart, but not more
+	 */
+	public function testIsOrderable(): void
+	{
+		$productList = new ProductList();
+		$this->assertFalse($productList->isOrderable());
+
+		$productList->add(['key' => 'socks', 'price' => new Price(price: 10.0, currency: 'EUR')]);
+		$this->assertTrue($productList->isOrderable());
+
+		$productList->add(['key' => 'coupon', 'type' => 'discount', 'price' => new Price(price: -10.0, currency: 'EUR')]);
+		$this->assertSame(0.0, $productList->total()->price);
+		$this->assertTrue($productList->isOrderable());
+
+		$productList->add(['key' => 'credit', 'type' => 'credit', 'price' => new Price(price: -5.0, currency: 'EUR')]);
+		$this->assertFalse($productList->isOrderable());
+
+		// Two currencies have no total
+		$mixed = new ProductList();
+		$mixed->add(['key' => 'socks', 'price' => new Price(price: 10.0, currency: 'EUR')]);
+		$mixed->add(['key' => 'shirt', 'price' => new Price(price: 20.0, currency: 'USD')]);
+		$this->assertFalse($mixed->isOrderable());
+
+		// An item without a price
+		$open = new ProductList();
+		$open->add(['key' => 'gift-wrap', 'type' => 'custom']);
+		$this->assertFalse($open->isOrderable());
+	}
+
 	public function testAddRejectsAPageWhichIsNoProduct(): void
 	{
 		$productList = new ProductList();

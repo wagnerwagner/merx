@@ -17,6 +17,8 @@ class PricingRule extends Obj
 {
 	/** Three-letter ISO currency code, in uppercase. E.g. EUR or USD */
 	public string|null $currency = null;
+
+	/** Key of the rule in the `pricingRules` option */
 	public string $key;
 
 	/** Name of the pricing rule */
