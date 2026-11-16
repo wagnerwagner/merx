@@ -219,11 +219,11 @@ class ListItem extends Obj
 			$price = $array['price'];
 			$array['price'] = (float)$price->price;
 			$array['pricenet'] = (float)$price->priceNet;
-			$array['taxrate'] = (float)$price->tax?->rate;
-			$array['currency'] = (string)$price->currency;
+			$array['taxrate'] = $price->tax?->rate;
+			$array['currency'] = $price->currency;
 			// Whether the customer saw net or gross prices. The pricing rule
 			// itself may be gone by the time the order is looked at.
-			$array['taxincluded'] = $price->taxIncluded() ?? true;
+			$array['taxincluded'] = $price->taxIncluded();
 		}
 
 		return $array;
