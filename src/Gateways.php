@@ -142,22 +142,61 @@ Gateways::$gateways['paypal'] = [
 
         // execute payment
         $paypalResponse = PayPalPayment::executePayPalPayment((string)$virtualOrderPage->payPalOrderId());
+
+        $content = [
+            'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
+        ];
+
+        // Mark the order as paid only when PayPal actually captured the money
+        if (validatePayPalCapture($paypalResponse) === true) {
+            $content['paymentComplete'] = true;
+            $content['paidDate'] = date('c');
+        }
+
         if (version_compare(App::version(), '5.0.0', '>=')) {
-            $virtualOrderPage->version('latest')->update([
-                'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
-                'paymentComplete' => true,
-                'paidDate' => date('c'),
-            ]);
+            $virtualOrderPage->version('latest')->update($content);
         } else {
-            $virtualOrderPage->content()->update([
-                'paymentDetails' => Data::encode($paypalResponse, 'yaml'),
-                'paymentComplete' => true,
-                'paidDate' => date('c'),
-            ]);
+            $virtualOrderPage->content()->update($content);
         }
         return $virtualOrderPage;
     }
 ];
+
+/**
+ * Checks the response of a PayPal capture request.
+ *
+ * PayPal answers with HTTP 2xx even when the order or a capture is not successful.
+ *
+ * @param array $paypalResponse Response of `PayPalPayment::executePayPalPayment()`
+ * @throws \Kirby\Exception\Exception When the order is not `COMPLETED` or a capture is `DECLINED` or `FAILED`
+ *
+ * @return bool `true` when every capture is `COMPLETED`, `false` when a capture is still pending
+ */
+function validatePayPalCapture(array $paypalResponse): bool
+{
+    $status = $paypalResponse['status'] ?? null;
+
+    $captureStatus = [];
+    foreach ($paypalResponse['purchase_units'] ?? [] as $purchaseUnit) {
+        foreach ($purchaseUnit['payments']['captures'] ?? [] as $capture) {
+            $captureStatus[] = $capture['status'] ?? null;
+        }
+    }
+
+    if ($status !== 'COMPLETED' || $captureStatus === [] || array_intersect(['DECLINED', 'FAILED'], $captureStatus) !== []) {
+        throw new Exception([
+            'key' => 'merx.paypalError',
+            'httpCode' => 400,
+            'details' => [
+                'status' => $status,
+                'captureStatus' => $captureStatus,
+            ],
+        ]);
+    }
+
+    // `PENDING` captures (e.g. eCheck or payment review) are completed by PayPal later
+    return array_diff($captureStatus, ['COMPLETED']) === [];
+}
 
 /**
  *  Credit Card payment gateway using Stripe
