@@ -4,6 +4,7 @@ layout: table
 status: listed
 create: false
 search: true
+flip: true
 help: |
   {{ page.orderInfo }}
 columns:
