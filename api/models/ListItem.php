@@ -10,6 +10,7 @@ return [
 		'key' => fn (ListItem $listItem): string => $listItem->key,
 		'title' => fn (ListItem $listItem): string|null => $listItem->title,
 		'type' => fn (ListItem $listItem): string => $listItem->type,
+		/** @return array{alt: string, src: string, srcset: string}|null */
 		'thumb' => function (ListItem $listItem): array|null {
 			if (!$listItem->page) {
 				return null;
@@ -29,6 +30,7 @@ return [
 		'total' => fn (ListItem $listItem): Price|null => $listItem->total(),
 		'quantity' => fn (ListItem $listItem): float => $listItem->quantity,
 		'page' => fn (ListItem $listItem): Page|null => $listItem->page,
+		/** @return array<string, mixed>|null */
 		'data' => fn (ListItem $listItem): array|null => $listItem->data,
 	],
 	'type' => ListItem::class,
