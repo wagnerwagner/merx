@@ -41,7 +41,6 @@ return [
 	'stripe.webhook_signing_secret' => '',
 	'stripe.paymentIntentParameters' => [
 		'capture_method' => 'manual',
-		'automatic_payment_methods' => ['enabled' => true],
 	],
 	'gateways' => [],
 ];

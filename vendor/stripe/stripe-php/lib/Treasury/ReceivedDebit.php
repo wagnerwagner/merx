@@ -5,7 +5,9 @@
 namespace Stripe\Treasury;
 
 /**
- * ReceivedDebits represent funds pulled from a <a href="https://api.stripe.com#financial_accounts">FinancialAccount</a>. These are not initiated from the FinancialAccount.
+ * Legacy ReceivedDebits are part of the v1 version of Treasury for platforms and do not support many of the features introduced in <a href="https://docs.stripe.com/treasury/connect">Treasury for platforms v2</a>. Use <a href="https://docs.stripe.com/api/v2/money-management/received-debits?api-version=preview">Received Debits</a> instead of building a new v1 integration.
+ *
+ * ReceivedDebits represent funds pulled from a <a href="https://docs.stripe.com/api#financial_accounts">FinancialAccount</a>. These are not initiated from the FinancialAccount.
  *
  * @property string $id Unique identifier for the object.
  * @property string $object String representing the object's type. Objects of the same type share the same value.

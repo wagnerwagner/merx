@@ -20,9 +20,9 @@
             'dev_requirement' => false,
         ),
         'stripe/stripe-php' => array(
-            'pretty_version' => 'v21.3.3',
-            'version' => '21.3.3.0',
-            'reference' => '3d52008ffeab02763b02462802393f3d4da2aa51',
+            'pretty_version' => 'v23.0.0',
+            'version' => '23.0.0.0',
+            'reference' => 'f29b7a44597531c304360c3d42959aaf52e33618',
             'type' => 'library',
             'install_path' => __DIR__ . '/../stripe/stripe-php',
             'aliases' => array(),

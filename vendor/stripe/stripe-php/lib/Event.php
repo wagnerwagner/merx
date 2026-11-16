@@ -52,6 +52,9 @@ class Event extends ApiResource
     const APPLICATION_FEE_CREATED = 'application_fee.created';
     const APPLICATION_FEE_REFUNDED = 'application_fee.refunded';
     const APPLICATION_FEE_REFUND_UPDATED = 'application_fee.refund.updated';
+    const APPS_INSTALL_CREATED = 'apps.install.created';
+    const APPS_INSTALL_DELETED = 'apps.install.deleted';
+    const APPS_INSTALL_UPDATED = 'apps.install.updated';
     const BALANCE_AVAILABLE = 'balance.available';
     const BALANCE_SETTINGS_UPDATED = 'balance_settings.updated';
     const BILLING_ALERT_TRIGGERED = 'billing.alert.triggered';
@@ -270,6 +273,13 @@ class Event extends ApiResource
     const TEST_HELPERS_TEST_CLOCK_DELETED = 'test_helpers.test_clock.deleted';
     const TEST_HELPERS_TEST_CLOCK_INTERNAL_FAILURE = 'test_helpers.test_clock.internal_failure';
     const TEST_HELPERS_TEST_CLOCK_READY = 'test_helpers.test_clock.ready';
+    const THREE_D_SECURE_AUTHENTICATION_CANCELED = 'three_d_secure.authentication.canceled';
+    const THREE_D_SECURE_AUTHENTICATION_CHALLENGE_STARTED = 'three_d_secure.authentication.challenge_started';
+    const THREE_D_SECURE_AUTHENTICATION_ERRORED = 'three_d_secure.authentication.errored';
+    const THREE_D_SECURE_AUTHENTICATION_FAILED = 'three_d_secure.authentication.failed';
+    const THREE_D_SECURE_AUTHENTICATION_REQUIRES_CHALLENGE = 'three_d_secure.authentication.requires_challenge';
+    const THREE_D_SECURE_AUTHENTICATION_REQUIRES_SUBMISSION = 'three_d_secure.authentication.requires_submission';
+    const THREE_D_SECURE_AUTHENTICATION_SUCCEEDED = 'three_d_secure.authentication.succeeded';
     const TOPUP_CANCELED = 'topup.canceled';
     const TOPUP_CREATED = 'topup.created';
     const TOPUP_FAILED = 'topup.failed';
@@ -318,6 +328,9 @@ class Event extends ApiResource
     const TYPE_APPLICATION_FEE_CREATED = 'application_fee.created';
     const TYPE_APPLICATION_FEE_REFUNDED = 'application_fee.refunded';
     const TYPE_APPLICATION_FEE_REFUND_UPDATED = 'application_fee.refund.updated';
+    const TYPE_APPS_INSTALL_CREATED = 'apps.install.created';
+    const TYPE_APPS_INSTALL_DELETED = 'apps.install.deleted';
+    const TYPE_APPS_INSTALL_UPDATED = 'apps.install.updated';
     const TYPE_BALANCE_AVAILABLE = 'balance.available';
     const TYPE_BALANCE_SETTINGS_UPDATED = 'balance_settings.updated';
     const TYPE_BILLING_ALERT_TRIGGERED = 'billing.alert.triggered';
@@ -536,6 +549,13 @@ class Event extends ApiResource
     const TYPE_TEST_HELPERS_TEST_CLOCK_DELETED = 'test_helpers.test_clock.deleted';
     const TYPE_TEST_HELPERS_TEST_CLOCK_INTERNAL_FAILURE = 'test_helpers.test_clock.internal_failure';
     const TYPE_TEST_HELPERS_TEST_CLOCK_READY = 'test_helpers.test_clock.ready';
+    const TYPE_THREE_D_SECURE_AUTHENTICATION_CANCELED = 'three_d_secure.authentication.canceled';
+    const TYPE_THREE_D_SECURE_AUTHENTICATION_CHALLENGE_STARTED = 'three_d_secure.authentication.challenge_started';
+    const TYPE_THREE_D_SECURE_AUTHENTICATION_ERRORED = 'three_d_secure.authentication.errored';
+    const TYPE_THREE_D_SECURE_AUTHENTICATION_FAILED = 'three_d_secure.authentication.failed';
+    const TYPE_THREE_D_SECURE_AUTHENTICATION_REQUIRES_CHALLENGE = 'three_d_secure.authentication.requires_challenge';
+    const TYPE_THREE_D_SECURE_AUTHENTICATION_REQUIRES_SUBMISSION = 'three_d_secure.authentication.requires_submission';
+    const TYPE_THREE_D_SECURE_AUTHENTICATION_SUCCEEDED = 'three_d_secure.authentication.succeeded';
     const TYPE_TOPUP_CANCELED = 'topup.canceled';
     const TYPE_TOPUP_CREATED = 'topup.created';
     const TYPE_TOPUP_FAILED = 'topup.failed';
@@ -582,7 +602,7 @@ class Event extends ApiResource
      * <code>api_version</code> attribute (not according to your current Stripe API
      * version or <code>Stripe-Version</code> header).
      *
-     * @param null|array{created?: array|int, delivery_success?: bool, ending_before?: string, expand?: string[], limit?: int, starting_after?: string, type?: string, types?: string[]} $params
+     * @param null|array{created?: array{gt?: int, gte?: int, lt?: int, lte?: int}|int, delivery_success?: bool, ending_before?: string, expand?: string[], limit?: int, starting_after?: string, type?: string, types?: string[]} $params
      * @param null|array|string $opts
      *
      * @return Collection<Event> of ApiResources

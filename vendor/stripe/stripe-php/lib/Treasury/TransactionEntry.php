@@ -5,7 +5,9 @@
 namespace Stripe\Treasury;
 
 /**
- * TransactionEntries represent individual units of money movements within a single <a href="https://api.stripe.com#transactions">Transaction</a>.
+ * Legacy TransactionEntries are part of the v1 version of Treasury for platforms and do not support many of the features introduced in <a href="https://docs.stripe.com/treasury/connect">Treasury for platforms v2</a>. Use <a href="https://docs.stripe.com/api/v2/money-management/transaction-entries">Transaction Entries</a> instead of building a new v1 integration.
+ *
+ * TransactionEntries represent individual units of money movements within a single <a href="https://docs.stripe.com/api#transactions">Transaction</a>.
  *
  * @property string $id Unique identifier for the object.
  * @property string $object String representing the object's type. Objects of the same type share the same value.
@@ -59,7 +61,7 @@ class TransactionEntry extends \Stripe\ApiResource
     /**
      * Retrieves a list of TransactionEntry objects.
      *
-     * @param null|array{created?: array|int, effective_at?: array|int, ending_before?: string, expand?: string[], financial_account: string, limit?: int, order_by?: string, starting_after?: string, transaction?: string} $params
+     * @param null|array{created?: array{gt?: int, gte?: int, lt?: int, lte?: int}|int, effective_at?: array{gt?: int, gte?: int, lt?: int, lte?: int}|int, ending_before?: string, expand?: string[], financial_account: string, limit?: int, order_by?: string, starting_after?: string, transaction?: string} $params
      * @param null|array|string $opts
      *
      * @return \Stripe\Collection<TransactionEntry> of ApiResources

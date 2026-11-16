@@ -21,6 +21,7 @@ class ObjectTypes
             \Stripe\Application::OBJECT_NAME => \Stripe\Application::class,
             \Stripe\ApplicationFee::OBJECT_NAME => \Stripe\ApplicationFee::class,
             \Stripe\ApplicationFeeRefund::OBJECT_NAME => \Stripe\ApplicationFeeRefund::class,
+            \Stripe\Apps\Install::OBJECT_NAME => \Stripe\Apps\Install::class,
             \Stripe\Apps\Secret::OBJECT_NAME => \Stripe\Apps\Secret::class,
             \Stripe\Balance::OBJECT_NAME => \Stripe\Balance::class,
             \Stripe\BalanceSettings::OBJECT_NAME => \Stripe\BalanceSettings::class,
@@ -105,6 +106,7 @@ class ObjectTypes
             \Stripe\Plan::OBJECT_NAME => \Stripe\Plan::class,
             \Stripe\Price::OBJECT_NAME => \Stripe\Price::class,
             \Stripe\Product::OBJECT_NAME => \Stripe\Product::class,
+            \Stripe\ProductCatalog\TrialOffer::OBJECT_NAME => \Stripe\ProductCatalog\TrialOffer::class,
             \Stripe\ProductFeature::OBJECT_NAME => \Stripe\ProductFeature::class,
             \Stripe\PromotionCode::OBJECT_NAME => \Stripe\PromotionCode::class,
             \Stripe\Quote::OBJECT_NAME => \Stripe\Quote::class,
@@ -133,6 +135,7 @@ class ObjectTypes
             \Stripe\Tax\Association::OBJECT_NAME => \Stripe\Tax\Association::class,
             \Stripe\Tax\Calculation::OBJECT_NAME => \Stripe\Tax\Calculation::class,
             \Stripe\Tax\CalculationLineItem::OBJECT_NAME => \Stripe\Tax\CalculationLineItem::class,
+            \Stripe\Tax\Location::OBJECT_NAME => \Stripe\Tax\Location::class,
             \Stripe\Tax\Registration::OBJECT_NAME => \Stripe\Tax\Registration::class,
             \Stripe\Tax\Settings::OBJECT_NAME => \Stripe\Tax\Settings::class,
             \Stripe\Tax\Transaction::OBJECT_NAME => \Stripe\Tax\Transaction::class,
@@ -147,6 +150,7 @@ class ObjectTypes
             \Stripe\Terminal\OnboardingLink::OBJECT_NAME => \Stripe\Terminal\OnboardingLink::class,
             \Stripe\Terminal\Reader::OBJECT_NAME => \Stripe\Terminal\Reader::class,
             \Stripe\TestHelpers\TestClock::OBJECT_NAME => \Stripe\TestHelpers\TestClock::class,
+            \Stripe\ThreeDSecure\Authentication::OBJECT_NAME => \Stripe\ThreeDSecure\Authentication::class,
             \Stripe\Token::OBJECT_NAME => \Stripe\Token::class,
             \Stripe\Topup::OBJECT_NAME => \Stripe\Topup::class,
             \Stripe\Transfer::OBJECT_NAME => \Stripe\Transfer::class,
@@ -170,6 +174,7 @@ class ObjectTypes
      * @var array Mapping from v2 object types to resource classes
      */
     const v2Mapping = [
+        \Stripe\V2\SearchResult::OBJECT_NAME => \Stripe\V2\SearchResult::class,
         // v2 object classes: The beginning of the section generated from our OpenAPI spec
         \Stripe\V2\Billing\MeterEvent::OBJECT_NAME => \Stripe\V2\Billing\MeterEvent::class,
         \Stripe\V2\Billing\MeterEventAdjustment::OBJECT_NAME => \Stripe\V2\Billing\MeterEventAdjustment::class,
@@ -182,6 +187,22 @@ class ObjectTypes
         \Stripe\V2\Core\AccountToken::OBJECT_NAME => \Stripe\V2\Core\AccountToken::class,
         \Stripe\V2\Core\Event::OBJECT_NAME => \Stripe\V2\Core\Event::class,
         \Stripe\V2\Core\EventDestination::OBJECT_NAME => \Stripe\V2\Core\EventDestination::class,
+        \Stripe\V2\Core\Vault\GbBankAccount::OBJECT_NAME => \Stripe\V2\Core\Vault\GbBankAccount::class,
+        \Stripe\V2\Core\Vault\UsBankAccount::OBJECT_NAME => \Stripe\V2\Core\Vault\UsBankAccount::class,
+        \Stripe\V2\MoneyManagement\Adjustment::OBJECT_NAME => \Stripe\V2\MoneyManagement\Adjustment::class,
+        \Stripe\V2\MoneyManagement\FinancialAccount::OBJECT_NAME => \Stripe\V2\MoneyManagement\FinancialAccount::class,
+        \Stripe\V2\MoneyManagement\FinancialAddress::OBJECT_NAME => \Stripe\V2\MoneyManagement\FinancialAddress::class,
+        \Stripe\V2\MoneyManagement\FinancialAddressCreditSimulation::OBJECT_NAME => \Stripe\V2\MoneyManagement\FinancialAddressCreditSimulation::class,
+        \Stripe\V2\MoneyManagement\InboundTransfer::OBJECT_NAME => \Stripe\V2\MoneyManagement\InboundTransfer::class,
+        \Stripe\V2\MoneyManagement\OutboundPayment::OBJECT_NAME => \Stripe\V2\MoneyManagement\OutboundPayment::class,
+        \Stripe\V2\MoneyManagement\OutboundSetupIntent::OBJECT_NAME => \Stripe\V2\MoneyManagement\OutboundSetupIntent::class,
+        \Stripe\V2\MoneyManagement\PayoutIntent::OBJECT_NAME => \Stripe\V2\MoneyManagement\PayoutIntent::class,
+        \Stripe\V2\MoneyManagement\PayoutMethod::OBJECT_NAME => \Stripe\V2\MoneyManagement\PayoutMethod::class,
+        \Stripe\V2\MoneyManagement\PayoutMethodsBankAccountSpec::OBJECT_NAME => \Stripe\V2\MoneyManagement\PayoutMethodsBankAccountSpec::class,
+        \Stripe\V2\MoneyManagement\ReceivedCredit::OBJECT_NAME => \Stripe\V2\MoneyManagement\ReceivedCredit::class,
+        \Stripe\V2\MoneyManagement\RecipientVerification::OBJECT_NAME => \Stripe\V2\MoneyManagement\RecipientVerification::class,
+        \Stripe\V2\MoneyManagement\Transaction::OBJECT_NAME => \Stripe\V2\MoneyManagement\Transaction::class,
+        \Stripe\V2\MoneyManagement\TransactionEntry::OBJECT_NAME => \Stripe\V2\MoneyManagement\TransactionEntry::class,
         // v2 object classes: The end of the section generated from our OpenAPI spec
     ];
 }

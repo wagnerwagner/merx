@@ -5,6 +5,8 @@
 namespace Stripe\Treasury;
 
 /**
+ * Legacy FinancialAccounts are part of the v1 version of Treasury for platforms and do not support many of the features introduced in <a href="https://docs.stripe.com/treasury/connect">Treasury for platforms v2</a>. Use <a href="https://docs.stripe.com/api/v2/money-management/financial-accounts">Financial Accounts</a> instead of building a new v1 integration.
+ *
  * Stripe Treasury for Platforms provides users with a container for money called a FinancialAccount that is separate from their Payments balance.
  * FinancialAccounts serve as the source and destination of Treasury for Platform’s money movement APIs.
  *
@@ -62,7 +64,7 @@ class FinancialAccount extends \Stripe\ApiResource
     /**
      * Returns a list of FinancialAccounts.
      *
-     * @param null|array{created?: array|int, ending_before?: string, expand?: string[], limit?: int, starting_after?: string, status?: string} $params
+     * @param null|array{created?: array{gt?: int, gte?: int, lt?: int, lte?: int}|int, ending_before?: string, expand?: string[], limit?: int, starting_after?: string, status?: string} $params
      * @param null|array|string $opts
      *
      * @return \Stripe\Collection<FinancialAccount> of ApiResources

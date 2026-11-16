@@ -7,7 +7,7 @@ namespace Stripe;
  *
  * // errorProperties: The beginning of the section generated from our OpenAPI spec
  *
- * @property null|string $advice_code For card errors resulting from a card issuer decline, a short string indicating [how to proceed with an error](https://docs.stripe.com/declines#retrying-issuer-declines) if they provide one.
+ * @property null|string $advice_code For card errors resulting from a card issuer decline, a short string indicating [how to proceed with an error](https://docs.stripe.com/declines/card#retrying-issuer-declines) if they provide one.
  * @property null|string $charge For card errors, the ID of the failed charge.
  * @property null|string $code For some errors that could be handled programmatically, a short string indicating the [error code](https://docs.stripe.com/error-codes) reported.
  * @property null|string $decline_code For card errors resulting from a card issuer decline, a short string indicating the [card issuer's reason for the decline](https://docs.stripe.com/declines#issuer-declines) if they provide one.
@@ -86,6 +86,7 @@ class ErrorObject extends StripeObject
     const CODE_CUSTOMER_SESSION_EXPIRED = 'customer_session_expired';
     const CODE_CUSTOMER_TAX_LOCATION_INVALID = 'customer_tax_location_invalid';
     const CODE_DEBIT_NOT_AUTHORIZED = 'debit_not_authorized';
+    const CODE_DISPUTE_EVIDENCE_PAGE_LIMIT_EXCEEDED = 'dispute_evidence_page_limit_exceeded';
     const CODE_EMAIL_INVALID = 'email_invalid';
     const CODE_EXPIRED_CARD = 'expired_card';
     const CODE_EXPIRED_PAYMENT_METHOD = 'expired_payment_method';
@@ -96,6 +97,8 @@ class ErrorObject extends StripeObject
     const CODE_FINANCIAL_CONNECTIONS_ACCOUNT_INACTIVE = 'financial_connections_account_inactive';
     const CODE_FINANCIAL_CONNECTIONS_ACCOUNT_PENDING_ACCOUNT_NUMBERS = 'financial_connections_account_pending_account_numbers';
     const CODE_FINANCIAL_CONNECTIONS_ACCOUNT_UNAVAILABLE_ACCOUNT_NUMBERS = 'financial_connections_account_unavailable_account_numbers';
+    const CODE_FINANCIAL_CONNECTIONS_CONSENT_LOCALE_INVALID = 'financial_connections_consent_locale_invalid';
+    const CODE_FINANCIAL_CONNECTIONS_CONSENT_LOCALE_UNSUPPORTED = 'financial_connections_consent_locale_unsupported';
     const CODE_FINANCIAL_CONNECTIONS_NO_SUCCESSFUL_TRANSACTION_REFRESH = 'financial_connections_no_successful_transaction_refresh';
     const CODE_FORWARDING_API_INACTIVE = 'forwarding_api_inactive';
     const CODE_FORWARDING_API_INVALID_PARAMETER = 'forwarding_api_invalid_parameter';
@@ -149,6 +152,7 @@ class ErrorObject extends StripeObject
     const CODE_PARAMETER_MISSING = 'parameter_missing';
     const CODE_PARAMETER_UNKNOWN = 'parameter_unknown';
     const CODE_PARAMETERS_EXCLUSIVE = 'parameters_exclusive';
+    const CODE_PAYMENT_EVALUATION_ON_API_VERSION_NOT_SUPPORTED = 'payment_evaluation_on_api_version_not_supported';
     const CODE_PAYMENT_INTENT_ACTION_REQUIRED = 'payment_intent_action_required';
     const CODE_PAYMENT_INTENT_AUTHENTICATION_FAILURE = 'payment_intent_authentication_failure';
     const CODE_PAYMENT_INTENT_INCOMPATIBLE_PAYMENT_METHOD = 'payment_intent_incompatible_payment_method';
@@ -212,11 +216,13 @@ class ErrorObject extends StripeObject
     const CODE_SHIPPING_CALCULATION_FAILED = 'shipping_calculation_failed';
     const CODE_SIRET_INVALID = 'siret_invalid';
     const CODE_SKU_INACTIVE = 'sku_inactive';
+    const CODE_SMART_DISPUTES_NOT_AVAILABLE = 'smart_disputes_not_available';
     const CODE_STATE_UNSUPPORTED = 'state_unsupported';
     const CODE_STATUS_TRANSITION_INVALID = 'status_transition_invalid';
     const CODE_STORER_CAPABILITY_MISSING = 'storer_capability_missing';
     const CODE_STORER_CAPABILITY_NOT_ACTIVE = 'storer_capability_not_active';
     const CODE_STRIPE_TAX_INACTIVE = 'stripe_tax_inactive';
+    const CODE_SUBSCRIPTION_UPDATE_TRIAL_AFTER_BILLING_CYCLE_ANCHOR = 'subscription_update_trial_after_billing_cycle_anchor';
     const CODE_TAX_ID_INVALID = 'tax_id_invalid';
     const CODE_TAX_ID_PROHIBITED = 'tax_id_prohibited';
     const CODE_TAXES_CALCULATION_FAILED = 'taxes_calculation_failed';
@@ -228,6 +234,8 @@ class ErrorObject extends StripeObject
     const CODE_TERMINAL_READER_OFFLINE = 'terminal_reader_offline';
     const CODE_TERMINAL_READER_TIMEOUT = 'terminal_reader_timeout';
     const CODE_TESTMODE_CHARGES_ONLY = 'testmode_charges_only';
+    const CODE_THREE_D_SECURE_AUTHENTICATION_NOT_SUPPORTED = 'three_d_secure_authentication_not_supported';
+    const CODE_THREE_D_SECURE_AUTHENTICATION_UPSTREAM_ERROR = 'three_d_secure_authentication_upstream_error';
     const CODE_TLS_VERSION_UNSUPPORTED = 'tls_version_unsupported';
     const CODE_TOKEN_ALREADY_USED = 'token_already_used';
     const CODE_TOKEN_CARD_NETWORK_INVALID = 'token_card_network_invalid';

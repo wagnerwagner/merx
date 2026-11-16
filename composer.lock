@@ -4,7 +4,7 @@
 		"Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
 		"This file is @generated automatically"
 	],
-	"content-hash": "65c868799a2c0ff9175acdf2fd397fac",
+	"content-hash": "1f5539eb57891ede9cf752503065e7f0",
 	"packages": [
 		{
 			"name": "getkirby/composer-installer",
@@ -55,23 +55,23 @@
 		},
 		{
 			"name": "stripe/stripe-php",
-			"version": "v21.3.3",
+			"version": "v23.0.0",
 			"source": {
 				"type": "git",
 				"url": "https://github.com/stripe/stripe-php.git",
-				"reference": "3d52008ffeab02763b02462802393f3d4da2aa51"
+				"reference": "f29b7a44597531c304360c3d42959aaf52e33618"
 			},
 			"dist": {
 				"type": "zip",
-				"url": "https://api.github.com/repos/stripe/stripe-php/zipball/3d52008ffeab02763b02462802393f3d4da2aa51",
-				"reference": "3d52008ffeab02763b02462802393f3d4da2aa51",
+				"url": "https://api.github.com/repos/stripe/stripe-php/zipball/f29b7a44597531c304360c3d42959aaf52e33618",
+				"reference": "f29b7a44597531c304360c3d42959aaf52e33618",
 				"shasum": ""
 			},
 			"require": {
 				"ext-curl": "*",
 				"ext-json": "*",
 				"ext-mbstring": "*",
-				"php": ">=7.2.0"
+				"php": ">=7.4.0"
 			},
 			"require-dev": {
 				"friendsofphp/php-cs-fixer": "3.94.0",
@@ -111,9 +111,9 @@
 			],
 			"support": {
 				"issues": "https://github.com/stripe/stripe-php/issues",
-				"source": "https://github.com/stripe/stripe-php/tree/v21.3.3"
+				"source": "https://github.com/stripe/stripe-php/tree/v23.0.0"
 			},
-			"time": "2026-10-27T19:47:35+00:00"
+			"time": "2026-11-11T19:52:56+00:00"
 		}
 	],
 	"packages-dev": [
