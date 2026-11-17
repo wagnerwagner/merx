@@ -94,8 +94,9 @@ final class OrderDraftTest extends TestCase
 	 * What `/api/shop/hooks/stripe` does with a verified event
 	 *
 	 * @param $deleteCart false keeps the cart of the session: the webhook is a request of Stripe, which has none
+	 * @param $orderUid `order_uid` in the metadata, which the gateway sets when it captures
 	 */
-	protected function fireWebhook(string $paymentIntentId, bool $deleteCart = true): void
+	protected function fireWebhook(string $paymentIntentId, bool $deleteCart = true, string|null $orderUid = null): void
 	{
 		$event = Event::constructFrom([
 			'id' => 'evt_1',
@@ -105,7 +106,7 @@ final class OrderDraftTest extends TestCase
 					'id' => $paymentIntentId,
 					'object' => 'payment_intent',
 					'status' => 'succeeded',
-					'metadata' => [],
+					'metadata' => $orderUid === null ? [] : ['order_uid' => $orderUid],
 				],
 			],
 		]);
@@ -345,6 +346,22 @@ final class OrderDraftTest extends TestCase
 	}
 
 	/**
+	 * The payment was captured for the order, and writing the order failed
+	 * afterwards. The webhook completes the draft rather than leaving it behind.
+	 */
+	public function testAStripeWebhookCompletesADraftWhosePaymentWasCaptured(): void
+	{
+		$return = $this->checkout();
+		$this->linkPaymentIntent($return['order'], 'pi_paid');
+
+		$this->fireWebhook('pi_paid', orderUid: $return['order']);
+
+		$this->assertSame(1, $this->completed);
+		$this->assertSame([], $this->drafts());
+		$this->assertSame('listed', $this->kirby->site()->ordersPage()->find($return['order'])?->status());
+	}
+
+	/**
 	 * The return url names the order and nothing else. The customer gets
 	 * the order in the language they ordered in.
 	 */
@@ -421,6 +438,23 @@ final class OrderDraftTest extends TestCase
 			'createOrder:after' => ['en', 'en'],
 		], $this->localesOfHooks);
 		$this->assertSame(['en', 'en'], $locales());
+	}
+
+	/**
+	 * A payment which fails in the browser, e.g. at 3-D Secure, leaves the
+	 * PaymentIntent in place. Submitting the checkout again uses it as well.
+	 */
+	public function testASecondCheckoutKeepsTheStripePaymentIntent(): void
+	{
+		$this->boot();
+		$this->kirby->session()->set('wagnerwagner.merx.stripePaymentIntentId', 'pi_retry');
+		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
+
+		foreach ([1, 2] as $attempt) {
+			merx()->initializeOrder(['paymentGateway' => 'stripe-elements', 'email' => 'customer@example.com']);
+			$draft = $this->kirby->site()->ordersPage()->drafts()->first();
+			$this->assertSame('pi_retry', $draft->stripePaymentIntentId()->value(), 'Attempt ' . $attempt);
+		}
 	}
 
 	/**

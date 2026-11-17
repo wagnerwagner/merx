@@ -5,6 +5,9 @@ namespace Wagnerwagner\Merx;
 use Kirby\Cms\App;
 use Kirby\Exception\Exception;
 use PHPUnit\Framework\TestCase;
+use Stripe\ApiRequestor;
+use Stripe\HttpClient\ClientInterface;
+use Stripe\Util\CaseInsensitiveArray;
 
 final class GatewaysTest extends TestCase
 {
@@ -24,20 +27,6 @@ final class GatewaysTest extends TestCase
 			'template' => 'order',
 			'content' => ['items' => $listItems->toYaml()],
 		]);
-	}
-
-	private static function payPalOrder(string $status, string|null $customId = 'aaaabbbbccccdddd'): array
-	{
-		$purchaseUnit = ['amount' => ['value' => '49.99', 'currency_code' => 'EUR']];
-		if ($customId !== null) {
-			$purchaseUnit['custom_id'] = $customId;
-		}
-
-		return [
-			'id' => '5O190127TN364715T',
-			'status' => $status,
-			'purchase_units' => [$purchaseUnit],
-		];
 	}
 
 	private static function payPalOrderWithUnits(array ...$units): array
@@ -68,6 +57,46 @@ final class GatewaysTest extends TestCase
 	}
 
 	/**
+	 * Answers every request to the Stripe API with one PaymentIntent
+	 *
+	 * @param $orderUid `order_uid` in the metadata of the PaymentIntent
+	 * @return OrderPage Order which the PaymentIntent pays for
+	 */
+	private function stripePaymentIntent(string|null $orderUid): OrderPage
+	{
+		$this->app->clone(['options' => [
+			'wagnerwagner.merx.production' => false,
+			'wagnerwagner.merx.stripe.test.secret_key' => 'sk_test_probe',
+		]]);
+
+		$body = json_encode([
+			'id' => 'pi_probe',
+			'object' => 'payment_intent',
+			'amount' => 4999,
+			'currency' => 'eur',
+			'status' => 'succeeded',
+			'livemode' => false,
+			'metadata' => $orderUid === null ? [] : ['order_uid' => $orderUid],
+		]);
+
+		ApiRequestor::setHttpClient(new class ($body) implements ClientInterface {
+			public function __construct(private string $body)
+			{
+			}
+
+			public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null)
+			{
+				return [$this->body, 200, new CaseInsensitiveArray([])];
+			}
+		});
+
+		$orderPage = self::orderPageWithCart(49.99);
+		$orderPage->version()->update(['stripePaymentIntentId' => 'pi_probe']);
+
+		return $orderPage;
+	}
+
+	/**
 	 * Some tests clone the App to set options. `clone()` makes the clone the
 	 * global instance, so it has to be put back — a leftover clone with
 	 * `production` on sends later tests at the live payment APIs. Kirby also
@@ -82,14 +111,33 @@ final class GatewaysTest extends TestCase
 
 	public function tearDown(): void
 	{
+		ApiRequestor::setHttpClient(null);
 		App::instance($this->app);
 		App::$enableWhoops = true;
 	}
 
-	public function testAlreadyCapturedOrderIsRefused(): void
+	/**
+	 * The payment was captured for this order, and writing the order failed
+	 * afterwards. Reloading the return url has to complete it.
+	 */
+	public function testAStripePaymentCapturedForThisOrderCompletesIt(): void
+	{
+		$orderPage = Gateways::completeStripePayment($this->stripePaymentIntent('probe-order'), []);
+
+		$this->assertTrue($orderPage->isPaid());
+	}
+
+	public function testAStripePaymentOfAnotherOrderIsRefused(): void
 	{
 		$this->expectException(Exception::class);
-		Gateways::validatePayPalOrderIsUnused(self::payPalOrder('COMPLETED'), self::virtualOrderPage());
+		Gateways::completeStripePayment($this->stripePaymentIntent('another-order'), []);
+	}
+
+	public function testAStripePaymentWithoutAnOrderCompletesIt(): void
+	{
+		$orderPage = Gateways::completeStripePayment($this->stripePaymentIntent(null), []);
+
+		$this->assertTrue($orderPage->isPaid());
 	}
 
 	public function testAMissingPayPalClientIdIsRefused(): void
@@ -115,12 +163,6 @@ final class GatewaysTest extends TestCase
 
 		$this->expectException(Exception::class);
 		Gateways::validatePayPalCredentials();
-	}
-
-	public function testApprovedOrderMayBeCaptured(): void
-	{
-		$this->expectNotToPerformAssertions();
-		Gateways::validatePayPalOrderIsUnused(self::payPalOrder('APPROVED'), self::virtualOrderPage());
 	}
 
 	public function testCapturedPaymentIsPaid(): void
@@ -176,34 +218,6 @@ final class GatewaysTest extends TestCase
 	{
 		$this->expectException(Exception::class);
 		Gateways::validatePaymentAmount(4998, 'eur', self::orderPageWithCart(49.99));
-	}
-
-	public function testOrderOfAnotherOrderPageIsRefused(): void
-	{
-		$this->expectException(Exception::class);
-		Gateways::validatePayPalOrderIsUnused(
-			self::payPalOrder('APPROVED', 'someoneelsesorder'),
-			self::virtualOrderPage(),
-		);
-	}
-
-	public function testOrderWithoutCustomIdIsAllowed(): void
-	{
-		// Created before `custom_id` was set; the status check still covers it.
-		$this->expectNotToPerformAssertions();
-		Gateways::validatePayPalOrderIsUnused(
-			self::payPalOrder('APPROVED', null),
-			self::virtualOrderPage(),
-		);
-	}
-
-	public function testOrderWithoutCustomIdIsStillRefusedWhenCaptured(): void
-	{
-		$this->expectException(Exception::class);
-		Gateways::validatePayPalOrderIsUnused(
-			self::payPalOrder('COMPLETED', null),
-			self::virtualOrderPage(),
-		);
 	}
 
 	public function testPartlyPendingCaptureIsNotPaidYet(): void
@@ -319,13 +333,5 @@ final class GatewaysTest extends TestCase
 	{
 		$this->expectException(Exception::class);
 		Gateways::validatePayPalCapture(self::payPalResponse('VOIDED'));
-	}
-
-	private static function virtualOrderPage(string $uid = 'aaaabbbbccccdddd'): OrderPage
-	{
-		return new OrderPage([
-			'slug' => $uid,
-			'template' => 'order',
-		]);
 	}
 }

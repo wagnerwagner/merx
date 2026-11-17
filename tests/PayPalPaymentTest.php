@@ -67,9 +67,8 @@ final class PayPalPaymentTest extends TestCase
 
 	public function testCustomIdIsSetOnPurchaseUnitsFromOption(): void
 	{
-		// `Gateways::validatePayPalOrderIsUnused()` refuses a returning payer whose
-		// PayPal order does not name this order, so a `custom_id` of the option
-		// must not be able to break the replay protection.
+		// A returning payer whose captured PayPal order does not name this order
+		// is refused, so a `custom_id` of the option must not take its place.
 		$this->app([
 			[
 				'custom_id' => 'something-else',

@@ -42,8 +42,11 @@ class Gateways
 		$paymentIntentId = $virtualOrderPage->stripePaymentIntentId()->toString();
 		$paymentIntent = StripePayment::retrieveStripePaymentIntent($paymentIntentId);
 
-		if (in_array('order_uid', $paymentIntent->metadata->keys())) {
-			// Fail payment, when order_uid is already set.
+		// Refuse a payment which belongs to another order. One which names this
+		// order was captured for it, and writing the order failed afterwards:
+		// the customer reloads the return url, or the webhook completes the draft.
+		$orderUid = $paymentIntent->metadata->order_uid ?? null;
+		if ($orderUid !== null && $orderUid !== (string)$virtualOrderPage->uid()) {
 			throw new Exception(
 				key: 'merx.stripeError',
 				httpCode: 500,
@@ -255,45 +258,6 @@ class Gateways
 			$virtualOrderPage,
 		);
 	}
-
-	/**
-	 * Makes sure a PayPal order has not been used for another order already
-	 *
-	 * PayPal refuses a second capture itself, but relying on that leaves the
-	 * check with the provider and reports it as an unspecific API error. This
-	 * is the PayPal counterpart of the `order_uid` check in
-	 * `completeStripePayment()`.
-	 *
-	 * @param $paypalOrder Response of `PayPalPayment::retrievePayPalOrder()`
-	 * @param $virtualOrderPage Order the payment is about to complete
-	 * @throws Exception merx.paypalError when the order was captured before or belongs to another order
-	 */
-	public static function validatePayPalOrderIsUnused(array $paypalOrder, OrderPage $virtualOrderPage): void
-	{
-		// A `COMPLETED` order has been captured already.
-		if (($paypalOrder['status'] ?? null) === 'COMPLETED') {
-			throw new Exception(
-				key: 'merx.paypalError',
-				httpCode: 400,
-			);
-		}
-
-		// `custom_id` is set when the PayPal order is created and names the order
-		// it belongs to.
-		$customIds = [];
-		foreach ($paypalOrder['purchase_units'] ?? [] as $purchaseUnit) {
-			if (isset($purchaseUnit['custom_id']) === true) {
-				$customIds[] = (string)$purchaseUnit['custom_id'];
-			}
-		}
-
-		if ($customIds !== [] && in_array((string)$virtualOrderPage->uid(), $customIds, true) === false) {
-			throw new Exception(
-				key: 'merx.paypalError',
-				httpCode: 400,
-			);
-		}
-	}
 }
 
 Gateways::$gateways['invoice'] = true;
@@ -325,14 +289,21 @@ Gateways::$gateways['paypal'] = [
 
 		$payPalOrder = PayPalPayment::retrievePayPalOrder($payPalOrderId);
 
-		// Refuse a PayPal order which was already captured for another order
-		Gateways::validatePayPalOrderIsUnused($payPalOrder, $virtualOrderPage);
-
 		// The payment has to cover the order before anything is captured
 		Gateways::validatePayPalOrderAmount($payPalOrder, $virtualOrderPage);
 
-		// execute payment
-		$paypalResponse = PayPalPayment::executePayPalPayment($payPalOrderId);
+		// A `COMPLETED` order was captured before. When it names this order,
+		// writing the order failed afterwards: it is evaluated rather than
+		// captured a second time. One which names another order is refused.
+		$paypalResponse = $payPalOrder;
+		if (($payPalOrder['status'] ?? null) !== 'COMPLETED') {
+			$paypalResponse = PayPalPayment::executePayPalPayment($payPalOrderId);
+		} elseif (in_array((string)$virtualOrderPage->uid(), array_column($payPalOrder['purchase_units'] ?? [], 'custom_id'), true) === false) {
+			throw new Exception(
+				key: 'merx.paypalError',
+				httpCode: 400,
+			);
+		}
 
 		// Store the outcome, even when the capture was not successful
 		$virtualOrderPage->version()->update([
@@ -352,7 +323,9 @@ Gateways::$gateways['paypal'] = [
 
 Gateways::$gateways['stripe-elements'] = [
 	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
-		$paymentIntentId = kirby()->session()->pull('wagnerwagner.merx.stripePaymentIntentId');
+		// Read, not pulled: when the payment fails, e.g. 3-D Secure, the
+		// customer submits the checkout again with the same PaymentIntent.
+		$paymentIntentId = kirby()->session()->get('wagnerwagner.merx.stripePaymentIntentId');
 		$virtualOrderPage->version()->update([
 			'stripePaymentIntentId' => $paymentIntentId,
 		]);

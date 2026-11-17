@@ -168,11 +168,9 @@ class PayPalPayment
 			];
 		}
 
-		// Binds the PayPal order to this order, so a captured payment cannot be
-		// replayed to complete a second one. A PayPal order has no field of its own
-		// for this — `custom_id` belongs to the purchase unit — and
-		// `Gateways::validatePayPalOrderIsUnused()` checks it when the payer returns,
-		// so Merx sets it on every purchase unit, including those from the option.
+		// Names the order the PayPal order belongs to. A PayPal order has no field
+		// of its own for this, so it goes on every purchase unit, including those
+		// from the option. See the `paypal` gateway’s `completePayment`.
 		return array_map(
 			fn (array $purchaseUnit): array => [
 				...$purchaseUnit,

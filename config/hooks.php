@@ -31,19 +31,24 @@ return [
 					}
 				};
 
-				if (!$orderUid) {
-					// The customer paid, but did not return to the shop, e.g. because
-					// they closed the browser. Their order is still a draft.
-					try {
-						$draft = site()->ordersPage()?->drafts()->findBy('stripePaymentIntentId', $paymentIntent->id);
+				// The order is still a draft when the customer paid but did not
+				// return to the shop, e.g. because they closed the browser, or when
+				// writing the order failed after the payment was captured.
+				try {
+					$draft = site()->ordersPage()?->drafts()->findBy('stripePaymentIntentId', $paymentIntent->id);
 
-						if ($draft instanceof OrderPage) {
-							$orderUid = $draft->uid();
-							merx()->createOrder([Merx::$orderParameterName => $orderUid]);
-						}
-					} catch (Throwable $ex) {
-						$fail($ex->getMessage());
+					// The order is updated below as well: when the customer’s return
+					// published it first, it was not necessarily paid yet.
+					if ($draft instanceof OrderPage) {
+						$orderUid = $draft->uid();
+						merx()->createOrder([Merx::$orderParameterName => $orderUid]);
 					}
+				} catch (Throwable $ex) {
+					$fail($ex->getMessage());
+					break;
+				}
+
+				if (!$orderUid) {
 					break;
 				}
 
