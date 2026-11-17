@@ -48,7 +48,13 @@ class ProductPage extends Page
 	public function orders(): Pages
 	{
 		$ordersPage = $this->site()->ordersPage();
-		return $this->orders ?? $this->orders = $ordersPage->children()->filter(function (OrderPage $page) {
+
+		if ($ordersPage === null) {
+			return new Pages();
+		}
+
+		// `index()`, not `children()`: the figures are for those who may list the orders
+		return $this->orders ?? $this->orders = $ordersPage->index()->filter(function (OrderPage $page) {
 			return in_array((string)$this->uuid(), $page->productUuids());
 		})->map(function (OrderPage $page) {
 			/** @var ?ListItem $listItem */

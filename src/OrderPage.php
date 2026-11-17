@@ -225,7 +225,7 @@ class OrderPage extends Page
 	}
 
 	/**
-	 * Hides the other orders from everybody but Panel users
+	 * Hides the other orders from everybody who may not list them
 	 *
 	 * SECURITY/PRIVACY
 	 * The siblings of an order are the orders of other customers. `prev()`
@@ -234,8 +234,7 @@ class OrderPage extends Page
 	 */
 	protected function siblingsCollection(): Pages
 	{
-		$user = $this->kirby()->user();
-		if ($user !== null && !$user->isNobody()) {
+		if ($this->isListable()) {
 			return parent::siblingsCollection();
 		}
 
