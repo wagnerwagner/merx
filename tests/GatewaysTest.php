@@ -103,6 +103,17 @@ final class GatewaysTest extends TestCase
 	 * installs Whoops’ handlers with every instance and leaves them behind,
 	 * which PHPUnit reports as risky.
 	 */
+	public function testAGatewaySetToFalseIsSwitchedOff(): void
+	{
+		$this->assertSame(['invoice', 'paypal', 'stripe'], array_keys(Gateways::enabled()));
+
+		$this->app->clone(['options' => [
+			'wagnerwagner.merx.gateways' => ['invoice' => false, 'prepayment' => true],
+		]]);
+
+		$this->assertSame(['paypal', 'stripe', 'prepayment'], array_keys(Gateways::enabled()));
+	}
+
 	public function setUp(): void
 	{
 		App::$enableWhoops = false;

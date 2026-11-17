@@ -89,7 +89,7 @@ class Merx
 	public function __construct()
 	{
 		$this->cart = new Cart();
-		$this->gateways = array_merge(Gateways::$gateways, option('wagnerwagner.merx.gateways', []));
+		$this->gateways = Gateways::enabled();
 	}
 
 	/**

@@ -20,6 +20,15 @@ class Gateways
 	public static array $gateways = [];
 
 	/**
+	 * The gateways of the shop: the built-in ones and those of the `gateways` option, which wins on a shared key. A gateway set to `false` is switched off and left out.
+	 */
+	public static function enabled(): array
+	{
+		$gateways = array_merge(static::$gateways, (array)option('wagnerwagner.merx.gateways', []));
+		return array_filter($gateways, fn ($gateway) => $gateway !== false);
+	}
+
+	/**
 	 * Captures stripe payment intent
 	 *
 	 * @param $virtualOrderPage Virtual order page which may contain `stripePaymentIntentId` field (Credit Card Payment)
