@@ -1,7 +1,6 @@
 label: field.orders
 type: pagelist
 layout: table
-status: listed
 create: false
 search: true
 flip: true

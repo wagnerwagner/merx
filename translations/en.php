@@ -53,6 +53,7 @@ return [
 	'field.type' => 'Type',
 	'page.status.open' => 'Not completed',
 	'page.status.ordered' => 'Ordered',
+	'page.title.incomplete' => 'Incomplete',
 	'page.title.product' => 'Product',
 	'product.price.onRequest' => 'Price on request',
 	'section.orders.info' => "{ count } Orders · { quantity } Items · { quantityPerOrder } Items/Order",

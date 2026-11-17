@@ -54,6 +54,7 @@ return [
 	'field.type' => 'Typ',
 	'page.status.open' => 'Nicht abgeschlossen',
 	'page.status.ordered' => 'Bestellt',
+	'page.title.incomplete' => 'Unvollständig',
 	'page.title.product' => 'Produkt',
 	'product.price.onRequest' => 'Preis auf Anfrage',
 	'section.orders.info' => '{ count } Bestellungen · { quantity } Stück · { quantityPerOrder } Stück/Bestellung',

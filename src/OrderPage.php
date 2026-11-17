@@ -280,11 +280,15 @@ class OrderPage extends Page
 	}
 
 	/**
-	 * Returns order number
+	 * Order number, or “Incomplete” for a draft
+	 *
+	 * A draft is an order the customer has not completed yet. It gets its
+	 * number when it is completed.
 	 */
 	public function title(): Field
 	{
-		return new Field($this, 'title', $this->orderNumber());
+		$title = $this->isDraft() ? t('page.title.incomplete') : $this->orderNumber()->value();
+		return new Field($this, 'title', $title);
 	}
 
 	/**

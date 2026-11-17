@@ -617,6 +617,25 @@ final class OrderDraftTest extends TestCase
 		$this->assertSame(0, $this->kirby->site()->ordersPage()->children()->count());
 	}
 
+	/**
+	 * A draft has no order number yet. The Panel shows it as incomplete, in
+	 * the language of the user, instead of with an empty title.
+	 */
+	public function testADraftIsTitledIncomplete(): void
+	{
+		$return = $this->checkout();
+		$draft = $this->kirby->site()->ordersPage()->draft($return['order']);
+
+		$this->assertSame('Incomplete', $draft->title()->value());
+
+		$this->kirby->setCurrentTranslation('de');
+		$this->assertSame('Unvollständig', $draft->title()->value());
+		$this->kirby->setCurrentTranslation('en');
+
+		$orderPage = merx()->createOrder($return);
+		$this->assertSame((string)$orderPage->orderNumber(), $orderPage->title()->value());
+	}
+
 	public function testOldDraftsAreDeleted(): void
 	{
 		$abandoned = $this->checkout('abandoned@example.com');
