@@ -25,8 +25,8 @@ class Logger
 	 */
 	public static function deleteOldLogs(string $threshold = '-1 year'): void
 	{
+		$kirby = App::instance();
 		try {
-			$kirby = App::instance();
 			$dir = $kirby->root('logs');
 			$pattern = $dir . '/*' . static::$appendix . '.log';
 			$threshold = new DateTime($threshold);
@@ -67,9 +67,8 @@ class Logger
 	 */
 	public static function log(string|int|array $content, $level = 'info'): void
 	{
+		$kirby = App::instance();
 		try {
-			$kirby = App::instance();
-
 			$level = strtoupper($level);
 
 			if (is_array($content) || is_object($content)) {
