@@ -127,7 +127,8 @@ class Cart extends ProductList
 	 * Items without a price and discounts (items with a negative price) are not
 	 * listed as items. PayPal adds the items up itself and rejects an order
 	 * whose numbers do not match, so discounts are settled through the
-	 * `discount` of the breakdown.
+	 * `discount` of the breakdown. Items of the type `shipping` go into its
+	 * `shipping`.
 	 *
 	 * @since 1.3.0
 	 *
@@ -138,8 +139,17 @@ class Cart extends ProductList
 		$currencyCode = $this->currency();
 		$total = $this->total()?->price ?? 0.0;
 
+		$purchaseUnit = [
+			'description' => (string)site()->title(),
+			'amount' => [
+				'value' => number_format($total, 2, '.', ''),
+				'currency_code' => $currencyCode,
+			],
+		];
+
 		$items = [];
 		$itemTotal = 0.0;
+		$shipping = 0.0;
 
 		foreach ($this->values() as $listItem) {
 			/** @var ListItem $listItem */
@@ -149,8 +159,17 @@ class Cart extends ProductList
 				continue;
 			}
 
-			// PayPal only accepts whole quantities.
-			$quantity = (int)$listItem->quantity;
+			if ($listItem->type === 'shipping') {
+				$shipping += round($unitAmount * $listItem->quantity, 2);
+				continue;
+			}
+
+			// PayPal only accepts whole quantities. A cart with any other is
+			// sent as its total alone.
+			$quantity = $listItem->quantity;
+			if ($quantity !== floor($quantity)) {
+				return [$purchaseUnit];
+			}
 
 			$items[] = [
 				'name' => $listItem->title ?? $listItem->key,
@@ -158,7 +177,7 @@ class Cart extends ProductList
 					'value' => number_format($unitAmount, 2, '.', ''),
 					'currency_code' => $currencyCode,
 				],
-				'quantity' => (string)$quantity,
+				'quantity' => (string)(int)$quantity,
 			];
 
 			// PayPal recalculates the item total from the rounded unit amount and
@@ -166,19 +185,10 @@ class Cart extends ProductList
 			$itemTotal += round($unitAmount, 2) * $quantity;
 		}
 
-		$purchaseUnit = [
-			'description' => (string)site()->title(),
-			'amount' => [
-				'value' => number_format($total, 2, '.', ''),
-				'currency_code' => $currencyCode,
-			],
-		];
-
-		$discount = round($itemTotal - $total, 2);
+		$discount = round($itemTotal + $shipping - $total, 2);
 
 		// The breakdown has to add up to the amount which is charged, and a
-		// discount can not be negative. A cart PayPal can not express as items —
-		// fractional quantities, for example — is sent as its total alone.
+		// discount can not be negative. Otherwise the total is sent alone.
 		if (count($items) === 0 || $discount < 0) {
 			return [$purchaseUnit];
 		}
@@ -186,6 +196,10 @@ class Cart extends ProductList
 		$purchaseUnit['amount']['breakdown'] = [
 			'item_total' => [
 				'value' => number_format($itemTotal, 2, '.', ''),
+				'currency_code' => $currencyCode,
+			],
+			'shipping' => [
+				'value' => number_format($shipping, 2, '.', ''),
 				'currency_code' => $currencyCode,
 			],
 			'discount' => [
