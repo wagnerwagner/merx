@@ -1,10 +1,14 @@
 <?php
 
+use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Wagnerwagner\Merx\OrderPage;
+use Wagnerwagner\Merx\SystemView;
+
+$isAdmin = fn (): bool => App::instance()->user()?->isAdmin() === true;
 
 /**
- * Merx’ Panel view buttons
+ * Merx’ Panel area and view buttons
  *
  * Kirby merges the `buttons` of every area into one list, so the button only
  * has to be registered somewhere. The area has to be keyed by an existing id,
@@ -12,6 +16,26 @@ use Wagnerwagner\Merx\OrderPage;
  * an unkeyed area overwrites it.
  */
 return [
+	/**
+	 * Version, the keys in use and security checks. Only for admins, because
+	 * it shows the end of the keys.
+	 */
+	'merx' => fn (): array => [
+		'label' => 'Merx',
+		'icon' => 'cart',
+		'menu' => $isAdmin,
+		'views' => [
+			'merx' => [
+				'pattern' => 'merx',
+				'when' => $isAdmin,
+				'action' => fn (): array => [
+					'component' => 'k-merx-view',
+					'title' => 'Merx',
+					'props' => SystemView::props(),
+				],
+			],
+		],
+	],
 	'site' => fn (): array => [
 		'buttons' => [
 			/**

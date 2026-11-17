@@ -1172,6 +1172,7 @@ return array(
     'Wagnerwagner\\Merx\\ProductList' => $baseDir . '/src/ProductList.php',
     'Wagnerwagner\\Merx\\ProductPage' => $baseDir . '/src/ProductPage.php',
     'Wagnerwagner\\Merx\\StripePayment' => $baseDir . '/src/StripePayment.php',
+    'Wagnerwagner\\Merx\\SystemView' => $baseDir . '/src/SystemView.php',
     'Wagnerwagner\\Merx\\Tax' => $baseDir . '/src/Tax.php',
     'Wagnerwagner\\Merx\\TaxRule' => $baseDir . '/src/TaxRule.php',
     'Wagnerwagner\\Merx\\TaxRules' => $baseDir . '/src/TaxRules.php',
