@@ -36,7 +36,7 @@ final class StripeWebhookTest extends TestCase
 				'draft' => false,
 				'content' => [
 					'dateCreated' => date('c'),
-					'paymentGateway' => 'stripe-elements',
+					'paymentGateway' => 'stripe',
 					'stripePaymentIntentId' => $paymentIntentId,
 				],
 			]);

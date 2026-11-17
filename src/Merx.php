@@ -261,8 +261,8 @@ class Merx
 					$kirby->setCurrentTranslation($currentTranslationCode);
 				}
 
-				// Gateways which complete the payment right away — PayPal, Stripe
-				// Elements — create an order which is already paid. This is reported
+				// Gateways which complete the payment right away — PayPal, Stripe —
+				// create an order which is already paid. This is reported
 				// here rather than from `page.create:after`, where the hooks would run
 				// while the lock above holds back every other checkout.
 				//

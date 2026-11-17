@@ -321,7 +321,7 @@ Gateways::$gateways['paypal'] = [
 	},
 ];
 
-Gateways::$gateways['stripe-elements'] = [
+Gateways::$gateways['stripe'] = [
 	'initializePayment' => function (OrderPage $virtualOrderPage): OrderPage {
 		// Read, not pulled: when the payment fails, e.g. 3-D Secure, the
 		// customer submits the checkout again with the same PaymentIntent.

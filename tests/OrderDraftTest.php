@@ -418,7 +418,7 @@ final class OrderDraftTest extends TestCase
 		// The return url has no language: the request starts in the default one
 		$this->kirby->session()->destroy();
 		$this->boot($languages, [
-			// Paid right away, the way PayPal and Stripe Elements complete a payment
+			// Paid right away, the way PayPal and Stripe complete a payment
 			'wagnerwagner.merx.createOrder:before' => function (OrderPage $virtualOrderPage) {
 				$virtualOrderPage->version()->update(['datePaid' => date('c')]);
 			},
@@ -451,7 +451,7 @@ final class OrderDraftTest extends TestCase
 		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
 
 		foreach ([1, 2] as $attempt) {
-			merx()->initializeOrder(['paymentGateway' => 'stripe-elements', 'email' => 'customer@example.com']);
+			merx()->initializeOrder(['paymentGateway' => 'stripe', 'email' => 'customer@example.com']);
 			$draft = $this->kirby->site()->ordersPage()->drafts()->first();
 			$this->assertSame('pi_retry', $draft->stripePaymentIntentId()->value(), 'Attempt ' . $attempt);
 		}

@@ -67,7 +67,7 @@ final class OrderPaidTest extends TestCase
 				'wagnerwagner.merx.logging' => false,
 				'wagnerwagner.merx.gateways' => [
 					// Completes the payment before the order page is written, the way
-					// PayPal and Stripe Elements do
+					// PayPal and Stripe do
 					'paid-right-away' => [
 						'completePayment' => function (OrderPage $virtualOrderPage): OrderPage {
 							$virtualOrderPage->version()->update([
