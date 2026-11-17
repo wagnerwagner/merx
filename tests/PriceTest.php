@@ -86,12 +86,6 @@ final class PriceTest extends TestCase
 		$this->assertArrayNotHasKey('tax', $array);
 	}
 
-	public function testToFloatReturnsPrice()
-	{
-		$price = new Price(42.5, null);
-		$this->assertEquals(42.5, $price->toFloat());
-	}
-
 	/**
 	 * `toFloat()` is the number `toString()` formats
 	 */
@@ -106,6 +100,12 @@ final class PriceTest extends TestCase
 		$this->assertSame(100.0, $net->toFloat());
 		$this->assertSame(119.0, $net->toFloat('price'));
 		$this->assertSame((string)$net, $net->toString('priceNet'));
+	}
+
+	public function testToFloatReturnsPrice()
+	{
+		$price = new Price(42.5, null);
+		$this->assertEquals(42.5, $price->toFloat());
 	}
 
 	public function testToStringFormatsCurrency()

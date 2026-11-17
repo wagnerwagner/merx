@@ -165,6 +165,34 @@ class ProductList extends ListItems
 	}
 
 	/**
+	 * Makes sure the `data` of $listItem stays small
+	 *
+	 * `data` comes from visitors who are not logged in and is kept in their
+	 * session, and later in the order.
+	 *
+	 * @throws Exception error.merx.cart.data when `data` is larger than `ProductList::$maxDataSize` or nested deeper than 8 levels
+	 */
+	protected static function validateData(ListItem $listItem): void
+	{
+		if ($listItem->data === null) {
+			return;
+		}
+
+		// False when nested too deep, or when it cannot be written at all
+		$json = json_encode($listItem->data, depth: 8);
+
+		if ($json === false || strlen($json) > static::$maxDataSize) {
+			throw new Exception(
+				key: 'merx.cart.data',
+				httpCode: 400,
+				data: [
+					'title' => $listItem->title,
+				],
+			);
+		}
+	}
+
+	/**
 	 * Makes sure the item’s quantity is a usable, non-negative number
 	 *
 	 * @throws Exception error.merx.cart.quantity when the quantity is negative or not a finite number
@@ -191,34 +219,6 @@ class ProductList extends ListItems
 				httpCode: 400,
 				data: [
 					'key' => $listItem->key,
-				],
-			);
-		}
-	}
-
-	/**
-	 * Makes sure the `data` of $listItem stays small
-	 *
-	 * `data` comes from visitors who are not logged in and is kept in their
-	 * session, and later in the order.
-	 *
-	 * @throws Exception error.merx.cart.data when `data` is larger than `ProductList::$maxDataSize` or nested deeper than 8 levels
-	 */
-	protected static function validateData(ListItem $listItem): void
-	{
-		if ($listItem->data === null) {
-			return;
-		}
-
-		// False when nested too deep, or when it cannot be written at all
-		$json = json_encode($listItem->data, depth: 8);
-
-		if ($json === false || strlen($json) > static::$maxDataSize) {
-			throw new Exception(
-				key: 'merx.cart.data',
-				httpCode: 400,
-				data: [
-					'title' => $listItem->title,
 				],
 			);
 		}

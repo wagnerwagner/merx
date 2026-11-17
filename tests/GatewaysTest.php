@@ -56,6 +56,12 @@ final class GatewaysTest extends TestCase
 		];
 	}
 
+	public function setUp(): void
+	{
+		App::$enableWhoops = false;
+		$this->app = App::instance();
+	}
+
 	/**
 	 * Answers every request to the Stripe API with one PaymentIntent
 	 *
@@ -96,6 +102,13 @@ final class GatewaysTest extends TestCase
 		return $orderPage;
 	}
 
+	public function tearDown(): void
+	{
+		ApiRequestor::setHttpClient(null);
+		App::instance($this->app);
+		App::$enableWhoops = true;
+	}
+
 	/**
 	 * Some tests clone the App to set options. `clone()` makes the clone the
 	 * global instance, so it has to be put back — a leftover clone with
@@ -112,43 +125,6 @@ final class GatewaysTest extends TestCase
 		]]);
 
 		$this->assertSame(['paypal', 'stripe', 'prepayment'], array_keys(Gateways::enabled()));
-	}
-
-	public function setUp(): void
-	{
-		App::$enableWhoops = false;
-		$this->app = App::instance();
-	}
-
-	public function tearDown(): void
-	{
-		ApiRequestor::setHttpClient(null);
-		App::instance($this->app);
-		App::$enableWhoops = true;
-	}
-
-	/**
-	 * The payment was captured for this order, and writing the order failed
-	 * afterwards. Reloading the return url has to complete it.
-	 */
-	public function testAStripePaymentCapturedForThisOrderCompletesIt(): void
-	{
-		$orderPage = Gateways::completeStripePayment($this->stripePaymentIntent('probe-order'), []);
-
-		$this->assertTrue($orderPage->isPaid());
-	}
-
-	public function testAStripePaymentOfAnotherOrderIsRefused(): void
-	{
-		$this->expectException(Exception::class);
-		Gateways::completeStripePayment($this->stripePaymentIntent('another-order'), []);
-	}
-
-	public function testAStripePaymentWithoutAnOrderCompletesIt(): void
-	{
-		$orderPage = Gateways::completeStripePayment($this->stripePaymentIntent(null), []);
-
-		$this->assertTrue($orderPage->isPaid());
 	}
 
 	public function testAMissingPayPalClientIdIsRefused(): void
@@ -174,6 +150,30 @@ final class GatewaysTest extends TestCase
 
 		$this->expectException(Exception::class);
 		Gateways::validatePayPalCredentials();
+	}
+
+	/**
+	 * The payment was captured for this order, and writing the order failed
+	 * afterwards. Reloading the return url has to complete it.
+	 */
+	public function testAStripePaymentCapturedForThisOrderCompletesIt(): void
+	{
+		$orderPage = Gateways::completeStripePayment($this->stripePaymentIntent('probe-order'), []);
+
+		$this->assertTrue($orderPage->isPaid());
+	}
+
+	public function testAStripePaymentOfAnotherOrderIsRefused(): void
+	{
+		$this->expectException(Exception::class);
+		Gateways::completeStripePayment($this->stripePaymentIntent('another-order'), []);
+	}
+
+	public function testAStripePaymentWithoutAnOrderCompletesIt(): void
+	{
+		$orderPage = Gateways::completeStripePayment($this->stripePaymentIntent(null), []);
+
+		$this->assertTrue($orderPage->isPaid());
 	}
 
 	public function testCapturedPaymentIsPaid(): void

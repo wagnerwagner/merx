@@ -3,8 +3,8 @@
 namespace Wagnerwagner\Merx;
 
 use Closure;
-use Kirby\Api\Api;
 use DateTimeImmutable;
+use Kirby\Api\Api;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Exception\Exception;
@@ -22,6 +22,25 @@ use NumberFormatter;
  */
 class Merx
 {
+	/**
+	 * Session key of the error which sent the customer back to the checkout
+	 *
+	 * @see Merx::error()
+	 */
+	public static string $errorSessionKey = 'wagnerwagner.merx.error';
+
+	/**
+	 * Session key of the uid of the order draft of the current checkout
+	 *
+	 * Not used to find the order of a return, which the return url names.
+	 * `returnUrl()` needs the uid before the draft is written, and the next
+	 * checkout of the session needs it to replace a draft which was left open.
+	 */
+	public static string $orderDraftSessionKey = 'wagnerwagner.merx.orderDraft';
+
+	/** Query parameter of the return url which names the order */
+	public static string $orderParameterName = 'order';
+
 	/**
 	 * Content fields of an `OrderPage` which Merx sets itself
 	 *
@@ -42,23 +61,6 @@ class Merx
 		'stripepaymentintentid',
 		'uuid',
 	];
-	/**
-	 * Session key of the uid of the order draft of the current checkout
-	 *
-	 * Not used to find the order of a return, which the return url names.
-	 * `returnUrl()` needs the uid before the draft is written, and the next
-	 * checkout of the session needs it to replace a draft which was left open.
-	 */
-	public static string $orderDraftSessionKey = 'wagnerwagner.merx.orderDraft';
-	/** Query parameter of the return url which names the order */
-	public static string $orderParameterName = 'order';
-
-	/**
-	 * Session key of the error which sent the customer back to the checkout
-	 *
-	 * @see Merx::error()
-	 */
-	public static string $errorSessionKey = 'wagnerwagner.merx.error';
 
 	protected Cart $cart;
 
@@ -303,29 +305,6 @@ class Merx
 	}
 
 	/**
-	 * Why the customer is back on the checkout page
-	 *
-	 * When an order cannot be completed after the payment, e.g. because the
-	 * customer canceled at PayPal, they are redirected to the checkout page.
-	 * This returns the error of that attempt, once: it is removed from the
-	 * session as it is read.
-	 *
-	 * ```php
-	 * <?php if ($error = merx()->error()): ?>
-	 *   <p role="alert"><?= esc($error['message']) ?></p>
-	 * <?php endif ?>
-	 * ```
-	 *
-	 * @return array{key: string|null, message: string}|null Translation key and translated message, or null when there was no error
-	 */
-	public function error(): array|null
-	{
-		$error = App::instance()->session()->pull(static::$errorSessionKey);
-
-		return is_array($error) ? $error : null;
-	}
-
-	/**
 	 * Currency of the pricing rule
 	 *
 	 * @return string|null Three-letter ISO currency code, in uppercase. E.g. EUR or USD
@@ -381,6 +360,63 @@ class Merx
 		$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, Price::roundingPrecision);
 
 		return static::$decimalFormatters[$locale] = $formatter;
+	}
+
+	/**
+	 * Deletes order drafts which were never completed
+	 *
+	 * A draft is written with every checkout and published when the customer
+	 * returns from the payment. One who never returns leaves it behind, with
+	 * their personal data in it.
+	 *
+	 * @param $threshold Relative date string. Drafts which were not changed since are deleted.
+	 */
+	public static function deleteOldOrderDrafts(string $threshold = '-1 week'): void
+	{
+		$kirby = App::instance();
+		$ordersPage = $kirby->site()->ordersPage();
+		$threshold = (new DateTimeImmutable($threshold))->getTimestamp();
+
+		if ($ordersPage === null) {
+			return;
+		}
+
+		// Orders are written in the default language. Asked in another one,
+		// a draft has no content file and would look infinitely old.
+		$languageCode = $kirby->defaultLanguage()?->code();
+
+		$kirby->impersonate('kirby', function () use ($ordersPage, $threshold, $languageCode): void {
+			foreach ($ordersPage->drafts() as $draft) {
+				$modified = $draft instanceof OrderPage ? $draft->modified(languageCode: $languageCode) : null;
+
+				if (is_int($modified) === true && $modified > 0 && $modified < $threshold) {
+					$draft->delete(true);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Why the customer is back on the checkout page
+	 *
+	 * When an order cannot be completed after the payment, e.g. because the
+	 * customer canceled at PayPal, they are redirected to the checkout page.
+	 * This returns the error of that attempt, once: it is removed from the
+	 * session as it is read.
+	 *
+	 * ```php
+	 * <?php if ($error = merx()->error()): ?>
+	 *   <p role="alert"><?= esc($error['message']) ?></p>
+	 * <?php endif ?>
+	 * ```
+	 *
+	 * @return array{key: string|null, message: string}|null Translation key and translated message, or null when there was no error
+	 */
+	public function error(): array|null
+	{
+		$error = App::instance()->session()->pull(static::$errorSessionKey);
+
+		return is_array($error) ? $error : null;
 	}
 
 	/**
@@ -493,19 +529,6 @@ class Merx
 		return (string)$number;
 	}
 
-	/**
-	 * Get locale with fallback for `C` locale
-	 */
-	private static function getLocale(int|string $category = LC_ALL): string
-	{
-		$locale ??= Locale::get($category);
-		if ($locale === 'C') {
-			App::instance()->setCurrentLanguage();
-			$locale = Locale::get($category);
-		}
-		return $locale;
-	}
-
 	private function getGateway(string $paymentGateway): array
 	{
 		if (!array_key_exists($paymentGateway, $this->gateways)) {
@@ -531,54 +554,16 @@ class Merx
 	}
 
 	/**
-	 * Orders page, created when the shop gets its first order
+	 * Get locale with fallback for `C` locale
 	 */
-	private static function ordersPage(): Page
+	private static function getLocale(int|string $category = LC_ALL): string
 	{
-		$kirby = App::instance();
-
-		return $kirby->site()->ordersPage() ?? $kirby->site()->createChild([
-			'slug' => option('wagnerwagner.merx.ordersPage'),
-			'template' => 'orders',
-			'draft' => false,
-			'content' => [
-				'title' => t('field.orders'),
-			],
-		]);
-	}
-
-	/**
-	 * Deletes order drafts which were never completed
-	 *
-	 * A draft is written with every checkout and published when the customer
-	 * returns from the payment. One who never returns leaves it behind, with
-	 * their personal data in it.
-	 *
-	 * @param $threshold Relative date string. Drafts which were not changed since are deleted.
-	 */
-	public static function deleteOldOrderDrafts(string $threshold = '-1 week'): void
-	{
-		$kirby = App::instance();
-		$ordersPage = $kirby->site()->ordersPage();
-		$threshold = (new DateTimeImmutable($threshold))->getTimestamp();
-
-		if ($ordersPage === null) {
-			return;
+		$locale ??= Locale::get($category);
+		if ($locale === 'C') {
+			App::instance()->setCurrentLanguage();
+			$locale = Locale::get($category);
 		}
-
-		// Orders are written in the default language. Asked in another one,
-		// a draft has no content file and would look infinitely old.
-		$languageCode = $kirby->defaultLanguage()?->code();
-
-		$kirby->impersonate('kirby', function () use ($ordersPage, $threshold, $languageCode): void {
-			foreach ($ordersPage->drafts() as $draft) {
-				$modified = $draft instanceof OrderPage ? $draft->modified(languageCode: $languageCode) : null;
-
-				if (is_int($modified) === true && $modified > 0 && $modified < $threshold) {
-					$draft->delete(true);
-				}
-			}
-		});
+		return $locale;
 	}
 
 	/**
@@ -684,7 +669,7 @@ class Merx
 			// run gateway
 			$gateway = $this->getGateway($paymentGateway);
 			if (is_callable($gateway['initializePayment'])) {
-				/** @var \Wagnerwagner\Merx\OrderPage */
+				/** @var OrderPage */
 				$virtualOrderPage = $gateway['initializePayment']($virtualOrderPage, $data);
 				if ($virtualOrderPage->redirect()->isNotEmpty()) {
 					$redirect = (string)$virtualOrderPage->redirect();
@@ -787,6 +772,44 @@ class Merx
 	}
 
 	/**
+	 * Orders page, created when the shop gets its first order
+	 */
+	private static function ordersPage(): Page
+	{
+		$kirby = App::instance();
+
+		return $kirby->site()->ordersPage() ?? $kirby->site()->createChild([
+			'slug' => option('wagnerwagner.merx.ordersPage'),
+			'template' => 'orders',
+			'draft' => false,
+			'content' => [
+				'title' => t('field.orders'),
+			],
+		]);
+	}
+
+	/**
+	 * Uid of the order of the current checkout
+	 *
+	 * Known before the order is written, because the return url carries it
+	 * and the payment gateway needs that url to set up the payment. Kept in
+	 * the session until `initializeOrder()` starts the next checkout.
+	 */
+	protected static function orderUid(): string
+	{
+		$kirby = App::instance();
+		$uid = $kirby->session()->get(static::$orderDraftSessionKey);
+
+		if (is_string($uid) === false || $uid === '') {
+			// Lower case, as Kirby writes a slug
+			$uid = Str::lower(Str::random(16, 'alphaNum'));
+			$kirby->session()->set(static::$orderDraftSessionKey, $uid);
+		}
+
+		return $uid;
+	}
+
+	/**
 	 * Returns (and creates) a percent number formatter for a given locale
 	 * Similar to I18n::decimalNumberFormatter()
 	 */
@@ -830,27 +853,6 @@ class Merx
 	}
 
 	/**
-	 * Uid of the order of the current checkout
-	 *
-	 * Known before the order is written, because the return url carries it
-	 * and the payment gateway needs that url to set up the payment. Kept in
-	 * the session until `initializeOrder()` starts the next checkout.
-	 */
-	protected static function orderUid(): string
-	{
-		$kirby = App::instance();
-		$uid = $kirby->session()->get(static::$orderDraftSessionKey);
-
-		if (is_string($uid) === false || $uid === '') {
-			// Lower case, as Kirby writes a slug
-			$uid = Str::lower(Str::random(16, 'alphaNum'));
-			$kirby->session()->set(static::$orderDraftSessionKey, $uid);
-		}
-
-		return $uid;
-	}
-
-	/**
 	 * Url to be used to complete the payment
 	 *
 	 * Includes the uid of the order. Nothing in it identifies the customer’s
@@ -885,23 +887,6 @@ class Merx
 	}
 
 	/**
-	 * Switches to the language the customer ordered in
-	 *
-	 * The return url and a payment provider’s webhook have no language. The
-	 * hooks, error messages and the url of the order use the one of the order.
-	 */
-	protected static function useLanguageOf(OrderPage $orderPage): void
-	{
-		$kirby = App::instance();
-		$languageCode = $orderPage->content($kirby->defaultLanguage()?->code())->get('language')->value();
-
-		if (is_string($languageCode) === true && $kirby->languages()->has($languageCode) === true) {
-			$kirby->setCurrentLanguage($languageCode);
-			$kirby->setCurrentTranslation($languageCode);
-		}
-	}
-
-	/**
 	 * Gets the tax rule by its key
 	 */
 	public static function taxRule(string|null $key): TaxRule|null
@@ -916,5 +901,22 @@ class Merx
 	public static function taxRules(array $options = []): TaxRules
 	{
 		return new TaxRules(option('wagnerwagner.merx.taxRules', $options));
+	}
+
+	/**
+	 * Switches to the language the customer ordered in
+	 *
+	 * The return url and a payment provider’s webhook have no language. The
+	 * hooks, error messages and the url of the order use the one of the order.
+	 */
+	protected static function useLanguageOf(OrderPage $orderPage): void
+	{
+		$kirby = App::instance();
+		$languageCode = $orderPage->content($kirby->defaultLanguage()?->code())->get('language')->value();
+
+		if (is_string($languageCode) === true && $kirby->languages()->has($languageCode) === true) {
+			$kirby->setCurrentLanguage($languageCode);
+			$kirby->setCurrentTranslation($languageCode);
+		}
 	}
 }

@@ -32,6 +32,16 @@ final class PriceFromDataTest extends TestCase
 	protected App $app;
 	protected string $root;
 
+	private static function desk(): DeskPage
+	{
+		// With a UUID of its own, so Kirby does not create one and write it to disk
+		return new DeskPage([
+			'slug' => 'desk',
+			'template' => 'product',
+			'content' => ['uuid' => 'desk'],
+		]);
+	}
+
 	/**
 	 * An instance with a folder of its own: Kirby caches the UUID of a page on
 	 * disk, which must not end up wherever the test before left its instance.
@@ -62,16 +72,6 @@ final class PriceFromDataTest extends TestCase
 		App::$enableWhoops = true;
 		Dir::remove($this->root);
 		App::instance($this->app);
-	}
-
-	private static function desk(): DeskPage
-	{
-		// With a UUID of its own, so Kirby does not create one and write it to disk
-		return new DeskPage([
-			'slug' => 'desk',
-			'template' => 'product',
-			'content' => ['uuid' => 'desk'],
-		]);
 	}
 
 	public function testChangingTheDataChangesThePrice(): void

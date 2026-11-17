@@ -39,6 +39,17 @@ final class LicenseTest extends TestCase
 		App::instance($this->app);
 	}
 
+	public function testAFingerprintIsNotAKey(): void
+	{
+		// Whoever reads the list must not be able to use what is on it
+		$this->assertFalse($this->license(str_repeat('a', 10))->isValid());
+	}
+
+	public function testAKeyIsValidHoweverItWasPasted(): void
+	{
+		$this->assertTrue($this->license(" merx2-abcdefgh-ijklmnop\n")->isValid());
+	}
+
 	public function testAKeyOnTheListIsValid(): void
 	{
 		$license = $this->license('MERX2-ABCDEFGH-IJKLMNOP');
@@ -48,23 +59,12 @@ final class LicenseTest extends TestCase
 		$this->assertSame('MERX2-XXXXXXXX-XXXXMNOP', $license->status()->label());
 	}
 
-	public function testAKeyIsValidHoweverItWasPasted(): void
-	{
-		$this->assertTrue($this->license(" merx2-abcdefgh-ijklmnop\n")->isValid());
-	}
-
 	public function testAKeyWhichIsNotOnTheListIsInvalid(): void
 	{
 		$license = $this->license('MERX2-ABCDEFGH-IJKLMNOQ');
 
 		$this->assertFalse($license->isValid());
 		$this->assertSame('negative', $license->status()->theme());
-	}
-
-	public function testAFingerprintIsNotAKey(): void
-	{
-		// Whoever reads the list must not be able to use what is on it
-		$this->assertFalse($this->license(str_repeat('a', 10))->isValid());
 	}
 
 	public function testNoKeyAsksForALicense(): void

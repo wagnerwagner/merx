@@ -2,6 +2,7 @@
 
 namespace Wagnerwagner\Merx;
 
+use Kirby\Exception\Exception;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use PHPUnit\Framework\TestCase;
@@ -9,6 +10,14 @@ use PHPUnit\Framework\TestCase;
 final class ApiTest extends TestCase
 {
 	protected const PRODUCTS = ['lorem', 'ipsum', 'dolor', 'amet'];
+
+	/**
+	 * Every test starts with an empty cart and does not depend on the tests before it
+	 */
+	public function setUp(): void
+	{
+		cart()->delete();
+	}
 
 	/**
 	 * The cart only takes products, so the test site gets some. They are
@@ -25,25 +34,17 @@ final class ApiTest extends TestCase
 		kirby()->site()->purge();
 	}
 
+	public function tearDown(): void
+	{
+		cart()->delete();
+	}
+
 	public static function tearDownAfterClass(): void
 	{
 		foreach (static::PRODUCTS as $slug) {
 			Dir::remove(kirby()->root('content') . '/' . $slug);
 		}
 		kirby()->site()->purge();
-	}
-
-	/**
-	 * Every test starts with an empty cart and does not depend on the tests before it
-	 */
-	public function setUp(): void
-	{
-		cart()->delete();
-	}
-
-	public function tearDown(): void
-	{
-		cart()->delete();
 	}
 
 	public function testCartAdd1(): void
@@ -59,7 +60,7 @@ final class ApiTest extends TestCase
 
 	public function testCartAddUnknownPageIsRefused(): void
 	{
-		$this->expectException(\Kirby\Exception\Exception::class);
+		$this->expectException(Exception::class);
 		$this->expectExceptionCode('error.merx.cart.add');
 
 		kirby()->api()->call('shop/cart', 'POST', [
@@ -100,23 +101,6 @@ final class ApiTest extends TestCase
 		$this->assertEquals(3, $response['data']['quantity']);
 	}
 
-	/**
-	 * A cart shows what lowers its total
-	 */
-	public function testCartListsDiscounts(): void
-	{
-		$kirby = kirby();
-		$kirby->api()->call('shop/cart', 'POST', ['body' => ['key' => 'ipsum']]);
-		$this->assertNull($kirby->api()->call('shop/cart', 'GET')['data']['discounts']);
-
-		cart()->add(['key' => 'coupon', 'title' => 'Coupon', 'type' => 'discount', 'price' => -1.0]);
-		$response = $kirby->api()->call('shop/cart', 'GET');
-
-		$this->assertSame('coupon', $response['data']['discounts']['items'][0]['key']);
-		$this->assertSame(1, count($response['data']['products']['items']));
-		$this->assertSame(-1.0, $response['data']['discounts']['total']['priceRaw']);
-	}
-
 	public function testCartDelete(): void
 	{
 		$kirby = kirby();
@@ -148,6 +132,23 @@ final class ApiTest extends TestCase
 		$response = $kirby->api()->call('shop/cart', 'GET');
 		$this->assertEquals(200, $response['code']);
 		$this->assertEquals(1, $response['data']['quantity']);
+	}
+
+	/**
+	 * A cart shows what lowers its total
+	 */
+	public function testCartListsDiscounts(): void
+	{
+		$kirby = kirby();
+		$kirby->api()->call('shop/cart', 'POST', ['body' => ['key' => 'ipsum']]);
+		$this->assertNull($kirby->api()->call('shop/cart', 'GET')['data']['discounts']);
+
+		cart()->add(['key' => 'coupon', 'title' => 'Coupon', 'type' => 'discount', 'price' => -1.0]);
+		$response = $kirby->api()->call('shop/cart', 'GET');
+
+		$this->assertSame('coupon', $response['data']['discounts']['items'][0]['key']);
+		$this->assertSame(1, count($response['data']['products']['items']));
+		$this->assertSame(-1.0, $response['data']['discounts']['total']['priceRaw']);
 	}
 
 	public function testCartPatch(): void

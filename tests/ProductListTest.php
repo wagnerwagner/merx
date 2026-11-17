@@ -9,14 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ProductListTest extends TestCase
 {
-	public function testAddRejectsNegativeQuantity(): void
-	{
-		$productList = new ProductList();
-
-		$this->expectException(Exception::class);
-		$productList->add(['key' => 'nice-shoes', 'price' => 99.99, 'quantity' => -1.0]);
-	}
-
 	public function testAddAcceptsAnItemWithoutPageWhichHasAPrice(): void
 	{
 		$productList = new ProductList();
@@ -24,6 +16,52 @@ final class ProductListTest extends TestCase
 		$productList->add(['key' => 'shipping', 'type' => 'shipping']);
 
 		$this->assertSame(['gift-wrap', 'shipping'], $productList->keys());
+	}
+
+	/**
+	 * Only a cart is bound to one currency. A wishlist may hold several.
+	 */
+	public function testAddAcceptsAnotherCurrency(): void
+	{
+		$productList = new ProductList();
+		$productList->add(['key' => 'socks', 'price' => new Price(price: 10.0, currency: 'EUR')]);
+		$productList->add(['key' => 'shirt', 'price' => new Price(price: 20.0, currency: 'USD')]);
+
+		$this->assertSame(['socks', 'shirt'], $productList->keys());
+		$this->assertSame('USD', $productList->get('shirt')->price->currency);
+		$this->assertFalse($productList->currency());
+		$this->assertNull($productList->total());
+	}
+
+	public function testAddRejectsAnUnknownPage(): void
+	{
+		$productList = new ProductList();
+
+		try {
+			$productList->add('no-such-product');
+			$this->fail('An unknown page was added');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.cart.add', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+		}
+
+		$this->assertCount(0, $productList);
+	}
+
+	public function testAddRejectsAPageWhichIsNoProduct(): void
+	{
+		$productList = new ProductList();
+
+		try {
+			// A page, but nothing to buy
+			$productList->add(['key' => 'about', 'page' => new Page(['slug' => 'about'])]);
+			$this->fail('A page which is no product was added');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.cart.add', $exception->getKey());
+			$this->assertSame(400, $exception->getHttpCode());
+		}
+
+		$this->assertCount(0, $productList);
 	}
 
 	/**
@@ -61,19 +99,64 @@ final class ProductListTest extends TestCase
 		$this->assertSame('Anna', $productList->get('socks')->data['name']);
 	}
 
-	/**
-	 * Only a cart is bound to one currency. A wishlist may hold several.
-	 */
-	public function testAddAcceptsAnotherCurrency(): void
+	public function testAddRejectsInputWithoutKeyAndPage(): void
 	{
 		$productList = new ProductList();
-		$productList->add(['key' => 'socks', 'price' => new Price(price: 10.0, currency: 'EUR')]);
-		$productList->add(['key' => 'shirt', 'price' => new Price(price: 20.0, currency: 'USD')]);
 
-		$this->assertSame(['socks', 'shirt'], $productList->keys());
-		$this->assertSame('USD', $productList->get('shirt')->price->currency);
-		$this->assertFalse($productList->currency());
-		$this->assertNull($productList->total());
+		$this->expectException(Exception::class);
+		$this->expectExceptionCode('error.merx.cart.add');
+		$productList->add(['quantity' => 2.0]);
+	}
+
+	public function testAddRejectsNegativeQuantity(): void
+	{
+		$productList = new ProductList();
+
+		$this->expectException(Exception::class);
+		$productList->add(['key' => 'nice-shoes', 'price' => 99.99, 'quantity' => -1.0]);
+	}
+
+	public function testAppend(): void
+	{
+		$productList = new ProductList();
+		$productList->add(['key' => 'nice-shoes', 'price' => 99.99]);
+
+		$this->assertEquals(
+			99.99,
+			$productList->first()->price()->toFloat(),
+		);
+		$this->assertEquals(
+			99.99,
+			$productList->total()->toFloat(),
+		);
+
+		$productList->add(['key' => 'nice-socks', 'price' => 10]);
+		$this->assertEquals(
+			109.99,
+			$productList->total()->toFloat(),
+		);
+	}
+
+	public function testConstructKeepsAssociativeKeys(): void
+	{
+		$productList = new ProductList([
+			'custom-key' => ['key' => 'nice-shoes', 'price' => 99.99],
+		]);
+
+		$this->assertSame(['custom-key'], $productList->keys());
+	}
+
+	public function testConstructKeysListByItemKey(): void
+	{
+		$productList = new ProductList([
+			['key' => 'nice-shoes', 'price' => 99.99],
+			['page' => 'nice-socks', 'price' => 10],
+		]);
+
+		$this->assertSame(['nice-shoes', 'nice-socks'], $productList->keys());
+
+		$productList->updateItem('nice-shoes', ['quantity' => 2.0]);
+		$this->assertSame(2.0, $productList->get('nice-shoes')->quantity);
 	}
 
 	/**
@@ -104,89 +187,6 @@ final class ProductListTest extends TestCase
 		$open = new ProductList();
 		$open->add(['key' => 'gift-wrap', 'type' => 'custom']);
 		$this->assertFalse($open->isOrderable());
-	}
-
-	public function testAddRejectsAPageWhichIsNoProduct(): void
-	{
-		$productList = new ProductList();
-
-		try {
-			// A page, but nothing to buy
-			$productList->add(['key' => 'about', 'page' => new Page(['slug' => 'about'])]);
-			$this->fail('A page which is no product was added');
-		} catch (Exception $exception) {
-			$this->assertSame('error.merx.cart.add', $exception->getKey());
-			$this->assertSame(400, $exception->getHttpCode());
-		}
-
-		$this->assertCount(0, $productList);
-	}
-
-	public function testAddRejectsAnUnknownPage(): void
-	{
-		$productList = new ProductList();
-
-		try {
-			$productList->add('no-such-product');
-			$this->fail('An unknown page was added');
-		} catch (Exception $exception) {
-			$this->assertSame('error.merx.cart.add', $exception->getKey());
-			$this->assertSame(400, $exception->getHttpCode());
-		}
-
-		$this->assertCount(0, $productList);
-	}
-
-	public function testAddRejectsInputWithoutKeyAndPage(): void
-	{
-		$productList = new ProductList();
-
-		$this->expectException(Exception::class);
-		$this->expectExceptionCode('error.merx.cart.add');
-		$productList->add(['quantity' => 2.0]);
-	}
-
-	public function testConstructKeysListByItemKey(): void
-	{
-		$productList = new ProductList([
-			['key' => 'nice-shoes', 'price' => 99.99],
-			['page' => 'nice-socks', 'price' => 10],
-		]);
-
-		$this->assertSame(['nice-shoes', 'nice-socks'], $productList->keys());
-
-		$productList->updateItem('nice-shoes', ['quantity' => 2.0]);
-		$this->assertSame(2.0, $productList->get('nice-shoes')->quantity);
-	}
-
-	public function testConstructKeepsAssociativeKeys(): void
-	{
-		$productList = new ProductList([
-			'custom-key' => ['key' => 'nice-shoes', 'price' => 99.99],
-		]);
-
-		$this->assertSame(['custom-key'], $productList->keys());
-	}
-
-	public function testAppend(): void
-	{
-		$productList = new ProductList();
-		$productList->add(['key' => 'nice-shoes', 'price' => 99.99]);
-
-		$this->assertEquals(
-			99.99,
-			$productList->first()->price()->toFloat(),
-		);
-		$this->assertEquals(
-			99.99,
-			$productList->total()->toFloat(),
-		);
-
-		$productList->add(['key' => 'nice-socks', 'price' => 10]);
-		$this->assertEquals(
-			109.99,
-			$productList->total()->toFloat(),
-		);
 	}
 
 	/**

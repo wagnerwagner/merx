@@ -208,23 +208,6 @@ class OrderPage extends Page
 	}
 
 	/**
-	 * Updates the order in the default language, whatever the current one is
-	 *
-	 * An order has one content file, in the default language. A hook runs
-	 * in the language of the customer: updating the order there would start
-	 * a translation of it, and leave out every field which is not
-	 * translatable, such as `datePaid`.
-	 */
-	public function update(
-		array|null $input = null,
-		string|null $languageCode = null,
-		bool $validate = false,
-	): static {
-		$languageCode ??= $this->kirby()->defaultLanguage()?->code();
-		return parent::update($input, $languageCode, $validate);
-	}
-
-	/**
 	 * Hides the other orders from everybody who may not list them
 	 *
 	 * SECURITY/PRIVACY
@@ -297,5 +280,22 @@ class OrderPage extends Page
 	public function total(): Price|null
 	{
 		return $this->cart()->total();
+	}
+
+	/**
+	 * Updates the order in the default language, whatever the current one is
+	 *
+	 * An order has one content file, in the default language. A hook runs
+	 * in the language of the customer: updating the order there would start
+	 * a translation of it, and leave out every field which is not
+	 * translatable, such as `datePaid`.
+	 */
+	public function update(
+		array|null $input = null,
+		string|null $languageCode = null,
+		bool $validate = false,
+	): static {
+		$languageCode ??= $this->kirby()->defaultLanguage()?->code();
+		return parent::update($input, $languageCode, $validate);
 	}
 }

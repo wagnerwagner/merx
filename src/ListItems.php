@@ -17,7 +17,7 @@ use Kirby\Toolkit\Collection;
 class ListItems extends Collection
 {
 	/**
-	 * @param array $data List of ListItems (or their data), keyed by ListItem::$key if it is a list
+	 * @param $data List of ListItems (or their data), keyed by ListItem::$key if it is a list
 	 */
 	public function __construct(array $data = [], bool $caseSensitive = false)
 	{
@@ -131,7 +131,7 @@ class ListItems extends Collection
 	/**
 	 * List of Tax items
 	 *
-	 * @return \Wagnerwagner\Merx\Tax[] List of `Tax` items sorted by tax rate, lowest first, with the total tax amount for each tax rate.
+	 * @return Tax[] List of `Tax` items sorted by tax rate, lowest first, with the total tax amount for each tax rate.
 	 */
 	public function taxRates(): array
 	{

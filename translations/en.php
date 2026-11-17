@@ -56,7 +56,7 @@ return [
 	'page.title.incomplete' => 'Incomplete',
 	'page.title.product' => 'Product',
 	'product.price.onRequest' => 'Price on request',
-	'section.orders.info' => "{ count } Orders · { quantity } Items · { quantityPerOrder } Items/Order",
+	'section.orders.info' => '{ count } Orders · { quantity } Items · { quantityPerOrder } Items/Order',
 	'field.shopSettings' => 'Shop settings',
 	'merx.system.security' => 'Security',
 	'merx.system.keys' => 'Keys in use',

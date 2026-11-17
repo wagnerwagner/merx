@@ -50,34 +50,6 @@ class ListItemTest extends TestCase
 		new ListItem(key: $key, price: $invalidPrice);
 	}
 
-	public function testPriceTotalCalculation()
-	{
-		$key = 'item4';
-		$price = new Price(100.0, 0.2, null, 'USD');
-		$quantity = 3.0;
-
-		$listItem = new ListItem(
-			key: $key,
-			price: $price,
-			quantity: $quantity,
-		);
-
-		$totalPrice = $listItem->total();
-
-		$this->assertInstanceOf(Price::class, $totalPrice);
-		$this->assertEquals(300.0, $totalPrice->toFloat());
-	}
-
-	/**
-	 * What the cart writes to the session, read the way Kirby reads a session
-	 */
-	private static function throughSession(ListItem $listItem): ListItem
-	{
-		$data = unserialize(serialize($listItem->toSessionArray()), ['allowed_classes' => false]);
-
-		return new ListItem(...$data);
-	}
-
 	public function testPriceOfItemWithoutPageSurvivesSession()
 	{
 		$listItem = new ListItem(
@@ -95,6 +67,24 @@ class ListItemTest extends TestCase
 		$this->assertSame(0.19, $restored->price->tax->rate);
 		$this->assertSame('EUR', $restored->price->currency);
 		$this->assertSame('shipping', $restored->type);
+	}
+
+	public function testPriceTotalCalculation()
+	{
+		$key = 'item4';
+		$price = new Price(100.0, 0.2, null, 'USD');
+		$quantity = 3.0;
+
+		$listItem = new ListItem(
+			key: $key,
+			price: $price,
+			quantity: $quantity,
+		);
+
+		$totalPrice = $listItem->total();
+
+		$this->assertInstanceOf(Price::class, $totalPrice);
+		$this->assertEquals(300.0, $totalPrice->toFloat());
 	}
 
 	public function testQuantifierIsNotAppliedAgainAfterSession()
@@ -125,6 +115,22 @@ class ListItemTest extends TestCase
 		});
 	}
 
+	public function testTitleFallbackToPageTitle()
+	{
+		$key = 'item3';
+		$page = new Page([
+			'slug' => $key,
+			'content' => [
+				'title' => 'Nice shoes',
+				'price' => 200,
+			],
+		]);
+
+		$listItem = new ListItem(key: $key, page: $page);
+
+		$this->assertSame('Nice shoes', $listItem->title);
+	}
+
 	/**
 	 * A cart is read from the session with every request. The title of a
 	 * product is read from its page then, in the language of that request.
@@ -140,19 +146,13 @@ class ListItemTest extends TestCase
 		$this->assertSame('Shipping', (new ListItem(key: 'shipping', title: 'Shipping', price: 5.0, type: 'shipping'))->toSessionArray()['title']);
 	}
 
-	public function testTitleFallbackToPageTitle()
+	/**
+	 * What the cart writes to the session, read the way Kirby reads a session
+	 */
+	private static function throughSession(ListItem $listItem): ListItem
 	{
-		$key = 'item3';
-		$page = new Page([
-			'slug' => $key,
-			'content' => [
-				'title' => 'Nice shoes',
-				'price' => 200,
-			],
-		]);
+		$data = unserialize(serialize($listItem->toSessionArray()), ['allowed_classes' => false]);
 
-		$listItem = new ListItem(key: $key, page: $page);
-
-		$this->assertSame('Nice shoes', $listItem->title);
+		return new ListItem(...$data);
 	}
 }

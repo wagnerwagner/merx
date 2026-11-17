@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx\Tests;
 
 use Kirby\Blueprint\Blueprint;
 use Kirby\Cms\App;
+use Kirby\Cms\Page;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use PHPUnit\Framework\TestCase;
@@ -74,29 +75,6 @@ final class SystemViewTest extends TestCase
 		Dir::remove($this->root);
 	}
 
-	/**
-	 * How many orders a user gets from `index()`, and how many siblings an order has
-	 */
-	protected function visibleOrders(string $user): array
-	{
-		$ordersPage = $this->kirby->site()->ordersPage();
-
-		return $this->kirby->impersonate($user, fn () => [
-			$ordersPage->index()->count(),
-			$ordersPage->children()->first()->siblings()->count(),
-		]);
-	}
-
-	public function testOnlyAdminsMayListOrdersByDefault(): void
-	{
-		$this->assertSame([2, 2], $this->visibleOrders('admin@example.com'));
-		$this->assertSame([0, 1], $this->visibleOrders('editor@example.com'));
-		$this->assertSame([0, 1], $this->visibleOrders('customer@example.com'));
-		$this->assertSame([0, 1], $this->visibleOrders('nobody'));
-		// Merx itself, e.g. for the order number
-		$this->assertSame([2, 2], $this->visibleOrders('kirby'));
-	}
-
 	public function testAShopBlueprintCanLetMoreRolesListOrders(): void
 	{
 		// Like a shop’s own `/site/blueprints/pages/order.yml`
@@ -122,20 +100,35 @@ final class SystemViewTest extends TestCase
 		$this->assertStringContainsString('Customer', $checks['frontendRoles']['text']);
 	}
 
-	public function testTheBlueprintWinsOverThePermissionsOfARole(): void
+	public function testKeysShowTheirLastFourCharacters(): void
 	{
-		F::write($this->root . '/site/blueprints/pages/order.yml', <<<'YAML'
-			extends: wagnerwagner.merx.pages/order
-			options:
-			  list:
-			    author: true
-			YAML);
-		Blueprint::$loaded = [];
-		Blueprint::$normalized = [];
+		$keys = array_column(SystemView::keys(), 'value', 'option');
 
-		// `author` has `pages.list: false`
-		$checks = array_column(SystemView::security(), null, 'id');
-		$this->assertStringContainsString('Author', $checks['roles']['text']);
+		$this->assertSame('••••abcd', $keys['stripe.test.secret_key']);
+		$this->assertSame('–', $keys['stripe.test.publishable_key']);
+		$this->assertArrayNotHasKey('stripe.live.secret_key', $keys);
+	}
+
+	public function testOnlyAdminsMayListOrdersByDefault(): void
+	{
+		$this->assertSame([2, 2], $this->visibleOrders('admin@example.com'));
+		$this->assertSame([0, 1], $this->visibleOrders('editor@example.com'));
+		$this->assertSame([0, 1], $this->visibleOrders('customer@example.com'));
+		$this->assertSame([0, 1], $this->visibleOrders('nobody'));
+		// Merx itself, e.g. for the order number
+		$this->assertSame([2, 2], $this->visibleOrders('kirby'));
+	}
+
+	public function testRulesHaveTheirOwnTables(): void
+	{
+		$this->assertSame([['key' => 'default', 'name' => 'default', 'currency' => 'EUR']], SystemView::pricingRules());
+		$this->assertSame([['key' => 'default', 'name' => 'default', 'rate' => '–']], SystemView::taxRules());
+
+		// Side by side in one grid
+		$grid = array_column(SystemView::props()['sections'], 'grid');
+		$sections = array_column($grid[0], null, 'headline');
+		$this->assertSame(['Pricing rules', 'Tax rules'], array_keys($sections));
+		$this->assertSame(['key', 'name', 'rate'], array_keys($sections['Tax rules']['columns']));
 	}
 
 	public function testSecurityNamesTheRolesWhichMayListOrders(): void
@@ -151,19 +144,6 @@ final class SystemViewTest extends TestCase
 		$this->assertSame('https://merx.wagnerwagner.de/guide/security', $checks['webhook']['link']);
 		// A Stripe key without a signing secret
 		$this->assertSame('notice', $checks['webhook']['theme']);
-	}
-
-	public function testVisitorsCheckFailsWithoutMerxModel(): void
-	{
-		$models = \Kirby\Cms\Page::$models;
-		\Kirby\Cms\Page::$models['order'] = \Kirby\Cms\Page::class;
-
-		try {
-			$checks = array_column(SystemView::security(), null, 'id');
-			$this->assertSame('negative', $checks['visitors']['theme']);
-		} finally {
-			\Kirby\Cms\Page::$models = $models;
-		}
 	}
 
 	public function testSettingsExplainEveryOption(): void
@@ -228,16 +208,20 @@ final class SystemViewTest extends TestCase
 		$this->assertStringContainsString('/bestellungen', $settings['ordersPage']['<note>']);
 	}
 
-	public function testRulesHaveTheirOwnTables(): void
+	public function testTheBlueprintWinsOverThePermissionsOfARole(): void
 	{
-		$this->assertSame([['key' => 'default', 'name' => 'default', 'currency' => 'EUR']], SystemView::pricingRules());
-		$this->assertSame([['key' => 'default', 'name' => 'default', 'rate' => '–']], SystemView::taxRules());
+		F::write($this->root . '/site/blueprints/pages/order.yml', <<<'YAML'
+			extends: wagnerwagner.merx.pages/order
+			options:
+			  list:
+			    author: true
+			YAML);
+		Blueprint::$loaded = [];
+		Blueprint::$normalized = [];
 
-		// Side by side in one grid
-		$grid = array_column(SystemView::props()['sections'], 'grid');
-		$sections = array_column($grid[0], null, 'headline');
-		$this->assertSame(['Pricing rules', 'Tax rules'], array_keys($sections));
-		$this->assertSame(['key', 'name', 'rate'], array_keys($sections['Tax rules']['columns']));
+		// `author` has `pages.list: false`
+		$checks = array_column(SystemView::security(), null, 'id');
+		$this->assertStringContainsString('Author', $checks['roles']['text']);
 	}
 
 	public function testTheBrowserChecksRobotsAnOrderAndTheSitemap(): void
@@ -258,12 +242,29 @@ final class SystemViewTest extends TestCase
 		$this->assertSame([], SystemView::browserChecks());
 	}
 
-	public function testKeysShowTheirLastFourCharacters(): void
+	public function testVisitorsCheckFailsWithoutMerxModel(): void
 	{
-		$keys = array_column(SystemView::keys(), 'value', 'option');
+		$models = Page::$models;
+		Page::$models['order'] = Page::class;
 
-		$this->assertSame('••••abcd', $keys['stripe.test.secret_key']);
-		$this->assertSame('–', $keys['stripe.test.publishable_key']);
-		$this->assertArrayNotHasKey('stripe.live.secret_key', $keys);
+		try {
+			$checks = array_column(SystemView::security(), null, 'id');
+			$this->assertSame('negative', $checks['visitors']['theme']);
+		} finally {
+			Page::$models = $models;
+		}
+	}
+
+	/**
+	 * How many orders a user gets from `index()`, and how many siblings an order has
+	 */
+	protected function visibleOrders(string $user): array
+	{
+		$ordersPage = $this->kirby->site()->ordersPage();
+
+		return $this->kirby->impersonate($user, fn () => [
+			$ordersPage->index()->count(),
+			$ordersPage->children()->first()->siblings()->count(),
+		]);
 	}
 }

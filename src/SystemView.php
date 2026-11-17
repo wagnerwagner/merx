@@ -21,6 +21,108 @@ use Kirby\Toolkit\Str;
 class SystemView
 {
 	/**
+	 * What the browser checks, as a visitor: robots.txt and sitemap.xml
+	 *
+	 * Requests from the server to its own domain hang on a server which runs
+	 * one request at a time, and miss a proxy in front of it. Kirby checks
+	 * exposed folders in its system view from the browser for the same reason.
+	 * Each check carries the item to show when it fails.
+	 */
+	public static function browserChecks(): array
+	{
+		$kirby = App::instance();
+		$ordersPage = $kirby->site()->ordersPage();
+
+		if ($ordersPage === null) {
+			return [];
+		}
+
+		$ordersUrl = $ordersPage->url();
+
+		return [
+			'robots' => [
+				'url' => $kirby->url('index') . '/robots.txt',
+				'path' => '/' . trim((string)parse_url($ordersUrl, PHP_URL_PATH), '/') . '/',
+				'missing' => static::check(id: 'robots', ok: false, text: t('merx.system.check.robots.missing'), themeFailed: 'notice'),
+				'orders' => static::check(id: 'robots', ok: false, text: t('merx.system.check.robots.orders'), themeFailed: 'notice'),
+			],
+			'sitemap' => [
+				'url' => $kirby->url('index') . '/sitemap.xml',
+				'prefix' => $ordersUrl . '/',
+				'orders' => static::check(id: 'sitemap', ok: false, text: t('merx.system.check.sitemap')),
+			],
+		];
+	}
+
+	protected static function check(
+		string $id,
+		bool $ok,
+		string $text,
+		string $themeOk = 'positive',
+		string $themeFailed = 'negative',
+	): array {
+		$theme = $ok ? $themeOk : $themeFailed;
+
+		return [
+			'id' => $id,
+			'text' => $text,
+			'theme' => $theme,
+			// A problem links to what to do about it
+			...($ok ? [] : ['link' => 'https://merx.wagnerwagner.de/guide/security', 'target' => '_blank']),
+			'image' => [
+				'back' => 'light-dark(var(--theme-color-200), var(--theme-color-900))',
+				'icon' => match ($theme) {
+					'positive' => 'check',
+					'info' => 'info',
+					default => 'alert',
+				},
+				'color' => 'var(--theme-color-icon)',
+			],
+		];
+	}
+
+	/**
+	 * The keys Merx uses right now, with their last four characters
+	 *
+	 * @return array<array{option: string, value: string}>
+	 */
+	public static function keys(): array
+	{
+		$production = option('wagnerwagner.merx.production') === true;
+		$stripe = $production ? 'live' : 'test';
+		$paypal = $production ? 'live' : 'sandbox';
+
+		$options = [
+			'stripe.' . $stripe . '.publishable_key',
+			'stripe.' . $stripe . '.secret_key',
+			'stripe.webhook_signing_secret',
+			'paypal.' . $paypal . '.clientID',
+			'paypal.' . $paypal . '.secret',
+		];
+
+		return array_map(function (string $option): array {
+			$key = (string)option('wagnerwagner.merx.' . $option);
+
+			return [
+				'option' => $option,
+				'value' => $key === '' ? '–' : '••••' . Str::substr($key, -4),
+			];
+		}, $options);
+	}
+
+	/**
+	 * The pricing rules with key, name and currency
+	 */
+	public static function pricingRules(): array
+	{
+		return array_values(array_map(fn (PricingRule $rule): array => [
+			'key' => $rule->key,
+			'name' => $rule->name,
+			'currency' => (string)$rule->currency,
+		], Merx::pricingRules()->values()));
+	}
+
+	/**
 	 * Props of the `k-merx-view` component: the sections of the view
 	 *
 	 * The component only renders them, so the view is built here.
@@ -68,27 +170,75 @@ class SystemView
 	}
 
 	/**
-	 * The pricing rules with key, name and currency
+	 * Whether users of a role may list orders
+	 *
+	 * What `Page::isListable()` checks for the current user, for a user of the
+	 * role who does not have to exist.
 	 */
-	public static function pricingRules(): array
+	protected static function roleMayListOrders(Role $role): bool
 	{
-		return array_values(array_map(fn (PricingRule $rule): array => [
-			'key' => $rule->key,
-			'name' => $rule->name,
-			'currency' => (string)$rule->currency,
-		], Merx::pricingRules()->values()));
+		$user = new User(['id' => 'merx-role-check', 'role' => $role->id()]);
+		$guards = new PageGuards(new OrderPage(['slug' => 'order', 'template' => 'order']), $user);
+
+		return $guards->isAvailable('read') && $guards->isAvailable('access') && $guards->isAvailable('list');
 	}
 
 	/**
-	 * The tax rules with key, name and rate
+	 * Results of the security checks, as items of `k-items`
 	 */
-	public static function taxRules(): array
+	public static function security(): array
 	{
-		return array_values(array_map(fn (TaxRule $rule): array => [
-			'key' => $rule->key,
-			'name' => $rule->name,
-			'rate' => $rule->rate() === null ? '–' : Merx::formatPercent($rule->rate()),
-		], Merx::taxRules()->values()));
+		$kirby = App::instance();
+		$production = option('wagnerwagner.merx.production') === true;
+		$checks = [];
+
+		// Who may see the list of all orders
+		$roles = [];
+		$frontendRoles = [];
+		foreach ($kirby->roles() as $role) {
+			if ($role->isNobody() || static::roleMayListOrders($role) === false) {
+				continue;
+			}
+			$roles[] = $role->title();
+			if ($role->permissions()->for('access', 'panel') !== true) {
+				$frontendRoles[] = $role->title();
+			}
+		}
+		$checks[] = static::check(
+			id: 'roles',
+			ok: count($roles) <= 1,
+			text: tt('merx.system.check.roles', ['roles' => implode(', ', $roles)]),
+			themeOk: 'info',
+			themeFailed: 'notice',
+		);
+
+		if ($frontendRoles !== []) {
+			$checks[] = static::check(
+				id: 'frontendRoles',
+				ok: false,
+				text: tt('merx.system.check.frontendRoles', ['roles' => implode(', ', $frontendRoles)]),
+			);
+		}
+
+		if (static::visitorsCannotListOrders() === false) {
+			$checks[] = static::check(id: 'visitors', ok: false, text: t('merx.system.check.visitors'));
+		}
+
+		if ($production === false && $kirby->system()->isLocal() === false) {
+			$checks[] = static::check(id: 'testMode', ok: false, text: t('merx.system.check.testMode'));
+		}
+
+		$liveKeys = (string)option('wagnerwagner.merx.stripe.live.secret_key') . ' ' . (string)option('wagnerwagner.merx.stripe.live.publishable_key');
+		if ($production === true && Str::contains($liveKeys, '_test_')) {
+			$checks[] = static::check(id: 'testKeys', ok: false, text: t('merx.system.check.testKeys'));
+		}
+
+		$stripeKey = (string)option('wagnerwagner.merx.stripe.' . ($production ? 'live' : 'test') . '.secret_key');
+		if ($stripeKey !== '' && (string)option('wagnerwagner.merx.stripe.webhook_signing_secret') === '') {
+			$checks[] = static::check(id: 'webhook', ok: false, text: t('merx.system.check.webhook'), themeFailed: 'notice');
+		}
+
+		return $checks;
 	}
 
 	/**
@@ -205,138 +355,15 @@ class SystemView
 	}
 
 	/**
-	 * The keys Merx uses right now, with their last four characters
-	 *
-	 * @return array<array{option: string, value: string}>
+	 * The tax rules with key, name and rate
 	 */
-	public static function keys(): array
+	public static function taxRules(): array
 	{
-		$production = option('wagnerwagner.merx.production') === true;
-		$stripe = $production ? 'live' : 'test';
-		$paypal = $production ? 'live' : 'sandbox';
-
-		$options = [
-			'stripe.' . $stripe . '.publishable_key',
-			'stripe.' . $stripe . '.secret_key',
-			'stripe.webhook_signing_secret',
-			'paypal.' . $paypal . '.clientID',
-			'paypal.' . $paypal . '.secret',
-		];
-
-		return array_map(function (string $option): array {
-			$key = (string)option('wagnerwagner.merx.' . $option);
-
-			return [
-				'option' => $option,
-				'value' => $key === '' ? '–' : '••••' . Str::substr($key, -4),
-			];
-		}, $options);
-	}
-
-	/**
-	 * Results of the security checks, as items of `k-items`
-	 */
-	public static function security(): array
-	{
-		$kirby = App::instance();
-		$production = option('wagnerwagner.merx.production') === true;
-		$checks = [];
-
-		// Who may see the list of all orders
-		$roles = [];
-		$frontendRoles = [];
-		foreach ($kirby->roles() as $role) {
-			if ($role->isNobody() || static::roleMayListOrders($role) === false) {
-				continue;
-			}
-			$roles[] = $role->title();
-			if ($role->permissions()->for('access', 'panel') !== true) {
-				$frontendRoles[] = $role->title();
-			}
-		}
-		$checks[] = static::check(
-			id: 'roles',
-			ok: count($roles) <= 1,
-			text: tt('merx.system.check.roles', ['roles' => implode(', ', $roles)]),
-			themeOk: 'info',
-			themeFailed: 'notice',
-		);
-
-		if ($frontendRoles !== []) {
-			$checks[] = static::check(
-				id: 'frontendRoles',
-				ok: false,
-				text: tt('merx.system.check.frontendRoles', ['roles' => implode(', ', $frontendRoles)]),
-			);
-		}
-
-		if (static::visitorsCannotListOrders() === false) {
-			$checks[] = static::check(id: 'visitors', ok: false, text: t('merx.system.check.visitors'));
-		}
-
-		if ($production === false && $kirby->system()->isLocal() === false) {
-			$checks[] = static::check(id: 'testMode', ok: false, text: t('merx.system.check.testMode'));
-		}
-
-		$liveKeys = (string)option('wagnerwagner.merx.stripe.live.secret_key') . ' ' . (string)option('wagnerwagner.merx.stripe.live.publishable_key');
-		if ($production === true && Str::contains($liveKeys, '_test_')) {
-			$checks[] = static::check(id: 'testKeys', ok: false, text: t('merx.system.check.testKeys'));
-		}
-
-		$stripeKey = (string)option('wagnerwagner.merx.stripe.' . ($production ? 'live' : 'test') . '.secret_key');
-		if ($stripeKey !== '' && (string)option('wagnerwagner.merx.stripe.webhook_signing_secret') === '') {
-			$checks[] = static::check(id: 'webhook', ok: false, text: t('merx.system.check.webhook'), themeFailed: 'notice');
-		}
-
-		return $checks;
-	}
-
-	/**
-	 * What the browser checks, as a visitor: robots.txt and sitemap.xml
-	 *
-	 * Requests from the server to its own domain hang on a server which runs
-	 * one request at a time, and miss a proxy in front of it. Kirby checks
-	 * exposed folders in its system view from the browser for the same reason.
-	 * Each check carries the item to show when it fails.
-	 */
-	public static function browserChecks(): array
-	{
-		$kirby = App::instance();
-		$ordersPage = $kirby->site()->ordersPage();
-
-		if ($ordersPage === null) {
-			return [];
-		}
-
-		$ordersUrl = $ordersPage->url();
-
-		return [
-			'robots' => [
-				'url' => $kirby->url('index') . '/robots.txt',
-				'path' => '/' . trim((string)parse_url($ordersUrl, PHP_URL_PATH), '/') . '/',
-				'missing' => static::check(id: 'robots', ok: false, text: t('merx.system.check.robots.missing'), themeFailed: 'notice'),
-				'orders' => static::check(id: 'robots', ok: false, text: t('merx.system.check.robots.orders'), themeFailed: 'notice'),
-			],
-			'sitemap' => [
-				'url' => $kirby->url('index') . '/sitemap.xml',
-				'prefix' => $ordersUrl . '/',
-				'orders' => static::check(id: 'sitemap', ok: false, text: t('merx.system.check.sitemap')),
-			],
-		];
-	}
-
-	/**
-	 * Whether users of a role may list orders
-	 *
-	 * What `Page::isListable()` checks for the current user, for a user of the
-	 * role who does not have to exist.
-	 */
-	protected static function roleMayListOrders(Role $role): bool
-	{
-		$user = new User(['id' => 'merx-role-check', 'role' => $role->id()]);
-		$guards = new PageGuards(new OrderPage(['slug' => 'order', 'template' => 'order']), $user);
-
-		return $guards->isAvailable('read') && $guards->isAvailable('access') && $guards->isAvailable('list');
+		return array_values(array_map(fn (TaxRule $rule): array => [
+			'key' => $rule->key,
+			'name' => $rule->name,
+			'rate' => $rule->rate() === null ? '–' : Merx::formatPercent($rule->rate()),
+		], Merx::taxRules()->values()));
 	}
 
 	/**
@@ -367,32 +394,5 @@ class SystemView
 
 			return $ordersPage->index(true)->count() === 0 && ($order === null || $order->siblings()->count() === 1);
 		});
-	}
-
-	protected static function check(
-		string $id,
-		bool $ok,
-		string $text,
-		string $themeOk = 'positive',
-		string $themeFailed = 'negative',
-	): array {
-		$theme = $ok ? $themeOk : $themeFailed;
-
-		return [
-			'id' => $id,
-			'text' => $text,
-			'theme' => $theme,
-			// A problem links to what to do about it
-			...($ok ? [] : ['link' => 'https://merx.wagnerwagner.de/guide/security', 'target' => '_blank']),
-			'image' => [
-				'back' => 'light-dark(var(--theme-color-200), var(--theme-color-900))',
-				'icon' => match ($theme) {
-					'positive' => 'check',
-					'info' => 'info',
-					default => 'alert',
-				},
-				'color' => 'var(--theme-color-icon)',
-			],
-		];
 	}
 }

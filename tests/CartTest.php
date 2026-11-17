@@ -87,24 +87,6 @@ final class CartTest extends TestCase
 		$this->assertSame('nice-shoes', $purchaseUnit['items'][0]['name']);
 	}
 
-	public function testPayPalPurchaseUnitsWithShipping(): void
-	{
-		$cart = new Cart([
-			['key' => 'nice-shoes', 'price' => new Price(price: 49.0, currency: 'EUR')],
-			['key' => 'voucher', 'price' => new Price(price: -4.9, currency: 'EUR'), 'type' => 'discount'],
-			['key' => 'shipping', 'price' => new Price(price: 5.9, currency: 'EUR'), 'type' => 'shipping'],
-		]);
-
-		$purchaseUnit = $cart->payPalPurchaseUnits()[0];
-
-		// PayPal shows shipping as its own amount, not as an item
-		$this->assertSame('50.00', $purchaseUnit['amount']['value']);
-		$this->assertSame('49.00', $purchaseUnit['amount']['breakdown']['item_total']['value']);
-		$this->assertSame('5.90', $purchaseUnit['amount']['breakdown']['shipping']['value']);
-		$this->assertSame('4.90', $purchaseUnit['amount']['breakdown']['discount']['value']);
-		$this->assertCount(1, $purchaseUnit['items']);
-	}
-
 	public function testPayPalPurchaseUnitsWithFractionalQuantityAndDiscount(): void
 	{
 		// A discount must not hide a quantity PayPal can not show: 1.8 is not
@@ -135,5 +117,23 @@ final class CartTest extends TestCase
 		$this->assertSame('15.00', $purchaseUnit['amount']['value']);
 		$this->assertArrayNotHasKey('breakdown', $purchaseUnit['amount']);
 		$this->assertArrayNotHasKey('items', $purchaseUnit);
+	}
+
+	public function testPayPalPurchaseUnitsWithShipping(): void
+	{
+		$cart = new Cart([
+			['key' => 'nice-shoes', 'price' => new Price(price: 49.0, currency: 'EUR')],
+			['key' => 'voucher', 'price' => new Price(price: -4.9, currency: 'EUR'), 'type' => 'discount'],
+			['key' => 'shipping', 'price' => new Price(price: 5.9, currency: 'EUR'), 'type' => 'shipping'],
+		]);
+
+		$purchaseUnit = $cart->payPalPurchaseUnits()[0];
+
+		// PayPal shows shipping as its own amount, not as an item
+		$this->assertSame('50.00', $purchaseUnit['amount']['value']);
+		$this->assertSame('49.00', $purchaseUnit['amount']['breakdown']['item_total']['value']);
+		$this->assertSame('5.90', $purchaseUnit['amount']['breakdown']['shipping']['value']);
+		$this->assertSame('4.90', $purchaseUnit['amount']['breakdown']['discount']['value']);
+		$this->assertCount(1, $purchaseUnit['items']);
 	}
 }
