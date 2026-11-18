@@ -236,7 +236,8 @@ class Merx
 					previous: $ex,
 				);
 			}
-			Logger::log($ex, 'error');
+			// A client error, e.g. a canceled payment, is a warning
+			Logger::log($ex, $ex->getHttpCode() < 500 ? 'warning' : 'error');
 			throw $ex;
 		}
 	}
@@ -610,7 +611,7 @@ class Merx
 					previous: $ex,
 				);
 			}
-			Logger::log($ex, 'error');
+			Logger::log($ex, $ex->getHttpCode() < 500 ? 'warning' : 'error');
 
 			// No new draft: the one of the previous attempt stays the session’s,
 			// so the next checkout replaces it. Otherwise it would be left behind

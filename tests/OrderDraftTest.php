@@ -208,6 +208,37 @@ final class OrderDraftTest extends TestCase
 		$this->assertSame(['orders/' . $second['order']], $this->drafts());
 	}
 
+	/**
+	 * A client error, e.g. a return which is refused, is a warning
+	 */
+	public function testAFailedOrderIsLoggedByWhatWentWrong(): void
+	{
+		$return = $this->checkout();
+		$this->kirby->session()->destroy();
+		$this->kirby = $this->kirby->clone([
+			'roots' => ['logs' => $this->root . '/logs'],
+			'options' => [
+				'wagnerwagner.merx.logging' => true,
+				'wagnerwagner.merx.gateways' => ['probe' => ['completePayment' => function () {
+				}]],
+			],
+		]);
+		$log = fn (): string => implode('', array_map('file_get_contents', glob($this->root . '/logs/*-merx.log')));
+
+		try {
+			merx()->createOrder([Merx::$orderParameterName => 'doesnotexist']);
+		} catch (Exception) {
+		}
+		$this->assertStringContainsString('] WARNING ', $log());
+		$this->assertStringNotContainsString('] ERROR ', $log());
+
+		try {
+			merx()->createOrder($return);
+		} catch (Exception) {
+		}
+		$this->assertStringContainsString('] ERROR ', $log());
+	}
+
 	public function testAForgedFieldNameDoesNotPayTheOrder(): void
 	{
 		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
