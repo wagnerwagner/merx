@@ -199,4 +199,21 @@ final class ApiTest extends TestCase
 			}
 		}
 	}
+
+	/**
+	 * The total of the cart comes with its tax like every other total. With
+	 * two tax rates it has none in common: the rate is null, also formatted.
+	 */
+	public function testCartTotalHasItsTax(): void
+	{
+		cart()->add(new ListItem(key: 'book', price: new Price(price: 10.0, tax: 0.07, currency: 'EUR')));
+		cart()->add(new ListItem(key: 'shirt', price: new Price(price: 20.0, tax: 0.19, currency: 'EUR')));
+
+		$total = kirby()->api()->call('shop/cart', 'GET')['data']['total'];
+
+		$this->assertArrayHasKey('taxIncluded', $total);
+		$this->assertNull($total['tax']['rate']);
+		$this->assertNull($total['tax']['rateRaw']);
+		$this->assertSame(3.84, $total['tax']['priceRaw']);
+	}
 }

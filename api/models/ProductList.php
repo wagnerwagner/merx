@@ -41,12 +41,7 @@ return [
 		],
 		'default' => [
 			'products',
-			'total' => [
-				'price',
-				'priceRaw',
-				'priceNet',
-				'priceNetRaw',
-			],
+			'total',
 			'taxRates',
 			'quantity',
 			'shippings',
