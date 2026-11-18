@@ -743,6 +743,34 @@ final class OrderDraftTest extends TestCase
 
 		$this->kirby->api()->call('shop/cart', 'GET', ['query' => ['language' => 'en']]);
 		$this->assertSame('en', I18n::locale());
+
+		// The `locale` option only counts on a site without languages
+		$this->kirby = $this->kirby->clone(['options' => ['locale' => 'fr_FR.utf-8']]);
+		$this->kirby->api()->call('shop/cart', 'GET');
+		$this->assertSame('de', I18n::locale());
+	}
+
+	/**
+	 * A site without languages has no default one: its `locale` option decides
+	 */
+	public function testTheApiOfASiteWithoutLanguagesAnswersInTheLanguageOfItsLocale(): void
+	{
+		$expected = [
+			'de_DE.utf-8' => 'de',
+			'pt_BR.utf-8' => 'pt_BR',
+			'en_US.utf-8' => 'en',
+			// No translation for it
+			'C' => 'en',
+		];
+
+		foreach ($expected as $locale => $translation) {
+			$this->kirby = $this->kirby->clone(['options' => ['locale' => $locale]]);
+			$this->kirby->api()->call('shop/cart', 'GET');
+			$this->assertSame($translation, I18n::locale(), $locale);
+		}
+
+		$this->kirby->api()->call('shop/cart', 'GET', ['query' => ['language' => 'fr']]);
+		$this->assertSame('fr', I18n::locale());
 	}
 
 	public function testWhatCompletePaymentReturnsIsWritten(): void

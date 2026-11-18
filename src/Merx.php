@@ -446,15 +446,22 @@ class Merx
 
 	/**
 	 * Get locale with fallback for `C` locale
+	 *
+	 * `C` is what PHP starts with, before Kirby sets the locale, and what stays
+	 * when the configured locale is not installed on the server. Number
+	 * formatting refuses it, so the last resort is `en_US`.
 	 */
 	private static function getLocale(int|string $category = LC_ALL): string
 	{
+		$isC = fn (string $locale): bool => preg_match('/^(C|POSIX)(\.|$)/', $locale) === 1;
+
 		$locale = Locale::get($category);
-		if ($locale === 'C') {
+		if ($isC($locale) === true) {
 			App::instance()->setCurrentLanguage();
 			$locale = Locale::get($category);
 		}
-		return $locale;
+
+		return $isC($locale) === true ? 'en_US' : $locale;
 	}
 
 	/**
@@ -622,6 +629,30 @@ class Merx
 
 			throw $ex;
 		}
+	}
+
+	/**
+	 * The translation for the `locale` option, e.g. `de` for `de_DE.utf-8`
+	 *
+	 * The full code first, for translations such as `pt_BR`, then the language
+	 * alone. Null, which is English, when Kirby has no translation for either.
+	 */
+	protected static function localeTranslation(): string|null
+	{
+		$kirby = App::instance();
+		$locale = $kirby->option('locale', 'en_US.utf-8');
+		if (is_array($locale) === true) {
+			$locale = $locale[LC_MESSAGES] ?? $locale[LC_ALL] ?? reset($locale);
+		}
+
+		$code = explode('.', (string)$locale)[0];
+		foreach (array_unique([$code, preg_split('/[_@-]/', $code)[0]]) as $translation) {
+			if ($kirby->translation($translation)->data() !== []) {
+				return $translation;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -844,13 +875,14 @@ class Merx
 	 *
 	 * The requested language (`X-Language` header or `language` query),
 	 * otherwise the current language of the site, which is the default one.
+	 * A site without languages has none, so its `locale` option decides.
 	 *
 	 * @internal
 	 */
 	public static function setApiTranslation(Api $api): void
 	{
 		$kirby = App::instance();
-		$kirby->setCurrentTranslation($api->language() ?? $kirby->language()?->code());
+		$kirby->setCurrentTranslation($api->language() ?? $kirby->language()?->code() ?? static::localeTranslation());
 	}
 
 	/**
