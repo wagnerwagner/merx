@@ -3,13 +3,13 @@ title: page.title.product
 fields:
   price:
     extends: fields/price
-    width: 1/2
+    width: 1/3
   taxRule:
     extends: fields/tax-rule
-    width: 1/2
+    width: 1/3
   stock:
     extends: fields/stock
-    width: 1/2
+    width: 1/3
 
 tabs:
   content:
