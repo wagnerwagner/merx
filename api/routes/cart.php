@@ -7,15 +7,24 @@ use Wagnerwagner\Merx\Merx;
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 /**
- * Reduces the request body to the allowed keys and makes sure `quantity` is a
- * number before it reaches the cart.
+ * Reduces the request body to the allowed keys and makes sure each has the
+ * type the cart expects. Anything else would fail inside the cart, as a
+ * server error instead of a client error.
  */
-$cartRequestData = function (array $requestBody, array $allowedKeys): array {
+$cartRequestData = function (array $requestBody, array $allowedKeys) use ($endpoint): array {
 	$data = array_filter(
 		$requestBody,
 		fn ($key) => in_array($key, $allowedKeys, true),
 		ARRAY_FILTER_USE_KEY,
 	);
+
+	foreach (['key' => 'is_string', 'page' => 'is_string', 'data' => 'is_array'] as $name => $isType) {
+		if (isset($data[$name]) === true && $isType($data[$name]) === false) {
+			throw new InvalidArgumentException(
+				data: ['argument' => $name, 'method' => $endpoint . '/cart'],
+			);
+		}
+	}
 
 	if (array_key_exists('quantity', $data) === true) {
 		if (is_numeric($data['quantity']) === false) {
@@ -28,6 +37,16 @@ $cartRequestData = function (array $requestBody, array $allowedKeys): array {
 	}
 
 	return $data;
+};
+
+/** The key of the item a request names, which it has to name */
+$cartKey = function (mixed $key) use ($endpoint): string {
+	if (is_string($key) === false || $key === '') {
+		throw new InvalidArgumentException(
+			data: ['argument' => 'key', 'method' => $endpoint . '/cart'],
+		);
+	}
+	return $key;
 };
 
 return [
@@ -76,11 +95,11 @@ return [
 		/**
 		 * @return Cart The cart including the updated item.
 		 */
-		'action' => function () use ($cartRequestData): Cart {
+		'action' => function () use ($cartRequestData, $cartKey): Cart {
 			/** @var \Kirby\Api\Api $this */
 			Merx::setApiTranslation($this);
 
-			$key = $this->requestBody('key');
+			$key = $cartKey($this->requestBody('key'));
 
 			// `key` and `page` identify the item and must not be rewritten by an update.
 			$patchData = $cartRequestData($this->requestBody(), ['quantity', 'data']);
@@ -99,11 +118,11 @@ return [
 		/**
 		 * @return Cart The cart without the removed item.
 		 */
-		'action' => function (): Cart {
+		'action' => function () use ($cartKey): Cart {
 			/** @var \Kirby\Api\Api $this */
 			Merx::setApiTranslation($this);
 
-			$key = $this->requestBody('key');
+			$key = $cartKey($this->requestBody('key'));
 
 			/** @var \Wagnerwagner\Merx\Cart $cart */
 			$cart = $this->cart();
