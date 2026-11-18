@@ -28,6 +28,7 @@ return [
 	'field.datePaid.help' => 'Empty while the payment is pending. Enter the date the payment arrived to mark the order as paid.',
 	'field.datePaid' => 'Paid on',
 	'field.id' => 'ID',
+	'field.items.help' => 'Total: <strong>{{ page.total.toString("price") }}</strong> · Net: {{ page.total.toString("priceNet") }} · Tax: {{ page.total.tax.toString }}',
 	'field.items' => 'Cart items',
 	'field.key' => 'Key',
 	'field.order' => 'Order',

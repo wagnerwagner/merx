@@ -31,8 +31,7 @@ fields:
   items:
     extends: fields/list-items
     width: 2/3
-    help: |
-      Total: <strong>{{ page.total.toString("price") }}</strong> · Net: {{ page.total.toString("priceNet") }} · Tax: {{ page.total.tax.toString }}
+    help: field.items.help
   paymentDetails:
     label: field.paymentDetails
     type: textarea

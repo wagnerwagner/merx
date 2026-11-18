@@ -28,6 +28,7 @@ return [
 	'field.datePaid.help' => 'Leer, solange die Zahlung aussteht. Mit dem Datum des Zahlungseingangs gilt die Bestellung als bezahlt.',
 	'field.datePaid' => 'Bezahlt am',
 	'field.id' => 'ID',
+	'field.items.help' => 'Summe: <strong>{{ page.total.toString("price") }}</strong> · Netto: {{ page.total.toString("priceNet") }} · Steuer: {{ page.total.tax.toString }}',
 	'field.items' => 'Warenkorb',
 	'field.key' => 'Key',
 	'field.order' => 'Bestellung',
