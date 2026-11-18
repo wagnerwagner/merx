@@ -87,7 +87,10 @@ return [
 	'merx.system.note.gateways.default' => 'The gateways Merx ships.',
 	'merx.system.check.robots.missing' => 'There is no robots.txt. Disallow the orders in it.',
 	'merx.system.check.robots.orders' => 'The robots.txt does not disallow the orders.',
-	'merx.system.check.noindex' => 'An order page has neither an X-Robots-Tag header nor a robots meta tag with noindex.',
 	'merx.system.check.sitemap' => 'The sitemap.xml lists orders.',
-	'merx.system.note.production.missingKeys' => '{ gateway } is enabled, but { options } is missing.',
+	'merx.system.note.production.missingKeys' => '{ gateway } is enabled, without { options }.',
+	'merx.system.log' => 'Latest log entries',
+	'merx.system.log.time' => 'Time',
+	'merx.system.log.level' => 'Level',
+	'merx.system.log.message' => 'Entry',
 ];

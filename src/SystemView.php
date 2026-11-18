@@ -131,11 +131,12 @@ class SystemView
 	{
 		// The first column holds the row headers. `code` values are a string
 		// or a list, `html` cells are HTML.
-		$table = function (array $columns, array $rows, array $types = [], string $width = '24ch'): array {
+		// `$widths` of other columns than the first, which is 24ch unless given
+		$table = function (array $columns, array $rows, array $types = [], array $widths = []): array {
+			$widths += [array_key_first($columns) => '24ch'];
 			foreach ($columns as $key => $label) {
-				$columns[$key] = ['label' => $label, 'type' => $types[$key] ?? 'text'];
+				$columns[$key] = ['label' => $label, 'type' => $types[$key] ?? 'text', 'width' => $widths[$key] ?? null];
 			}
-			$columns[array_key_first($columns)]['width'] = $width;
 
 			return ['columns' => $columns, 'rows' => $rows];
 		};
@@ -163,10 +164,62 @@ class SystemView
 				['headline' => t('merx.system.keys'), ...$table(
 					['option' => t('merx.system.option'), 'value' => t('merx.system.keys.value')],
 					static::keys(),
-					width: '40ch',
+					widths: ['option' => '40ch'],
+				)],
+				['headline' => t('merx.system.log'), ...$table(
+					['time' => t('merx.system.log.time'), 'level' => t('merx.system.log.level'), 'message' => t('merx.system.log.message')],
+					static::logs(),
+					['level' => 'code', 'message' => 'pre'],
+					['level' => '20ch'],
 				)],
 			],
 		];
+	}
+
+	/**
+	 * The newest entries of Merx’ log, newest first, each as a whole
+	 *
+	 * @return array<array{time: string, level: string, type: string|null, message: string}>
+	 */
+	public static function logs(int $limit = 10): array
+	{
+		$files = glob(App::instance()->root('logs') . '/*' . Logger::$appendix . '.log') ?: [];
+		rsort($files);
+
+		$logs = [];
+		foreach ($files as $file) {
+			$entries = preg_split('/^(?=\[\d{4}-\d{2}-\d{2}T)/m', (string)file_get_contents($file), -1, PREG_SPLIT_NO_EMPTY);
+
+			foreach (array_reverse($entries) as $entry) {
+				if (preg_match('/^\[([^\]]+)\] (\w+) (.*)$/s', trim($entry), $match) !== 1) {
+					continue;
+				}
+
+				[, $time, $level, $message] = $match;
+
+				$level = strtolower($level);
+				$logs[] = [
+					'time' => date('Y-m-d H:i:s', strtotime($time)),
+					'level' => $level,
+					// The color of the level’s code block, none for `info`
+					'type' => match ($level) {
+						'debug' => 'gray',
+						'info' => null,
+						'notice' => 'aqua',
+						'warning' => 'yellow',
+						'error' => 'orange',
+						default => 'red',
+					},
+					'message' => $message,
+				];
+
+				if (count($logs) === $limit) {
+					return $logs;
+				}
+			}
+		}
+
+		return $logs;
 	}
 
 	/**

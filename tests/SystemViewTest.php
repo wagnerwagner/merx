@@ -100,6 +100,28 @@ final class SystemViewTest extends TestCase
 		$this->assertStringContainsString('Customer', $checks['frontendRoles']['text']);
 	}
 
+	public function testLogsShowTheNewestEntriesFirst(): void
+	{
+		$logs = $this->kirby->root('logs');
+		F::write($logs . '/2026-11-16-merx.log', "[2026-11-16T10:00:00+01:00] ERROR Payment failed\nwith details\n");
+		F::write($logs . '/2026-11-17-merx.log', implode('', [
+			"[2026-11-17T09:00:00+01:00] INFO " . json_encode(['event' => 'orderPage.render', 'order' => 'aaaa', 'orderNumber' => '42', 'user' => null], JSON_PRETTY_PRINT) . "\n",
+			"[2026-11-17T10:00:00+01:00] INFO " . json_encode(['event' => 'orderPage.render', 'order' => 'bbbb', 'orderNumber' => null, 'user' => 'abc'], JSON_PRETTY_PRINT) . "\n",
+		]));
+		// Not Merx’ log
+		F::write($logs . '/2026-11-18-other.log', "[2026-11-18T10:00:00+01:00] INFO Other\n");
+
+		$entries = SystemView::logs();
+		// Each entry as a whole
+		$this->assertStringContainsString('"order": "bbbb"', $entries[0]['message']);
+		$this->assertStringContainsString('"orderNumber": "42"', $entries[1]['message']);
+		$this->assertSame("Payment failed\nwith details", $entries[2]['message']);
+		$this->assertSame('error', $entries[2]['level']);
+		$this->assertSame('orange', $entries[2]['type']);
+		$this->assertNull($entries[0]['type']);
+		$this->assertSame(1, count(SystemView::logs(1)));
+	}
+
 	public function testKeysShowTheirLastFourCharacters(): void
 	{
 		$keys = array_column(SystemView::keys(), 'value', 'option');
@@ -167,7 +189,7 @@ final class SystemViewTest extends TestCase
 
 		$this->assertStringContainsString('live keys', $settings['production']['<note>']);
 		// Stripe and PayPal are enabled, their live keys are not set
-		$this->assertStringContainsString('<code>stripe</code> is enabled, but <code>stripe.live.publishable_key</code>, <code>stripe.live.secret_key</code> is missing.', $settings['production']['<note>']);
+		$this->assertStringContainsString('<code>stripe</code> is enabled, without <code>stripe.live.publishable_key</code>, <code>stripe.live.secret_key</code>.', $settings['production']['<note>']);
 		$this->assertStringContainsString('<code>paypal</code> is enabled', $settings['production']['<note>']);
 
 		// A gateway which is switched off needs no keys, one with its keys has none missing
@@ -177,7 +199,7 @@ final class SystemViewTest extends TestCase
 			'wagnerwagner.merx.stripe.live.secret_key' => 'sk_live_1234',
 		]]);
 		$production = array_column(SystemView::settings(), null, 'option')['production'];
-		$this->assertStringNotContainsString('missing', $production['<note>']);
+		$this->assertStringNotContainsString('without', $production['<note>']);
 		$this->assertStringContainsString('-merx.log</code>', $settings['logging']['<note>']);
 
 		$this->assertSame('/api/kasse', $settings['api.endpoint']['value']);
@@ -224,18 +246,16 @@ final class SystemViewTest extends TestCase
 		$this->assertStringContainsString('Author', $checks['roles']['text']);
 	}
 
-	public function testTheBrowserChecksRobotsAnOrderAndTheSitemap(): void
+	public function testTheBrowserChecksRobotsAndTheSitemap(): void
 	{
 		$checks = SystemView::browserChecks();
 
 		$this->assertStringEndsWith('/robots.txt', $checks['robots']['url']);
 		$this->assertSame('/orders/', $checks['robots']['path']);
-		// The newest order
-		$this->assertStringEndsWith('/orders/eeeeffffgggghhhh', $checks['order']['url']);
 		$this->assertStringEndsWith('/sitemap.xml', $checks['sitemap']['url']);
 		$this->assertStringEndsWith('/orders/', $checks['sitemap']['prefix']);
 		// Each carries the item to show when it fails
-		$this->assertSame('negative', $checks['order']['noindex']['theme']);
+		$this->assertSame('negative', $checks['sitemap']['orders']['theme']);
 
 		// Nothing to check before the first order
 		$this->kirby = $this->kirby->clone(['options' => ['wagnerwagner.merx.ordersPage' => 'bestellungen']]);

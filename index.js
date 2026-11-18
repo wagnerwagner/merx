@@ -6,6 +6,7 @@ panel.plugin("wagnerwagner/merx", {
 		 * The table is Kirby’s, with row headers in the first column, which
 		 * `k-table` can’t do. Cells of type `code` show a value or each value of
 		 * a list as code, linked to the row’s `link`. A row `type` colors it.
+		 * Cells of type `pre` keep their line breaks and scroll beyond 4.5 lines.
 		 */
 		"k-merx-section": {
 			props: {
@@ -31,6 +32,13 @@ panel.plugin("wagnerwagner/merx", {
 									<template v-for="(column, key, position) in section.columns" :key="key">
 										<th v-if="position === 0" scope="row">{{ row[key] }}</th>
 										<td v-else-if="column.type === 'html'"><k-text :text="row[key]" /></td>
+										<td v-else-if="column.type === 'pre'">
+											<k-text size="tiny" style="padding-block: var(--spacing-1)">
+												<k-code style="max-height: 9.2lh; overflow: auto; --code-color-back: var(--color-gray-200); --code-color-text: var(--color-gray-800, var(--color-black));">
+													{{ row[key] }}
+												</k-code>
+											</k-text>
+										</td>
 										<td v-else-if="column.type === 'code'" :class="{ 'k-text': !row.type }">
 											<k-link v-if="row.link" :to="row.link"><code :data-type="row.type">{{ row[key] }}</code></k-link>
 											<span v-else style="display: flex; flex-wrap: wrap; gap: var(--spacing-1)">

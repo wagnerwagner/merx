@@ -88,7 +88,10 @@ return [
 	'merx.system.note.gateways.default' => 'Die Gateways, die Merx mitbringt.',
 	'merx.system.check.robots.missing' => 'Es gibt keine robots.txt. Darin die Bestellungen ausschließen.',
 	'merx.system.check.robots.orders' => 'Die robots.txt schließt die Bestellungen nicht aus.',
-	'merx.system.check.noindex' => 'Eine Bestellseite hat weder einen X-Robots-Tag-Header noch ein Robots-Meta-Tag mit noindex.',
 	'merx.system.check.sitemap' => 'Die sitemap.xml listet Bestellungen.',
-	'merx.system.note.production.missingKeys' => '{ gateway } ist aktiv, aber { options } fehlt.',
+	'merx.system.note.production.missingKeys' => '{ gateway } ist aktiv, ohne { options }.',
+	'merx.system.log' => 'Letzte Log-Einträge',
+	'merx.system.log.time' => 'Zeit',
+	'merx.system.log.level' => 'Level',
+	'merx.system.log.message' => 'Eintrag',
 ];
