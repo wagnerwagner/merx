@@ -39,7 +39,7 @@ final class OrderPageHeadersTest extends TestCase
 				'template' => 'order',
 				'model' => 'order',
 				'draft' => false,
-				'content' => ['dateCreated' => date('c'), 'name' => 'Marta Doe'],
+				'content' => ['dateCreated' => date('c'), 'name' => 'Marta Doe', 'email' => 'marta@example.com', 'paymentGateway' => 'invoice'],
 			]);
 
 			return $orderPage->changeStatus('listed');

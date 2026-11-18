@@ -37,6 +37,7 @@ final class StripeWebhookTest extends TestCase
 				'content' => [
 					'dateCreated' => date('c'),
 					'paymentGateway' => 'stripe',
+					'email' => 'customer@example.com',
 					'stripePaymentIntentId' => $paymentIntentId,
 				],
 			]);

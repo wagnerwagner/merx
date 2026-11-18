@@ -65,6 +65,8 @@ final class SystemViewTest extends TestCase
 					'slug' => $slug,
 					'template' => 'order',
 					'draft' => false,
+					// Required by the order blueprint, which Kirby checks when it publishes
+					'content' => ['email' => 'customer@example.com', 'paymentGateway' => 'invoice'],
 				])->changeStatus('listed');
 			}
 		});
