@@ -749,9 +749,9 @@ class Merx
 	/**
 	 * Gets all pricing rules defined by pricing rule option
 	 */
-	public static function pricingRules(array $options = []): PricingRules
+	public static function pricingRules(): PricingRules
 	{
-		return new PricingRules(option('wagnerwagner.merx.pricingRules', $options));
+		return new PricingRules(option('wagnerwagner.merx.pricingRules') ?? []);
 	}
 
 	/**
@@ -865,9 +865,9 @@ class Merx
 	/**
 	 * Gets all tax rules defined by tax rule option
 	 */
-	public static function taxRules(array $options = []): TaxRules
+	public static function taxRules(): TaxRules
 	{
-		return new TaxRules(option('wagnerwagner.merx.taxRules', $options));
+		return new TaxRules(option('wagnerwagner.merx.taxRules') ?? []);
 	}
 
 	/**
