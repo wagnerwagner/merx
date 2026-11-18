@@ -28,7 +28,6 @@ return [
 	'field.datePaid.help' => 'Leer, solange die Zahlung aussteht. Mit dem Datum des Zahlungseingangs gilt die Bestellung als bezahlt.',
 	'field.datePaid' => 'Bezahlt am',
 	'field.id' => 'ID',
-	'field.info' => 'Info',
 	'field.items' => 'Warenkorb',
 	'field.key' => 'Key',
 	'field.order' => 'Bestellung',

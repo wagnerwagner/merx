@@ -28,7 +28,6 @@ return [
 	'field.datePaid.help' => 'Empty while the payment is pending. Enter the date the payment arrived to mark the order as paid.',
 	'field.datePaid' => 'Paid on',
 	'field.id' => 'ID',
-	'field.info' => 'Info',
 	'field.items' => 'Cart items',
 	'field.key' => 'Key',
 	'field.order' => 'Order',
