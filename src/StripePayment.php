@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
 use Stripe\Event;
+use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
@@ -69,20 +70,35 @@ class StripePayment
 	}
 
 	/**
-	 * Create Stripe Payment
+	 * The PaymentIntent $id with the new amount, or a new one
+	 *
+	 * An intent nothing was paid with yet is updated, so a checkout which asks
+	 * for the client secret again, e.g. after the cart changed, does not leave
+	 * an abandoned intent behind with every call. One which is authorized,
+	 * paid or canceled stays as it is.
 	 *
 	 * @see https://docs.stripe.com/api/payment_intents/create
-	 * @param array $options
+	 * @param $id The intent of the visitor’s session
 	 */
-	public static function createStripePaymentIntent(float $amount, array $params = [], $options = []): PaymentIntent
+	public static function createStripePaymentIntent(float $amount, array $params = [], $options = [], string|null $id = null): PaymentIntent
 	{
 		self::setStripeApiKey();
+		$amount = (int)round($amount * 100);
 
-		$intent = PaymentIntent::create(array_merge([
-			'amount' => round($amount * 100),
-		], $params), $options);
+		if ($id !== null) {
+			try {
+				if (PaymentIntent::retrieve($id, $options)->status === 'requires_payment_method') {
+					return PaymentIntent::update($id, array_filter([
+						'amount' => $amount,
+						'currency' => $params['currency'] ?? null,
+					]), $options);
+				}
+			} catch (ApiErrorException) {
+				// Gone, or of another account
+			}
+		}
 
-		return $intent;
+		return PaymentIntent::create(['amount' => $amount, ...$params], $options);
 	}
 
 	/**

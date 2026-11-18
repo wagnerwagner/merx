@@ -46,6 +46,8 @@ class Cart extends ProductList
 	 * $cart->add(new ListItem(key: 'nice-socks', price: 10.0)); // Custom ListItem
 	 * ```
 	 *
+	 * A quantity of 0 adds nothing, and one which leaves an item at 0 removes it, as `updateItem()` does.
+	 *
 	 * @throws Exception error.merx.cart.add
 	 * @throws Exception error.merx.mixedCurrencies.add when the item has another currency than the cart
 	 */
@@ -92,17 +94,26 @@ class Cart extends ProductList
 	}
 
 	/**
-	 * Get Stripe’s PaymentIntent.
+	 * Stripe’s PaymentIntent for the cart
+	 *
+	 * The intent of the visitor’s session, with the cart’s total, as long as
+	 * nothing was paid with it. Otherwise a new one.
 	 *
 	 * @param $params Additional parameters used by \Stripe\PaymentIntent::create().
 	 * @param null|array|RequestOptions $options Additional options used by \Stripe\PaymentIntent::create().
-	 * @throws Exception merx.emptycart
+	 * @throws Exception merx.emptycart, or merx.cart.notOrderable when the cart has no total, e.g. with prices in two currencies
 	 * @return PaymentIntent
 	 */
 	public function getStripePaymentIntent(array|null $params = [], $options = []): object
 	{
-		$amount = $this->total()->price;
-		if ($amount === 0.0) {
+		$total = $this->total();
+		if ($total === null) {
+			throw new Exception(
+				key: 'merx.cart.notOrderable',
+				httpCode: 400,
+			);
+		}
+		if ($total->price === 0.0) {
 			throw new Exception(
 				key: 'merx.emptycart',
 				httpCode: 400,
@@ -111,9 +122,11 @@ class Cart extends ProductList
 
 		$params = array_merge([
 			'currency' => $this->currency(),
-		], $params);
+		], $params ?? []);
 
-		return StripePayment::createStripePaymentIntent($amount, $params, $options);
+		$id = App::instance()->session()->get('wagnerwagner.merx.stripePaymentIntentId');
+
+		return StripePayment::createStripePaymentIntent($total->price, $params, $options, is_string($id) ? $id : null);
 	}
 
 	/**
