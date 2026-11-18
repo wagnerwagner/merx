@@ -17,7 +17,10 @@ use Kirby\Toolkit\Collection;
 class ListItems extends Collection
 {
 	/**
-	 * @param $data List of ListItems (or their data), keyed by ListItem::$key if it is a list
+	 * Creates a list of items
+	 *
+	 * @param $data ListItems, or what `ListItem::factory()` takes for each. A list without keys is keyed by each item’s `key`.
+	 * @param $caseSensitive Whether keys are case-sensitive. A cart’s are, a product list’s are not.
 	 */
 	public function __construct(array $data = [], bool $caseSensitive = false)
 	{

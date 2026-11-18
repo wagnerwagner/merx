@@ -161,9 +161,6 @@ final class StockTest extends TestCase
 	}
 
 	/**
-	 * The limit comes from the page, so nothing a client sends can lift it
-	 */
-	/**
 	 * A product is one line, however the page is named
 	 */
 	public function testAddFindsTheLineOfAProductByIdUuidAndPage(): void
@@ -181,6 +178,9 @@ final class StockTest extends TestCase
 		$this->assertSame(['page://shirt', 'shirt-anna'], cart()->keys());
 	}
 
+	/**
+	 * The limit comes from the page, so nothing a client sends can lift it
+	 */
 	public function testAddIgnoresALimitInTheItemData(): void
 	{
 		$this->assertStockError(
