@@ -12,7 +12,7 @@ columns:
   email:
     label: email
   city: true
-  date:
+  dateCreated:
     label: date
     value: "{{ page.dateCreated }}"
   total:

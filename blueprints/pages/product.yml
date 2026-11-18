@@ -27,9 +27,13 @@ tabs:
         extends: fields/orders
         query: page.orders
         columns:
+          total: false
+          datePaid: false
           quantity:
             label: field.quantity
           price:
             label: field.price
+            align: right
           producttotal:
             label: field.total
+            align: right
