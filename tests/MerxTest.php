@@ -42,6 +42,18 @@ final class MerxTest extends TestCase
 		);
 	}
 
+	/** What `blueprint()->fields()` returns for a typical order blueprint */
+	protected const ORDER_FIELDS = [
+		'dateCreated' => [],
+		'datePaid' => [],
+		'paymentGateway' => [],
+		'items' => [],
+		'paymentDetails' => [],
+		'email' => ['disabled' => true],
+		'street' => [],
+		'note' => [],
+	];
+
 	public function testFilterOrderDataIsCaseInsensitive(): void
 	{
 		// Kirby lower cases content keys, so these all address `datePaid`.
@@ -49,41 +61,49 @@ final class MerxTest extends TestCase
 			'DatePaid' => '2026-01-01',
 			'DATEPAID' => '2026-01-01',
 			'datepaid' => '2026-01-01',
-			'PayPalOrderId' => 'forged',
-			'email' => 'customer@example.com',
-		]);
+			'EMAIL' => 'customer@example.com',
+		], self::ORDER_FIELDS);
 
-		$this->assertSame(['email' => 'customer@example.com'], $data);
+		$this->assertSame(['EMAIL' => 'customer@example.com'], $data);
 	}
 
 	public function testFilterOrderDataKeepsCustomerFields(): void
 	{
+		// Also a disabled one, which only the Panel does not let anybody change
 		$data = [
-			'paymentGateway' => 'paypal',
 			'email' => 'customer@example.com',
 			'street' => 'Example Street 1',
 			'note' => 'Please ring twice',
 		];
 
-		$this->assertSame($data, Merx::filterOrderData($data));
+		$this->assertSame($data, Merx::filterOrderData($data, self::ORDER_FIELDS));
+	}
+
+	public function testFilterOrderDataRemovesFieldsWhichAreNotTheCustomers(): void
+	{
+		$data = Merx::filterOrderData([
+			'email' => 'customer@example.com',
+			// Kirby writes a key as its slug: these would be stored as `datePaid` and `items`
+			'datePaid_' => '2026-01-01',
+			'datePaid!' => '2026-01-01',
+			'items-' => 'forged cart',
+			'paymentDetails' => ['amount' => 1],
+			// Not in the blueprint
+			'payment_gateway' => 'invoice',
+			'csrf' => 'token',
+			'stripePaymentIntentId' => 'pi_forged',
+		], self::ORDER_FIELDS);
+
+		$this->assertSame(['email' => 'customer@example.com'], $data);
 	}
 
 	public function testFilterOrderDataRemovesProtectedFields(): void
 	{
-		$data = Merx::filterOrderData([
-			'email' => 'customer@example.com',
-			'datePaid' => '2026-01-01T00:00:00+00:00',
-			'paymentDetails' => ['amount' => 1],
-			'orderNumber' => 9999,
-			'dateCreated' => '2026-01-01T00:00:00+00:00',
-			'items' => 'forged cart',
-			'redirect' => 'https://example.com',
-			'stripePaymentIntentId' => 'pi_forged',
-			'payPalOrderId' => 'forged',
-			'uuid' => 'page://forged',
-		]);
+		// Even when a shop has them in its blueprint, e.g. to show them in the Panel
+		$fields = array_fill_keys(Merx::$protectedOrderFields, []) + ['email' => []];
+		$data = array_fill_keys(Merx::$protectedOrderFields, 'forged') + ['email' => 'customer@example.com'];
 
-		$this->assertSame(['email' => 'customer@example.com'], $data);
+		$this->assertSame(['email' => 'customer@example.com'], Merx::filterOrderData($data, $fields));
 	}
 
 	public function testFormatCurrency(): void

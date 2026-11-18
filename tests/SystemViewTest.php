@@ -215,7 +215,7 @@ final class SystemViewTest extends TestCase
 		$settings = array_column(SystemView::settings(), null, 'option');
 		// The API endpoint only when it was changed
 		$this->assertArrayNotHasKey('api.endpoint', $settings);
-		$this->assertSame(['invoice', 'paypal', 'stripe'], $settings['gateways']['value']);
+		$this->assertSame(['paypal', 'stripe'], $settings['gateways']['value']);
 		$this->assertStringContainsString('No real money', $settings['production']['<note>']);
 		$this->assertStringContainsString('not logged', $settings['logging']['<note>']);
 		$this->assertStringContainsString('lowers the stock', $settings['reduceStock']['<note>']);

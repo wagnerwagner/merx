@@ -222,6 +222,65 @@ final class OrderDraftTest extends TestCase
 		merx()->createOrder($first);
 	}
 
+	public function testAFailedCheckoutKeepsTheDraftOfTheSession(): void
+	{
+		$first = $this->checkout();
+
+		try {
+			merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'not an email']);
+			$this->fail('The checkout should fail');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.fieldsvalidation', $exception->getKey());
+		}
+
+		$this->assertSame($first['order'], $this->kirby->session()->get(Merx::$orderDraftSessionKey));
+
+		// Replaced by the next checkout instead of being left behind
+		$second = $this->checkout();
+		$this->assertSame(['orders/' . $second['order']], $this->drafts());
+	}
+
+	public function testWhatCompletePaymentReturnsIsWritten(): void
+	{
+		$this->kirby->session()->destroy();
+		$this->kirby = $this->kirby->clone(['options' => [
+			'wagnerwagner.merx.gateways' => [
+				'probe' => [
+					// A copy, not the page it got
+					'completePayment' => fn (OrderPage $virtualOrderPage): OrderPage => $virtualOrderPage->clone([
+						'content' => ['datePaid' => '2026-11-11 12:00:00'] + $virtualOrderPage->content()->toArray(),
+					]),
+				],
+			],
+		]]);
+
+		$orderPage = merx()->createOrder($this->checkout());
+
+		$this->assertTrue($orderPage->isPaid());
+	}
+
+	public function testAForgedFieldNameDoesNotPayTheOrder(): void
+	{
+		cart()->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
+
+		// Kirby writes a key as its slug, `datePaid_` as `datePaid`
+		$redirect = merx()->initializeOrder([
+			'paymentGateway' => 'probe',
+			'email' => 'customer@example.com',
+			'datePaid_' => '2026-01-01 00:00:00',
+			'paymentDetails-' => 'status: succeeded',
+			'items_' => 'forged cart',
+		]);
+		$query = [];
+		parse_str(parse_url($redirect, PHP_URL_QUERY) ?? '', $query);
+		$orderPage = merx()->createOrder($query);
+
+		$this->assertFalse($orderPage->isPaid());
+		$this->assertTrue($orderPage->content()->get('paymentDetails')->isEmpty());
+		$this->assertSame('socks', $orderPage->cart()->first()->key);
+		$this->assertSame('probe', $orderPage->paymentGateway()->value());
+	}
+
 	/**
 	 * `prev()` and `next()` in an order template must not lead to the
 	 * orders of other customers
@@ -258,6 +317,7 @@ final class OrderDraftTest extends TestCase
 			],
 		);
 		$this->kirby->setCurrentLanguage('en');
+		cart()->add(['key' => 'gloves', 'title' => 'Gloves', 'price' => ['price' => 20.0, 'tax' => 0.19]]);
 
 		$orderPage = merx()->createOrder($this->checkout());
 
@@ -265,6 +325,8 @@ final class OrderDraftTest extends TestCase
 		$this->assertTrue($orderPage->isPaid());
 		$this->assertFileDoesNotExist($orderPage->root() . '/order.en.txt');
 		$this->assertSame('From the hook', $orderPage->content('de')->get('note')->value());
+		// Kept by the update of the hook, which runs in the customer’s language
+		$this->assertSame(0.19, $orderPage->cart()->get('gloves')->price->tax?->rate);
 	}
 
 	public function testAnOrderWhichDoesNotExistIsRefused(): void

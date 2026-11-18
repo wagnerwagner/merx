@@ -65,6 +65,17 @@ final class OrderModelTest extends TestCase
 			}
 			PHP);
 
+		// Merx stores the fields of the order blueprint only
+		F::write($this->root . '/site/blueprints/fields/personal-data.yml', <<<'YAML'
+			type: group
+			fields:
+			  email:
+			    type: email
+			    required: true
+			  company:
+			    type: text
+			YAML);
+
 		$this->classes = [];
 		$test = $this;
 

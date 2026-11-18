@@ -304,6 +304,43 @@ final class ProductListTest extends TestCase
 	}
 
 	/**
+	 * Adding to a line prices it at its new quantity, as the next request would
+	 */
+	public function testAddingToALineReadsItsVolumePrice(): void
+	{
+		$app = App::instance();
+		$models = Page::$models;
+		App::$enableWhoops = false;
+		Page::$models['volume-product'] = VolumeProductPage::class;
+
+		new App([
+			'roots' => ['index' => __DIR__ . '/kirby'],
+			'site' => [
+				'children' => [
+					[
+						'slug' => 'socks',
+						'template' => 'volume-product',
+						'content' => ['title' => 'Socks', 'price' => 10],
+					],
+				],
+			],
+		]);
+
+		try {
+			$productList = new ProductList();
+			$productList->add(['page' => 'socks', 'quantity' => 5.0]);
+			$productList->add(['page' => 'socks', 'quantity' => 5.0]);
+
+			$this->assertSame(10.0, $productList->first()->quantity);
+			$this->assertSame(9.5, $productList->first()->price->price);
+		} finally {
+			Page::$models = $models;
+			App::$enableWhoops = true;
+			App::instance($app);
+		}
+	}
+
+	/**
 	 * A new quantity reads the price from the page again, for volume-based
 	 * pricing. The item’s quantifier has to apply to that price as well.
 	 */
@@ -368,5 +405,18 @@ final class ProductListTest extends TestCase
 
 		$this->expectException(Exception::class);
 		$productList->updateItem('does-not-exist', ['quantity' => 1.0]);
+	}
+}
+
+/** 5 % off from 10 pieces, as in the volume-based pricing cookbook */
+class VolumeProductPage extends ProductPage
+{
+	public function price(string|PricingRule|null $pricingRule = null, float|null $quantity = null, array|null $data = null): Price|null
+	{
+		$price = parent::price($pricingRule, $quantity, $data);
+		if ($price !== null && $quantity >= 10) {
+			$price->updatePrice($price->price * 0.95);
+		}
+		return $price;
 	}
 }

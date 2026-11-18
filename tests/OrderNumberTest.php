@@ -61,6 +61,7 @@ final class OrderNumberTest extends TestCase
 			],
 			'options' => [
 				'wagnerwagner.merx.logging' => false,
+				'wagnerwagner.merx.gateways' => ['invoice' => true],
 			],
 		]);
 	}

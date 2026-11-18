@@ -118,13 +118,13 @@ final class GatewaysTest extends TestCase
 	 */
 	public function testAGatewaySetToFalseIsSwitchedOff(): void
 	{
-		$this->assertSame(['invoice', 'paypal', 'stripe'], array_keys(Gateways::enabled()));
+		$this->assertSame(['paypal', 'stripe'], array_keys(Gateways::enabled()));
 
 		$this->app->clone(['options' => [
-			'wagnerwagner.merx.gateways' => ['invoice' => false, 'prepayment' => true],
+			'wagnerwagner.merx.gateways' => ['paypal' => false, 'invoice' => true],
 		]]);
 
-		$this->assertSame(['paypal', 'stripe', 'prepayment'], array_keys(Gateways::enabled()));
+		$this->assertSame(['stripe', 'invoice'], array_keys(Gateways::enabled()));
 	}
 
 	public function testAMissingPayPalClientIdIsRefused(): void

@@ -66,6 +66,7 @@ final class OrderPaidTest extends TestCase
 			'options' => [
 				'wagnerwagner.merx.logging' => false,
 				'wagnerwagner.merx.gateways' => [
+					'invoice' => true,
 					// Completes the payment before the order page is written, the way
 					// PayPal and Stripe do
 					'paid-right-away' => [
