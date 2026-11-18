@@ -212,6 +212,7 @@ class SystemView
 					['option' => t('merx.system.option'), 'value' => t('merx.system.value'), 'note' => t('merx.system.note')],
 					static::settings(),
 					['value' => 'code', 'note' => 'html'],
+					['value' => '40ch'],
 				)],
 				// Side by side
 				['grid' => [
