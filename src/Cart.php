@@ -52,6 +52,7 @@ class Cart extends ProductList
 	public function add(string|array|ListItem $data): static
 	{
 		$kirby = App::instance();
+		$listItem = null;
 		try {
 			// `apply()`: a hook may return the item it wants added instead,
 			// e.g. with a key or a quantifier derived from its `data`
@@ -62,17 +63,15 @@ class Cart extends ProductList
 			$this->save();
 			$kirby->trigger('wagnerwagner.merx.cart.add:after', ['cart' => $this]);
 			return $this;
-		} catch (\Exception $ex) {
+		} catch (\Throwable $ex) {
 			if ($ex instanceof Exception) {
 				throw $ex;
 			}
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log($ex, 'error');
-			}
+			Logger::log($ex, 'error');
 			throw new Exception(
 				key: 'merx.cart.add',
 				data: [
-					'key' => $data['key'] ?? $data['page'] ?? $data->key ?? (string)$data ?? '',
+					'key' => $listItem?->key ?? (is_string($data) ? $data : ''),
 				],
 				details: Merx::exceptionDetails($ex),
 				previous: $ex,
@@ -252,15 +251,13 @@ class Cart extends ProductList
 			$this->save();
 			$kirby->trigger('wagnerwagner.merx.cart.updateItem:after', ['cart' => $this, 'key' => $key, 'data' => $data]);
 			return $this;
-		} catch (\Exception $ex) {
+		} catch (\Throwable $ex) {
 			// A rejected update (invalid quantity, not enough stock) is a client error and
 			// must keep its own message instead of being hidden behind merx.cart.update.
 			if ($ex instanceof Exception) {
 				throw $ex;
 			}
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log($ex, 'error');
-			}
+			Logger::log($ex, 'error');
 			throw new Exception(
 				key: 'merx.cart.update',
 				details: Merx::exceptionDetails($ex),

@@ -22,11 +22,8 @@ use Throwable;
  */
 class SystemView
 {
-	/** Result of `accounts()` in this request */
-	protected static array|null $accounts = null;
-
 	/**
-	 * What Stripe and PayPal say about the keys in use, once per request
+	 * What Stripe and PayPal say about the keys in use
 	 *
 	 * Stripe names the account of its secret key. PayPal names no account for
 	 * a client ID and secret, only whether they are valid. A gateway which is
@@ -36,10 +33,6 @@ class SystemView
 	 */
 	public static function accounts(): array
 	{
-		if (static::$accounts !== null) {
-			return static::$accounts;
-		}
-
 		$production = option('wagnerwagner.merx.production') === true;
 		$gateways = Gateways::enabled();
 		$accounts = [];
@@ -72,7 +65,7 @@ class SystemView
 			}
 		}
 
-		return static::$accounts = $accounts;
+		return $accounts;
 	}
 
 	/**
@@ -139,9 +132,10 @@ class SystemView
 	/**
 	 * The keys Merx uses right now, with their last four characters
 	 *
+	 * @param $accounts What `accounts()` returns, asked for once per view
 	 * @return array<array{option: string, value: string}>
 	 */
-	public static function keys(): array
+	public static function keys(array|null $accounts = null): array
 	{
 		$production = option('wagnerwagner.merx.production') === true;
 		$stripe = $production ? 'live' : 'test';
@@ -155,7 +149,7 @@ class SystemView
 			'paypal.' . $paypal . '.secret',
 		];
 
-		$accounts = static::accounts();
+		$accounts ??= static::accounts();
 		$notes = [
 			'stripe.' . $stripe . '.secret_key' => $accounts['stripe']['note'] ?? '',
 			'paypal.' . $paypal . '.secret' => $accounts['paypal']['note'] ?? '',
@@ -250,10 +244,12 @@ class SystemView
 			return ['columns' => $columns, 'rows' => $rows];
 		};
 
+		$accounts = static::accounts();
+
 		return [
 			'checks' => static::browserChecks(),
 			'sections' => [
-				['id' => 'security', 'headline' => t('merx.system.security'), 'items' => static::security()],
+				['id' => 'security', 'headline' => t('merx.system.security'), 'items' => static::security($accounts)],
 				['headline' => t('merx.system.settings'), ...$table(
 					['option' => t('merx.system.option'), 'value' => t('merx.system.value'), 'note' => t('merx.system.note')],
 					static::settings(),
@@ -273,7 +269,7 @@ class SystemView
 				]],
 				['headline' => t('merx.system.keys'), ...$table(
 					['option' => t('merx.system.option'), 'value' => t('merx.system.keys.value'), 'note' => t('merx.system.note')],
-					static::keys(),
+					static::keys($accounts),
 					['note' => 'html'],
 					['option' => '40ch', 'value' => '20ch'],
 				)],
@@ -303,8 +299,10 @@ class SystemView
 
 	/**
 	 * Results of the security checks, as items of `k-items`
+	 *
+	 * @param $accounts What `accounts()` returns, asked for once per view
 	 */
-	public static function security(): array
+	public static function security(array|null $accounts = null): array
 	{
 		$kirby = App::instance();
 		$production = option('wagnerwagner.merx.production') === true;
@@ -356,7 +354,7 @@ class SystemView
 			$checks[] = static::check(id: 'webhook', ok: false, text: t('merx.system.check.webhook'), themeFailed: 'notice');
 		}
 
-		foreach (static::accounts() as $provider => $account) {
+		foreach ($accounts ?? static::accounts() as $provider => $account) {
 			if ($account['ok'] === false) {
 				$checks[] = static::check(id: $provider . 'Keys', ok: false, text: t('merx.system.check.' . $provider . 'Keys'));
 			}

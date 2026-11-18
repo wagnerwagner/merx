@@ -67,7 +67,6 @@ class ProductList extends ListItems
 		$quantities = [];
 
 		foreach ($this as $listItem) {
-			/** @var ListItem $listItem */
 			if ($listItem->page instanceof ProductPage === false) {
 				continue;
 			}
@@ -92,23 +91,19 @@ class ProductList extends ListItems
 	 */
 	public function reduceStock(): static
 	{
-		$logging = option('wagnerwagner.merx.logging') === true;
-
 		foreach ($this->quantitiesPerProduct() as ['page' => $page, 'quantity' => $quantity]) {
 			try {
 				// A copy reads the stock from disk. The page itself may hold a stock
 				// read earlier in this request, which another checkout has lowered since.
 				$page = $page->clone()->reduceStock($quantity);
 			} catch (\Throwable $ex) {
-				if ($logging === true) {
-					Logger::log('Stock of “' . $page->title() . '” not reduced: ' . $ex->getMessage(), 'error');
-				}
+				Logger::log('Stock of “' . $page->title() . '” not reduced: ' . $ex->getMessage(), 'error');
 				continue;
 			}
 
 			// Two checkouts can pass the stock check for the last item before
 			// either order is written. Both orders exist by then, so this is only reported.
-			if ($logging === true && $page->stock() < 0) {
+			if ($page->stock() < 0) {
 				Logger::log('Stock of “' . $page->title() . '” is ' . $page->stock() . ': more were sold than there were.', 'error');
 			}
 		}
@@ -121,7 +116,6 @@ class ProductList extends ListItems
 	 */
 	public function updateItem(string $key, array $data): self
 	{
-		/** @var ?ListItem $listItem */
 		$listItem = $this->get($key);
 
 		if ($listItem === null) {
@@ -143,7 +137,7 @@ class ProductList extends ListItems
 		}
 
 		// Update the price according to the quantity. Required for volume-based pricing.
-		if (!array_key_exists('price', $data) && $updatedItem->page instanceof ProductPage) {
+		if (!array_key_exists('price', $data)) {
 			$updatedItem->refreshPrice();
 		}
 

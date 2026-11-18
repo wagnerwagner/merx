@@ -71,6 +71,6 @@ class Tax extends Obj
 	 */
 	public function toString(): string
 	{
-		return Merx::formatCurrency($this->price ?? 0, $this->currency);
+		return Merx::formatCurrency($this->price, $this->currency);
 	}
 }

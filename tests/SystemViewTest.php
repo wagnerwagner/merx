@@ -8,7 +8,6 @@ use Kirby\Cms\Page;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 use Stripe\ApiRequestor;
 use Stripe\HttpClient\ClientInterface;
 use Stripe\Util\CaseInsensitiveArray;
@@ -76,9 +75,6 @@ final class SystemViewTest extends TestCase
 	 */
 	protected function stripeAnswers(int $code, array $body): void
 	{
-		// `accounts()` asks once per request; a test is a new one
-		(new ReflectionProperty(SystemView::class, 'accounts'))->setValue(null, null);
-
 		ApiRequestor::setHttpClient(new class ($code, json_encode($body)) implements ClientInterface {
 			public function __construct(private int $code, private string $body)
 			{

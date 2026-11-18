@@ -76,10 +76,6 @@ for every test after it. This is not only untidy: a leftover clone with
 `wagnerwagner.merx.production` set sends later tests at the **live** payment
 APIs, where the suite stops looking failed and starts looking hung.
 
-`MerxTest::testinitializeOrderEmpty` depends on test order. It passes in a full
-run because an earlier test fills the session cart, and fails under `--filter`
-with `merx.emptycart`. A filtered run failing there is not a regression.
-
 ## Static analysis
 
 ```bash

@@ -19,6 +19,27 @@ class PayPalPayment
 	private static string $paypalSandboxApiEntry = 'https://api-m.sandbox.paypal.com';
 
 	/**
+	 * A request to the PayPal REST API with a new access token
+	 *
+	 * @param $data Sent as JSON
+	 */
+	private static function authorizedRequest(string $method, string $endpoint, array|null $data = null): array
+	{
+		$access = self::getAccessToken();
+		$params = [
+			'method' => $method,
+			'headers' => [
+				'Content-Type' => 'application/json',
+				'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
+			],
+		];
+		if ($data !== null) {
+			$params['data'] = json_encode($data);
+		}
+		return self::request($endpoint, $params);
+	}
+
+	/**
 	 * Create PayPal order from OrderPage
 	 *
 	 * @see https://developer.paypal.com/docs/api/orders/v2/#orders_create PayPal REST API Documentation
@@ -34,7 +55,6 @@ class PayPalPayment
 	public static function createPayPalPayment(OrderPage $virtualOrderPage, string $currency): array
 	{
 		$siteTitle = (string)site()->title();
-		$access = self::getAccessToken();
 
 		$purchaseUnits = self::purchaseUnits($virtualOrderPage, $currency);
 
@@ -58,19 +78,7 @@ class PayPalPayment
 			],
 		];
 
-		$endpoint = '/v2/checkout/orders';
-		$response = self::request(
-			$endpoint,
-			[
-				'method' => 'POST',
-				'headers' => [
-					'Content-Type' => 'application/json',
-					'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
-				],
-				'data' => json_encode($data),
-			],
-		);
-		return $response;
+		return self::authorizedRequest('POST', '/v2/checkout/orders', $data);
 	}
 
 	/**
@@ -90,19 +98,7 @@ class PayPalPayment
 	 */
 	public static function executePayPalPayment(string $payPalOrderId): array
 	{
-		$access = self::getAccessToken();
-		$endpoint = '/v2/checkout/orders/' . rawurlencode($payPalOrderId) . '/capture';
-		$response = self::request(
-			$endpoint,
-			[
-				'method' => 'POST',
-				'headers' => [
-					'Content-Type' => 'application/json',
-					'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
-				],
-			],
-		);
-		return $response;
+		return self::authorizedRequest('POST', '/v2/checkout/orders/' . rawurlencode($payPalOrderId) . '/capture');
 	}
 
 	/**
@@ -202,9 +198,7 @@ class PayPalPayment
 		if (in_array(substr($response->code(), 0, 1), ['4', '5'])) {
 			// A PayPal response can hold the payer’s name, email and address, so it
 			// goes to the log instead of to the caller.
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log('PayPal request to ' . $endpoint . ' failed: ' . $response->content(), 'error');
-			}
+			Logger::log('PayPal request to ' . $endpoint . ' failed: ' . $response->content(), 'error');
 			throw new Exception(
 				key: 'merx.paypalError',
 				httpCode: $response->code(),
@@ -224,17 +218,6 @@ class PayPalPayment
 	 */
 	public static function retrievePayPalOrder(string $payPalOrderId): array
 	{
-		$access = self::getAccessToken();
-		$endpoint = '/v2/checkout/orders/' . rawurlencode($payPalOrderId);
-		return self::request(
-			$endpoint,
-			[
-				'method' => 'GET',
-				'headers' => [
-					'Content-Type' => 'application/json',
-					'Authorization' => $access['token_type'] . ' ' . $access['access_token'],
-				],
-			],
-		);
+		return self::authorizedRequest('GET', '/v2/checkout/orders/' . rawurlencode($payPalOrderId));
 	}
 }

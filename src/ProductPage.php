@@ -57,7 +57,6 @@ class ProductPage extends Page
 		return $this->orders ?? $this->orders = $ordersPage->index()->filter(function (OrderPage $page) {
 			return in_array((string)$this->uuid(), $page->productUuids());
 		})->map(function (OrderPage $page) {
-			/** @var ?ListItem $listItem */
 			$listItem = $page->cart()->filter(function (ListItem $listItem) {
 				return (string)$listItem->page?->uuid() === (string)$this->uuid();
 			})->first();

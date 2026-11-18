@@ -171,9 +171,7 @@ class PaymentDetails
 		try {
 			return PaymentMethod::retrieve($id)->toArray();
 		} catch (ApiErrorException $ex) {
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log('Stripe PaymentMethod "' . $id . '" not retrieved: ' . $ex->getMessage(), 'warning');
-			}
+			Logger::log('Stripe PaymentMethod "' . $id . '" not retrieved: ' . $ex->getMessage(), 'warning');
 			return null;
 		}
 	}

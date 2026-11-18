@@ -1,5 +1,6 @@
 <?php
 
+use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use PHPUnit\Framework\TestCase;
 use Wagnerwagner\Merx\ListItem;
@@ -7,6 +8,29 @@ use Wagnerwagner\Merx\Price;
 
 class ListItemTest extends TestCase
 {
+	public function testAnItemWithAPriceOfItsOwnIsNotLinkedToThePageOfItsKey()
+	{
+		self::withPages(function () {
+			$listItem = new ListItem(key: 'shipping', title: 'Shipping', price: 5.9, type: 'shipping');
+			$restored = self::throughSession($listItem);
+
+			$this->assertNull($restored->page);
+			$this->assertSame('Shipping', $restored->title);
+			$this->assertSame(5.9, $restored->price?->price);
+		});
+	}
+
+	public function testAQuantifierWithoutAPriceLeavesNoPrice()
+	{
+		self::withPages(function () {
+			// A product without a price for the visitor’s pricing rule
+			$listItem = new ListItem(key: 'fabric', quantifier: 1.5);
+
+			$this->assertSame('fabric', $listItem->page?->id());
+			$this->assertNull($listItem->price);
+		});
+	}
+
 	public function testConstructorInitializesCorrectly()
 	{
 		$key = 'item1';
@@ -154,5 +178,31 @@ class ListItemTest extends TestCase
 		$data = unserialize(serialize($listItem->toSessionArray()), ['allowed_classes' => false]);
 
 		return new ListItem(...$data);
+	}
+
+	/**
+	 * A site with pages named like items of the shop’s own, e.g. `shipping`
+	 */
+	protected static function withPages(Closure $test): void
+	{
+		$app = App::instance();
+		App::$enableWhoops = false;
+
+		new App([
+			'roots' => ['index' => __DIR__ . '/kirby'],
+			'site' => [
+				'children' => [
+					['slug' => 'shipping', 'template' => 'default', 'content' => ['title' => 'Shipping and returns']],
+					['slug' => 'fabric', 'template' => 'product', 'content' => ['title' => 'Fabric']],
+				],
+			],
+		]);
+
+		try {
+			$test();
+		} finally {
+			App::$enableWhoops = true;
+			App::instance($app);
+		}
 	}
 }

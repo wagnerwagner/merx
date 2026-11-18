@@ -71,7 +71,6 @@ class Price extends Obj
 
 		if ($taxRate) {
 			if ($taxIncluded === true) {
-				$this->price = $this->price;
 				$this->priceNet = round($this->price / (1 + $taxRate), $roundingPrecision);
 			} else {
 				$this->priceNet = $this->price;

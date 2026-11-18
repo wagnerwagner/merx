@@ -64,7 +64,7 @@ class PricingRule extends Obj
 	/**
 	 * Checks if the pricing rule applies to the current context
 	 *
-	 * Kirby instance is passed to the rule function if it is a callable.
+	 * Kirby instance is passed to the rule function.
 	 * If no rule is set, true is returned.
 	 *
 	 * @param $kirby The Kirby instance
@@ -75,12 +75,7 @@ class PricingRule extends Obj
 			return true;
 		}
 
-		$kirby ??= App::instance();
-
-		if (is_callable($this->rule)) {
-			return call_user_func($this->rule, $kirby);
-		}
-		return false;
+		return call_user_func($this->rule, $kirby ?? App::instance());
 	}
 
 	/**

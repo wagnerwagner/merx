@@ -26,9 +26,7 @@ return [
 					// This is the only path which completes payments the customer’s
 					// browser never confirms, e.g. SEPA debit. Failing here silently
 					// leaves an order unpaid with nobody knowing.
-					if (option('wagnerwagner.merx.logging') === true) {
-						Logger::log('Stripe webhook for order "' . $orderUid . '" ignored: ' . $reason, 'error');
-					}
+					Logger::log('Stripe webhook for order "' . $orderUid . '" ignored: ' . $reason, 'error');
 				};
 
 				// The order is still a draft when the customer paid but did not

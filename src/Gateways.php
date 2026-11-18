@@ -54,11 +54,6 @@ class Gateways
 		// The payment has to cover the order before anything is captured
 		static::validatePaymentAmount($paymentIntent->amount, $paymentIntent->currency, $virtualOrderPage);
 
-		// Store what is known before capturing, so a failed capture leaves a record
-		$virtualOrderPage->version()->update([
-			'paymentDetails' => Yaml::encode(PaymentDetails::fromStripePaymentIntent($paymentIntent)),
-		]);
-
 		// Prepare meta data
 		$metadata = [
 			'order_uid' => (string)$virtualOrderPage->uid(),
@@ -201,8 +196,7 @@ class Gateways
 	 * Makes sure PayPal is configured before a payment is started
 	 *
 	 * Both keys are needed, so either one missing is a problem. Merx defaults
-	 * them to empty strings rather than null, which is why emptiness is what is
-	 * checked — comparing against null never matched.
+	 * them to empty strings, so emptiness is what is checked.
 	 *
 	 * Which key is missing goes to the log. The caller is an unauthenticated
 	 * visitor and has no business learning how the shop is configured.
@@ -218,9 +212,7 @@ class Gateways
 				continue;
 			}
 
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log('Missing PayPal ' . $environment . ' ' . $key, 'error');
-			}
+			Logger::log('Missing PayPal ' . $environment . ' ' . $key, 'error');
 
 			throw new Exception(
 				key: 'merx.paypalError',
@@ -275,9 +267,10 @@ Gateways::$gateways['paypal'] = [
 		Gateways::validatePayPalCredentials();
 		$currency = $virtualOrderPage->cart()->currency();
 		$response = PayPalPayment::createPayPalPayment($virtualOrderPage, $currency);
+		$links = array_column($response['links'] ?? [], 'href', 'rel');
 		$virtualOrderPage->version()->update([
 			'payPalOrderId' => $response['id'],
-			'redirect' => $response['links'][1]['href'],
+			'redirect' => $links['approve'] ?? $links['payer-action'] ?? throw new Exception(key: 'merx.paypalError', httpCode: 500),
 		]);
 		return $virtualOrderPage;
 	},
@@ -337,8 +330,5 @@ Gateways::$gateways['stripe'] = [
 
 		return $virtualOrderPage;
 	},
-	'completePayment' => function (OrderPage $virtualOrderPage, array $data): OrderPage {
-		$virtualOrderPage = Gateways::completeStripePayment($virtualOrderPage, $data);
-		return $virtualOrderPage;
-	},
+	'completePayment' => Gateways::completeStripePayment(...),
 ];

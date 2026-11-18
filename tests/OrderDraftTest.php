@@ -190,38 +190,6 @@ final class OrderDraftTest extends TestCase
 		$this->assertSame((string)$orderPage->orderNumber(), $orderPage->title()->value());
 	}
 
-	/**
-	 * A coupon may cover the whole cart
-	 */
-	public function testAFreeOrderIsCompleted(): void
-	{
-		new Cart([
-			['key' => 'socks', 'title' => 'Socks', 'price' => 10.0],
-			['key' => 'coupon', 'title' => 'Coupon', 'type' => 'discount', 'price' => -10.0],
-		]);
-
-		$redirect = merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'customer@example.com']);
-		$query = [];
-		parse_str(parse_url($redirect, PHP_URL_QUERY) ?? '', $query);
-		$orderPage = merx()->createOrder($query);
-
-		$this->assertSame('listed', $orderPage->status());
-		$this->assertSame(0.0, $orderPage->total()->price);
-	}
-
-	public function testANewCheckoutReplacesTheDraftOfTheSession(): void
-	{
-		$first = $this->checkout();
-		$second = $this->checkout();
-
-		$this->assertSame(['orders/' . $second['order']], $this->drafts());
-
-		// The return url of the first attempt completes nothing any more
-		$this->expectException(Exception::class);
-		$this->expectExceptionCode('error.merx.invalidReturn');
-		merx()->createOrder($first);
-	}
-
 	public function testAFailedCheckoutKeepsTheDraftOfTheSession(): void
 	{
 		$first = $this->checkout();
@@ -238,25 +206,6 @@ final class OrderDraftTest extends TestCase
 		// Replaced by the next checkout instead of being left behind
 		$second = $this->checkout();
 		$this->assertSame(['orders/' . $second['order']], $this->drafts());
-	}
-
-	public function testWhatCompletePaymentReturnsIsWritten(): void
-	{
-		$this->kirby->session()->destroy();
-		$this->kirby = $this->kirby->clone(['options' => [
-			'wagnerwagner.merx.gateways' => [
-				'probe' => [
-					// A copy, not the page it got
-					'completePayment' => fn (OrderPage $virtualOrderPage): OrderPage => $virtualOrderPage->clone([
-						'content' => ['datePaid' => '2026-11-11 12:00:00'] + $virtualOrderPage->content()->toArray(),
-					]),
-				],
-			],
-		]]);
-
-		$orderPage = merx()->createOrder($this->checkout());
-
-		$this->assertTrue($orderPage->isPaid());
 	}
 
 	public function testAForgedFieldNameDoesNotPayTheOrder(): void
@@ -279,6 +228,58 @@ final class OrderDraftTest extends TestCase
 		$this->assertTrue($orderPage->content()->get('paymentDetails')->isEmpty());
 		$this->assertSame('socks', $orderPage->cart()->first()->key);
 		$this->assertSame('probe', $orderPage->paymentGateway()->value());
+	}
+
+	/**
+	 * A coupon may cover the whole cart
+	 */
+	public function testAFreeOrderIsCompleted(): void
+	{
+		new Cart([
+			['key' => 'socks', 'title' => 'Socks', 'price' => 10.0],
+			['key' => 'coupon', 'title' => 'Coupon', 'type' => 'discount', 'price' => -10.0],
+		]);
+
+		$redirect = merx()->initializeOrder(['paymentGateway' => 'probe', 'email' => 'customer@example.com']);
+		$query = [];
+		parse_str(parse_url($redirect, PHP_URL_QUERY) ?? '', $query);
+		$orderPage = merx()->createOrder($query);
+
+		$this->assertSame('listed', $orderPage->status());
+		$this->assertSame(0.0, $orderPage->total()->price);
+	}
+
+	public function testAGatewayWhichReturnsNothingIsAnInternalError(): void
+	{
+		$return = $this->checkout();
+		$this->kirby->session()->destroy();
+		$this->kirby = $this->kirby->clone(['options' => [
+			'wagnerwagner.merx.gateways' => [
+				'probe' => ['completePayment' => function () {
+				}],
+			],
+		]]);
+
+		try {
+			merx()->createOrder($return);
+			$this->fail('The order was completed');
+		} catch (Exception $exception) {
+			$this->assertSame('error.merx.createOrder', $exception->getKey());
+			$this->assertSame(500, $exception->getHttpCode());
+		}
+	}
+
+	public function testANewCheckoutReplacesTheDraftOfTheSession(): void
+	{
+		$first = $this->checkout();
+		$second = $this->checkout();
+
+		$this->assertSame(['orders/' . $second['order']], $this->drafts());
+
+		// The return url of the first attempt completes nothing any more
+		$this->expectException(Exception::class);
+		$this->expectExceptionCode('error.merx.invalidReturn');
+		merx()->createOrder($first);
 	}
 
 	/**
@@ -711,5 +712,24 @@ final class OrderDraftTest extends TestCase
 
 		$this->kirby->api()->call('shop/cart', 'GET', ['query' => ['language' => 'en']]);
 		$this->assertSame('en', I18n::locale());
+	}
+
+	public function testWhatCompletePaymentReturnsIsWritten(): void
+	{
+		$this->kirby->session()->destroy();
+		$this->kirby = $this->kirby->clone(['options' => [
+			'wagnerwagner.merx.gateways' => [
+				'probe' => [
+					// A copy, not the page it got
+					'completePayment' => fn (OrderPage $virtualOrderPage): OrderPage => $virtualOrderPage->clone([
+						'content' => ['datePaid' => '2026-11-11 12:00:00'] + $virtualOrderPage->content()->toArray(),
+					]),
+				],
+			],
+		]]);
+
+		$orderPage = merx()->createOrder($this->checkout());
+
+		$this->assertTrue($orderPage->isPaid());
 	}
 }

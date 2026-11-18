@@ -33,6 +33,43 @@ final class ProductListTest extends TestCase
 		$this->assertNull($productList->total());
 	}
 
+	/**
+	 * Adding to a line prices it at its new quantity, as the next request would
+	 */
+	public function testAddingToALineReadsItsVolumePrice(): void
+	{
+		$app = App::instance();
+		$models = Page::$models;
+		App::$enableWhoops = false;
+		Page::$models['volume-product'] = VolumeProductPage::class;
+
+		new App([
+			'roots' => ['index' => __DIR__ . '/kirby'],
+			'site' => [
+				'children' => [
+					[
+						'slug' => 'socks',
+						'template' => 'volume-product',
+						'content' => ['title' => 'Socks', 'price' => 10],
+					],
+				],
+			],
+		]);
+
+		try {
+			$productList = new ProductList();
+			$productList->add(['page' => 'socks', 'quantity' => 5.0]);
+			$productList->add(['page' => 'socks', 'quantity' => 5.0]);
+
+			$this->assertSame(10.0, $productList->first()->quantity);
+			$this->assertSame(9.5, $productList->first()->price->price);
+		} finally {
+			Page::$models = $models;
+			App::$enableWhoops = true;
+			App::instance($app);
+		}
+	}
+
 	public function testAddRejectsAnUnknownPage(): void
 	{
 		$productList = new ProductList();
@@ -114,6 +151,25 @@ final class ProductListTest extends TestCase
 
 		$this->expectException(Exception::class);
 		$productList->add(['key' => 'nice-shoes', 'price' => 99.99, 'quantity' => -1.0]);
+	}
+
+	/**
+	 * An item with a plain float price has no currency, and the order of the
+	 * items must not decide whether the list has a total
+	 */
+	public function testAnItemWithoutCurrencyDoesNotMixCurrencies(): void
+	{
+		$euros = new ListItem(key: 'socks', price: new Price(price: 10.0, currency: 'EUR'));
+		$plain = new ListItem(key: 'gift-wrap', price: 2.0, type: 'custom');
+
+		foreach ([[$euros, $plain], [$plain, $euros]] as $items) {
+			$productList = new ProductList();
+			foreach ($items as $item) {
+				$productList->add($item);
+			}
+			$this->assertSame(12.0, $productList->total()?->price);
+			$this->assertSame('EUR', $productList->total()?->currency);
+		}
 	}
 
 	public function testAppend(): void
@@ -301,43 +357,6 @@ final class ProductListTest extends TestCase
 			179.98,
 			$productList->total()->toFloat(),
 		);
-	}
-
-	/**
-	 * Adding to a line prices it at its new quantity, as the next request would
-	 */
-	public function testAddingToALineReadsItsVolumePrice(): void
-	{
-		$app = App::instance();
-		$models = Page::$models;
-		App::$enableWhoops = false;
-		Page::$models['volume-product'] = VolumeProductPage::class;
-
-		new App([
-			'roots' => ['index' => __DIR__ . '/kirby'],
-			'site' => [
-				'children' => [
-					[
-						'slug' => 'socks',
-						'template' => 'volume-product',
-						'content' => ['title' => 'Socks', 'price' => 10],
-					],
-				],
-			],
-		]);
-
-		try {
-			$productList = new ProductList();
-			$productList->add(['page' => 'socks', 'quantity' => 5.0]);
-			$productList->add(['page' => 'socks', 'quantity' => 5.0]);
-
-			$this->assertSame(10.0, $productList->first()->quantity);
-			$this->assertSame(9.5, $productList->first()->price->price);
-		} finally {
-			Page::$models = $models;
-			App::$enableWhoops = true;
-			App::instance($app);
-		}
 	}
 
 	/**

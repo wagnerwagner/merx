@@ -12,7 +12,7 @@ use Kirby\Toolkit\Collection;
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  *
- * @extends \Kirby\Cms\Collection<\Wagnerwagner\Merx\ListItem>
+ * @extends \Kirby\Toolkit\Collection<\Wagnerwagner\Merx\ListItem>
  */
 class ListItems extends Collection
 {
@@ -55,7 +55,6 @@ class ListItems extends Collection
 	{
 		$currency = null;
 		foreach ($this as $listItem) {
-			/** @var ListItem $listItem */
 			$itemCurrency = $listItem->price?->currency;
 
 			// An item without a price has no currency, and takes none away
@@ -90,7 +89,6 @@ class ListItems extends Collection
 	{
 		$isFromPrice = false;
 		foreach ($this as $listItem) {
-			/** @var ListItem $listItem */
 			if ($listItem->total() === null) {
 				$isFromPrice = true;
 			}
@@ -122,7 +120,6 @@ class ListItems extends Collection
 		$quantity = 0.0;
 		$items = $type === null ? $this : $this->filterByType($type);
 		foreach ($items as $listItem) {
-			/** @var ListItem $listItem */
 			$quantity += $listItem->quantity;
 		}
 		return $quantity;
@@ -139,7 +136,6 @@ class ListItems extends Collection
 		$taxRates = [];
 
 		foreach ($this as $listItem) {
-			/** @var ListItem $listItem */
 			$tax = $listItem->total()?->tax ?? null;
 			if ($tax === null || $tax->rate === null) {
 				continue;
@@ -177,15 +173,15 @@ class ListItems extends Collection
 		$taxRate = null;
 		$hasTax = false;
 		$mixedTaxRates = false;
-		$currency = null;
 		$pricingRule = null;
-		foreach ($this as $listItem) {
-			/** @var ListItem $listItem */
-			$listItemTotal = $listItem->total();
 
-			if ($currency !== null && $listItemTotal !== null && $currency !== $listItemTotal?->currency) {
-				return null;
-			}
+		$currency = $this->currency();
+		if ($currency === false) {
+			return null;
+		}
+
+		foreach ($this as $listItem) {
+			$listItemTotal = $listItem->total();
 
 			$tax = $listItemTotal?->tax ?? null;
 			// An item without a tax is an item taxed at 0 %. A list of taxed and
@@ -198,7 +194,6 @@ class ListItems extends Collection
 			$hasTax = $hasTax || $tax !== null;
 			$mixedTaxRates = $mixedTaxRates || ($taxRate !== null && $taxRate !== $listItemTaxRate);
 			$taxRate ??= $listItemTaxRate;
-			$currency ??= $listItemTotal?->currency;
 			$pricingRule ??= $listItemTotal?->pricingRule;
 		}
 

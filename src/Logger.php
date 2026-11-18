@@ -61,17 +61,21 @@ class Logger
 	}
 
 	/**
-	 * Create log in Kirby’s log directory
+	 * Create log in Kirby’s log directory. Writes nothing while `wagnerwagner.merx.logging` is off.
 	 *
 	 * @param string $level Should be one of the eight RFC 5424 levels (debug, info, notice, warning, error, critical, alert, emergency)
 	 */
 	public static function log(string|int|array $content, $level = 'info'): void
 	{
 		$kirby = App::instance();
+		if ($kirby->option('wagnerwagner.merx.logging') !== true) {
+			return;
+		}
+
 		try {
 			$level = strtoupper($level);
 
-			if (is_array($content) || is_object($content)) {
+			if (is_array($content)) {
 				$content = json_encode($content, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 			}
 

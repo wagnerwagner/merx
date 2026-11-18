@@ -3,7 +3,6 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\Page;
-use Kirby\Content\Field;
 use Kirby\Exception\Exception;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\Obj;
@@ -54,7 +53,7 @@ class ListItem extends Obj
 	 * Create a new ListItem
 	 *
 	 * @param $title Title of an item without a page. The cart reads the title of an item with a page from the page.
-	 * @param $page Page object or page slug
+	 * @param $page Page object or page id. Without one, the key names the page, unless the item has a price of its own.
 	 * @param $price Read from $page when null. An array is a price as `toSessionArray()` stores it.
 	 * @param $quantity Quantity of the ListItem. E.g. 3.0 for 3 items.
 	 * @param $quantifier Multiplier for the price. Could be used when the item has a price per meter.
@@ -75,65 +74,37 @@ class ListItem extends Obj
 		bool $refreshPrice = true,
 	) {
 		$this->key = $key;
-		$this->title = $title;
-
-		// Set page
-		if ($page instanceof Page) {
-			$this->page = $page;
-		} elseif (is_string($page)) {
-			$this->page = page($page);
-		} else {
-			$this->page = page($this->key);
-		}
-
-		// Set price
-		$priceFromSession = is_array($price);
-		if ($price instanceof Price) {
-			$this->price = $price;
-		} elseif ($priceFromSession === true) {
-			$this->price = new Price(...$price);
-		} elseif (is_float($price)) {
-			$this->price = new Price(price: $price);
-		} else {
-			// Update price by page’s definition
-			if ($this->page instanceof ProductPage && $refreshPrice === true) {
-				$this->price = $this->page->price(quantity: $quantity, data: $data);
-			}
-		}
-
-		// A price from the session is the price of the line as it was stored,
-		// quantifier included. Applied again, it would grow with every request.
-		if (is_float($quantifier) && $priceFromSession === false) {
-			$price = $this->price;
-			$this->price = $price->quantify($quantifier);
-		}
-
-		// Set title from page
-		if ($this->title === null && $this->page instanceof Page) {
-			if (is_string($this->page->title())) {
-				$this->title = $this->page->title();
-			} elseif (
-				$this->page->title() instanceof Field &&
-				$this->page->title()->isNotEmpty()
-			) {
-				$this->title = (string)$this->page->title();
-			}
-		}
-
-		// Set type
-		$type ??= (string)$this->page?->type();
-		if (is_string($type)) {
-			if (!in_array($type, static::$allowedTypes)) {
-				throw new InvalidArgumentException(
-					message: 'Type ' . $type . ' is not allowed. Allowed types: ' . implode(', ', static::$allowedTypes),
-				);
-			}
-			$this->type = $type;
-		}
-
 		$this->quantity = $quantity;
 		$this->quantifier = $quantifier;
 		$this->data = $data;
+
+		// Without a page, the key names it. Not for an item with a price of its
+		// own, e.g. shipping: on a site with a page of that name, the item would
+		// lose its price to the page’s.
+		$page ??= $price === null ? $key : null;
+		$this->page = is_string($page) ? page($page) : $page;
+
+		if (is_array($price)) {
+			// The price of the line as the session stored it, quantifier included
+			$this->price = new Price(...$price);
+		} elseif ($price !== null) {
+			$this->price = is_float($price) ? new Price(price: $price) : $price;
+			if (is_float($quantifier)) {
+				$this->price = $this->price->quantify($quantifier);
+			}
+		} elseif ($refreshPrice === true) {
+			$this->refreshPrice();
+		}
+
+		$this->title = $title ?? $this->page?->title()->value();
+
+		$type ??= (string)$this->page?->type();
+		if (!in_array($type, static::$allowedTypes)) {
+			throw new InvalidArgumentException(
+				message: 'Type ' . $type . ' is not allowed. Allowed types: ' . implode(', ', static::$allowedTypes),
+			);
+		}
+		$this->type = $type;
 	}
 
 	/**
@@ -208,14 +179,13 @@ class ListItem extends Obj
 	{
 		$array = (array)$this;
 
-		// remove price definition, when page is present
+		// A page by its UUID, or its id where UUIDs are switched off
 		if ($array['page'] instanceof Page) {
 			$page = $array['page'];
-			$array['page'] = (string)$page->uuid() ?? $page->id();
+			$array['page'] = $page->uuid()?->toString() ?? $page->id();
 		}
 
 		if ($array['price'] instanceof Price) {
-			/** @var Price $price */
 			$price = $array['price'];
 			$array['price'] = (float)$price->price;
 			$array['pricenet'] = (float)$price->priceNet;
@@ -247,7 +217,6 @@ class ListItem extends Obj
 			// would come back as `__PHP_Incomplete_Class`, and its pricing rule
 			// holds a closure, which cannot be written at all. Stored as the
 			// arguments `Price` is built from instead.
-			/** @var Price $price */
 			$price = $array['price'];
 			$array['price'] = [
 				'price' => $price->toFloat(),
@@ -266,21 +235,6 @@ class ListItem extends Obj
 	 */
 	public function total(): Price|null
 	{
-		// Net under a pricing rule without tax, gross otherwise: the amount
-		// `Price` expects for that pricing rule
-		$pricePerItem = $this->price?->toFloat();
-
-		if (!is_float($pricePerItem)) {
-			return null;
-		}
-
-		$tax = $this->price?->tax ?? null;
-
-		return new Price(
-			price: $pricePerItem * $this->quantity,
-			tax: $tax?->toFloat(),
-			currency: $this->price?->currency,
-			pricingRule: $this->price?->pricingRule,
-		);
+		return $this->price?->quantify($this->quantity);
 	}
 }

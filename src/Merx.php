@@ -68,22 +68,11 @@ class Merx
 	 * Custom and default gateways
 	 */
 	protected array $gateways = [];
-	protected PricingRules $pricingRules;
 
 	/**
-	 * Cache of `NumberFormatter` objects by locale
+	 * Cache of `NumberFormatter` objects by style, locale and fraction digits
 	 */
-	protected static array $currencyFormatters = [];
-
-	/**
-	 * Cache of `NumberFormatter` objects by locale
-	 */
-	protected static array $decimalFormatters = [];
-
-	/**
-	 * Cache of `NumberFormatter` objects by locale
-	 */
-	protected static array $percentFormatters = [];
+	protected static array $numberFormatters = [];
 
 	/**
 	 * Initializes cart and gateways
@@ -211,64 +200,12 @@ class Merx
 					$virtualOrderPage = $gateway['completePayment']($virtualOrderPage, $data);
 				}
 
-				// Set to default language to make sure content is saved in default language
-				$currentLanguageCode = null;
-				$currentTranslationCode = I18n::locale();
-				if ($kirby->multilang()) {
-					$currentLanguageCode = $kirby->languageCode();
-					$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
-				}
-
-				try {
-					// Publishing the order requires admin permissions. The callback makes sure the
-					// impersonation is always reset, even when an error occurs. Without it the
-					// `kirby` super user would stay active for the rest of the request.
-					/** @var OrderPage $orderPage */
-					$orderPage = $kirby->impersonate('kirby', function () use ($ordersPage, $draft, $virtualOrderPage): OrderPage {
-						return static::lock($ordersPage, '.merx-orders.lock', function () use ($draft, $virtualOrderPage): OrderPage {
-							// `orderNumber` reads the orders through the virtual order page’s parent.
-							// They may have been read before the lock was taken, and another
-							// checkout may have written one since.
-							$virtualOrderPage->parentModel()->purge();
-
-							$content = $virtualOrderPage->content()->toArray();
-
-							// Taken inside the lock, so the orders sort in the order they got their number
-							$now = new DateTimeImmutable();
-							$content['datecreated'] = $now->format('c');
-							// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
-							$content['sortingnumber'] = (string)OrderPage::sortingNumberFromDate($now);
-
-							if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
-								$content['ordernumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
-							}
-
-							/** @var OrderPage $orderPage */
-							$orderPage = $draft->save($content, null, true);
-							$orderPage = $orderPage->changeStatus('listed');
-
-							// Inside the lock, so two orders cannot both lower the same stock
-							// from the same number.
-							if (option('wagnerwagner.merx.reduceStock') === true) {
-								$orderPage->cart()->reduceStock();
-							}
-
-							return $orderPage;
-						});
-					});
-				} finally {
-					// Back to the language of the customer, for the hooks and
-					// the error messages. The translation as well: for the sorting
-					// number of the order Kirby clones the App, which sets the
-					// translation back to the default language.
-					$kirby->setCurrentLanguage($currentLanguageCode);
-					$kirby->setCurrentTranslation($currentTranslationCode);
-				}
+				$orderPage = static::publishDraft($ordersPage, $draft, $virtualOrderPage);
 
 				// Gateways which complete the payment right away — PayPal, Stripe —
 				// create an order which is already paid. This is reported
 				// here rather than from `page.create:after`, where the hooks would run
-				// while the lock above holds back every other checkout.
+				// while the lock of `publishDraft()` holds back every other checkout.
 				//
 				// `apply()` rather than `trigger()`: a hook which updates the order
 				// leaves the object it was given behind as an outdated copy. Updating
@@ -287,7 +224,7 @@ class Merx
 			}, true);
 
 			return $orderPage;
-		} catch (\Exception $ex) {
+		} catch (\Throwable $ex) {
 			// Kirby’s exceptions carry a translated message and a status code,
 			// also the ones a hook throws to refuse an order, e.g.
 			// `InvalidArgumentException`. Everything else is an internal error.
@@ -299,9 +236,7 @@ class Merx
 					previous: $ex,
 				);
 			}
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log($ex, 'error');
-			}
+			Logger::log($ex, 'error');
 			throw $ex;
 		}
 	}
@@ -314,54 +249,6 @@ class Merx
 	public static function currency(): string|null
 	{
 		return self::pricingRule()?->currency;
-	}
-
-	/**
-	 * Returns (and creates) a currency number formatter for a given locale
-	 * Similar to I18n::decimalNumberFormatter()
-	 */
-	protected static function currencyNumberFormatter(
-		string $locale,
-	): NumberFormatter|null {
-		if ($formatter = static::$currencyFormatters[$locale] ?? null) {
-			return $formatter;
-		}
-
-		if (
-			extension_loaded('intl') !== true ||
-			class_exists('NumberFormatter') !== true
-		) {
-			return null; // @codeCoverageIgnore
-		}
-
-		return static::$currencyFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::CURRENCY);
-	}
-
-	/**
-	 * Returns (and creates) a decimal number formatter for a given locale
-	 *
-	 * Used for prices without a currency. It keeps the two fraction digits of a
-	 * price, where `NumberFormatter::DECIMAL` would print 10.20 as `10.2`.
-	 */
-	protected static function decimalNumberFormatter(
-		string $locale,
-	): NumberFormatter|null {
-		if ($formatter = static::$decimalFormatters[$locale] ?? null) {
-			return $formatter;
-		}
-
-		if (
-			extension_loaded('intl') !== true ||
-			class_exists('NumberFormatter') !== true
-		) {
-			return null; // @codeCoverageIgnore
-		}
-
-		$formatter = new NumberFormatter($locale, NumberFormatter::DECIMAL);
-		$formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, Price::roundingPrecision);
-		$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, Price::roundingPrecision);
-
-		return static::$decimalFormatters[$locale] = $formatter;
 	}
 
 	/**
@@ -485,13 +372,11 @@ class Merx
 		// Without a currency code there is no symbol to place. `formatCurrency()`
 		// would use the generic currency sign (¤), so the number is formatted on
 		// its own instead.
-		$formatter = $currency === null
-			? static::decimalNumberFormatter($locale)
-			: static::currencyNumberFormatter($locale);
-
-		if (is_int($maxFractionDigits)) {
-			$formatter?->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
-		}
+		$formatter = static::numberFormatter(
+			$locale,
+			$currency === null ? NumberFormatter::DECIMAL : NumberFormatter::CURRENCY,
+			$maxFractionDigits,
+		);
 
 		if ($currency === null) {
 			return (string)($formatter?->format($number) ?? $number);
@@ -529,10 +414,7 @@ class Merx
 	): string {
 		$locale ??= static::getLocale(LC_NUMERIC);
 
-		$formatter = static::percentNumberFormatter($locale);
-		if (is_int($maxFractionDigits)) {
-			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
-		}
+		$formatter = static::numberFormatter($locale, NumberFormatter::PERCENT, $maxFractionDigits);
 		$number = $formatter?->format($number) ?? $number;
 		return (string)$number;
 	}
@@ -603,15 +485,9 @@ class Merx
 				return is_string($item) ? Str::trim($item) : $item;
 			}, $data);
 
+			// One of the shop’s gateways, or refused right away
 			$paymentGateway = $data['paymentGateway'] ?? null;
-
-			// check if paymentGateway exists
-			if (is_string($paymentGateway) === false || $paymentGateway === '') {
-				throw new Exception(
-					key: 'merx.noPaymentGateway',
-					httpCode: 400,
-				);
-			}
+			$gateway = $this->getGateway(is_string($paymentGateway) ? $paymentGateway : '');
 
 			// Only the fields of the order blueprint. Without this a client could
 			// submit `datePaid_` and receive a paid order without paying.
@@ -685,7 +561,6 @@ class Merx
 			}
 
 			// run gateway
-			$gateway = $this->getGateway($paymentGateway);
 			if (is_callable($gateway['initializePayment'])) {
 				/** @var OrderPage */
 				$virtualOrderPage = $gateway['initializePayment']($virtualOrderPage, $data);
@@ -697,34 +572,24 @@ class Merx
 			// return in another browser, or after their session has ended.
 			$content = $virtualOrderPage->content()->toArray();
 
-			$orderPage = $kirby->impersonate('kirby', function () use ($kirby, $virtualOrderPage, $content, $previousUid): OrderPage {
-				// Set to default language to make sure content is saved in default language
-				$currentLanguageCode = null;
-				if ($kirby->multilang()) {
-					$currentLanguageCode = $kirby->languageCode();
-					$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
-				}
+			// `createChild()` writes the default language, whichever is current
+			$orderPage = $kirby->impersonate('kirby', function () use ($virtualOrderPage, $content, $previousUid): OrderPage {
+				$ordersPage = static::ordersPage();
 
-				try {
-					$ordersPage = static::ordersPage();
-
-					if (is_string($previousUid) === true) {
-						$previousDraft = $ordersPage->draft($previousUid);
-						if ($previousDraft instanceof OrderPage) {
-							$previousDraft->delete(true);
-						}
+				if (is_string($previousUid) === true) {
+					$previousDraft = $ordersPage->draft($previousUid);
+					if ($previousDraft instanceof OrderPage) {
+						$previousDraft->delete(true);
 					}
-
-					return $ordersPage->createChild([
-						'slug' => $virtualOrderPage->slug(),
-						'template' => 'order',
-						'model' => 'order',
-						'draft' => true,
-						'content' => $content,
-					]);
-				} finally {
-					$kirby->setCurrentLanguage($currentLanguageCode);
 				}
+
+				return $ordersPage->createChild([
+					'slug' => $virtualOrderPage->slug(),
+					'template' => 'order',
+					'model' => 'order',
+					'draft' => true,
+					'content' => $content,
+				]);
 			});
 
 			static::deleteOldOrderDrafts();
@@ -733,7 +598,7 @@ class Merx
 			$kirby->trigger('wagnerwagner.merx.initializeOrder:after', ['orderPage' => $orderPage, 'redirect' => $redirect]);
 
 			return $redirect;
-		} catch (\Exception $ex) {
+		} catch (\Throwable $ex) {
 			// Kirby’s exceptions carry a translated message and a status code,
 			// also the ones a hook throws to refuse an order, e.g.
 			// `InvalidArgumentException`. Everything else is an internal error.
@@ -745,9 +610,7 @@ class Merx
 					previous: $ex,
 				);
 			}
-			if (option('wagnerwagner.merx.logging') === true) {
-				Logger::log($ex, 'error');
-			}
+			Logger::log($ex, 'error');
 
 			// No new draft: the one of the previous attempt stays the session’s,
 			// so the next checkout replaces it. Otherwise it would be left behind
@@ -780,7 +643,7 @@ class Merx
 		$handle = @fopen($lockFile, 'c');
 		$locked = $handle !== false && flock($handle, LOCK_EX);
 
-		if ($locked === false && option('wagnerwagner.merx.logging') === true) {
+		if ($locked === false) {
 			Logger::log('Could not lock ' . $lockFile . '. The order was written without a lock.', 'error');
 		}
 
@@ -795,6 +658,39 @@ class Merx
 				@unlink($lockFile);
 			}
 		}
+	}
+
+	/**
+	 * Returns (and creates) a number formatter for a locale
+	 *
+	 * One per style, locale and fraction digits: a formatter which is changed
+	 * for one call would keep the change for every later one. A decimal number
+	 * is a price without a currency and keeps its two fraction digits, where
+	 * `NumberFormatter::DECIMAL` would print 10.20 as `10.2`.
+	 *
+	 * @param $style `NumberFormatter::CURRENCY`, `DECIMAL` or `PERCENT`
+	 */
+	protected static function numberFormatter(string $locale, int $style, int|null $maxFractionDigits = null): NumberFormatter|null
+	{
+		$key = $style . '/' . $locale . '/' . $maxFractionDigits;
+		if ($formatter = static::$numberFormatters[$key] ?? null) {
+			return $formatter;
+		}
+
+		if (class_exists('NumberFormatter') !== true) {
+			return null; // @codeCoverageIgnore
+		}
+
+		$formatter = new NumberFormatter($locale, $style);
+		if ($style === NumberFormatter::DECIMAL) {
+			$formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, Price::roundingPrecision);
+			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, Price::roundingPrecision);
+		}
+		if (is_int($maxFractionDigits)) {
+			$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxFractionDigits);
+		}
+
+		return static::$numberFormatters[$key] = $formatter;
 	}
 
 	/**
@@ -836,27 +732,6 @@ class Merx
 	}
 
 	/**
-	 * Returns (and creates) a percent number formatter for a given locale
-	 * Similar to I18n::decimalNumberFormatter()
-	 */
-	protected static function percentNumberFormatter(
-		string $locale,
-	): NumberFormatter|null {
-		if ($formatter = static::$percentFormatters[$locale] ?? null) {
-			return $formatter;
-		}
-
-		if (
-			extension_loaded('intl') !== true ||
-			class_exists('NumberFormatter') !== true
-		) {
-			return null; // @codeCoverageIgnore
-		}
-
-		return static::$percentFormatters[$locale] = new NumberFormatter($locale, NumberFormatter::PERCENT);
-	}
-
-	/**
 	 * Gets a pricing rule by its key, or finds the one that applies to the current context
 	 *
 	 * @param $key Key of the pricing rule, or null for the pricing rule that applies to the current visitor
@@ -876,6 +751,71 @@ class Merx
 	public static function pricingRules(array $options = []): PricingRules
 	{
 		return new PricingRules(option('wagnerwagner.merx.pricingRules', $options));
+	}
+
+	/**
+	 * Publishes the draft of an order with what its virtual order page holds
+	 *
+	 * In the default language, which orders are written in, and inside
+	 * `.merx-orders.lock`: the order gets its number and lowers the stock, and
+	 * another checkout must not do the same in between.
+	 */
+	protected static function publishDraft(Page $ordersPage, OrderPage $draft, OrderPage $virtualOrderPage): OrderPage
+	{
+		$kirby = App::instance();
+
+		// Set to default language to make sure content is saved in default language
+		$currentLanguageCode = null;
+		$currentTranslationCode = I18n::locale();
+		if ($kirby->multilang()) {
+			$currentLanguageCode = $kirby->languageCode();
+			$kirby->setCurrentLanguage($kirby->defaultLanguage()->code());
+		}
+
+		try {
+			// Publishing the order requires admin permissions. The callback makes sure the
+			// impersonation is always reset, even when an error occurs. Without it the
+			// `kirby` super user would stay active for the rest of the request.
+			return $kirby->impersonate('kirby', function () use ($ordersPage, $draft, $virtualOrderPage): OrderPage {
+				return static::lock($ordersPage, '.merx-orders.lock', function () use ($draft, $virtualOrderPage): OrderPage {
+					// `orderNumber` reads the orders through the virtual order page’s parent.
+					// They may have been read before the lock was taken, and another
+					// checkout may have written one since.
+					$virtualOrderPage->parentModel()->purge();
+
+					$content = $virtualOrderPage->content()->toArray();
+
+					// Taken inside the lock, so the orders sort in the order they got their number
+					$now = new DateTimeImmutable();
+					$content['datecreated'] = $now->format('c');
+					// As a string: Kirby writes an int as a float, which keeps 14 digits of the 17
+					$content['sortingnumber'] = (string)OrderPage::sortingNumberFromDate($now);
+
+					if (is_callable(option('wagnerwagner.merx.orderNumber'))) {
+						$content['ordernumber'] = option('wagnerwagner.merx.orderNumber')($virtualOrderPage);
+					}
+
+					/** @var OrderPage $orderPage */
+					$orderPage = $draft->save($content, null, true);
+					$orderPage = $orderPage->changeStatus('listed');
+
+					// Inside the lock, so two orders cannot both lower the same stock
+					// from the same number.
+					if (option('wagnerwagner.merx.reduceStock') === true) {
+						$orderPage->cart()->reduceStock();
+					}
+
+					return $orderPage;
+				});
+			});
+		} finally {
+			// Back to the language of the customer, for the hooks and
+			// the error messages. The translation as well: for the sorting
+			// number of the order Kirby clones the App, which sets the
+			// translation back to the default language.
+			$kirby->setCurrentLanguage($currentLanguageCode);
+			$kirby->setCurrentTranslation($currentTranslationCode);
+		}
 	}
 
 	/**

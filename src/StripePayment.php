@@ -90,9 +90,7 @@ class StripePayment
 	 */
 	private static function logWebhookError(string $message): void
 	{
-		if (option('wagnerwagner.merx.logging') === true) {
-			Logger::log('Stripe webhook rejected: ' . $message, 'error');
-		}
+		Logger::log('Stripe webhook rejected: ' . $message, 'error');
 	}
 
 	/**

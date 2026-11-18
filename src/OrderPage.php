@@ -57,7 +57,9 @@ class OrderPage extends Page
 			$listItem = new ListItem(
 				key: $item['key'],
 				title: $item['title'] ?? null,
-				page: $page,
+				// The price is the order’s, so an item without a page may be
+				// linked to the page its key names, as in older orders
+				page: $page ?? $item['key'],
 				price: $price,
 				quantity: $item['quantity'] ?? 1.0,
 				type: $item['type'] ?? null,
@@ -105,10 +107,6 @@ class OrderPage extends Page
 	 */
 	protected function logRender(): void
 	{
-		if (option('wagnerwagner.merx.logging') !== true) {
-			return;
-		}
-
 		$kirby = $this->kirby();
 
 		Logger::log([

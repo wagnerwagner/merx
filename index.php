@@ -28,12 +28,8 @@ App::plugin(
 	name: 'wagnerwagner/merx',
 	extends: [
 		'api' => [
-			'collections' => array_merge(
-				include __DIR__ . '/api/collections/listItems.php',
-			),
-			'data' => array_merge(
-				include __DIR__ . '/api/data/cart.php',
-			),
+			'collections' => include __DIR__ . '/api/collections/listItems.php',
+			'data' => include __DIR__ . '/api/data/cart.php',
 			'routes' => function (App $kirby) {
 				$endpoint = (string)$kirby->option('wagnerwagner.merx.api.endpoint', 'shop');
 				return array_merge(

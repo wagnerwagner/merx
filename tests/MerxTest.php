@@ -6,6 +6,18 @@ use PHPUnit\Framework\TestCase;
 
 final class MerxTest extends TestCase
 {
+	/** What `blueprint()->fields()` returns for a typical order blueprint */
+	protected const ORDER_FIELDS = [
+		'dateCreated' => [],
+		'datePaid' => [],
+		'paymentGateway' => [],
+		'items' => [],
+		'paymentDetails' => [],
+		'email' => ['disabled' => true],
+		'street' => [],
+		'note' => [],
+	];
+
 	public function testCalculateTax(): void
 	{
 		$this->assertEquals(
@@ -41,18 +53,6 @@ final class MerxTest extends TestCase
 			Merx::exceptionDetails(new \RuntimeException('internal failure')),
 		);
 	}
-
-	/** What `blueprint()->fields()` returns for a typical order blueprint */
-	protected const ORDER_FIELDS = [
-		'dateCreated' => [],
-		'datePaid' => [],
-		'paymentGateway' => [],
-		'items' => [],
-		'paymentDetails' => [],
-		'email' => ['disabled' => true],
-		'street' => [],
-		'note' => [],
-	];
 
 	public function testFilterOrderDataIsCaseInsensitive(): void
 	{
@@ -141,6 +141,16 @@ final class MerxTest extends TestCase
 			'DE89 3704 0044 0532 0130 00',
 			Merx::formatIBAN('DE89370400440532013000'),
 		);
+	}
+
+	public function testFractionDigitsApplyToOneCallOnly(): void
+	{
+		$this->assertSame('€11', Merx::formatCurrency(10.55, 'EUR', 'en', 0));
+		$this->assertSame('€10.55', Merx::formatCurrency(10.55, 'EUR', 'en'));
+		$this->assertSame('11', Merx::formatCurrency(10.55, null, 'en', 0));
+		$this->assertSame('10.55', Merx::formatCurrency(10.55, null, 'en'));
+		$this->assertSame('7.5%', Merx::formatPercent(0.075, 'en', 1));
+		$this->assertSame('8%', Merx::formatPercent(0.075, 'en'));
 	}
 
 	public function testinitializeOrderEmpty(): void
