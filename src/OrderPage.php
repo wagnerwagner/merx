@@ -61,7 +61,8 @@ class OrderPage extends Page
 				price: $price,
 				quantity: $item['quantity'] ?? 1.0,
 				type: $item['type'] ?? null,
-				data: $item['data'] ?? null,
+				// An order may store an empty `data` as an empty string
+				data: is_array($item['data'] ?? null) ? $item['data'] : null,
 				refreshPrice: false,
 			);
 			// The stored price already includes the quantifier. Passed to the

@@ -83,6 +83,17 @@ final class OrderPageCartTest extends TestCase
 	}
 
 	/**
+	 * An item whose `data` is stored as an empty string has no data
+	 */
+	public function testItemWithEmptyData(): void
+	{
+		$cart = $this->cart("-\n  key: nice-shoes\n  page: nice-shoes\n  type: product\n  price: 100\n  data: ''\n-\n  key: socks\n  type: custom\n  price: 5\n  data:\n");
+
+		$this->assertNull($cart->first()->data);
+		$this->assertNull($cart->last()->data);
+	}
+
+	/**
 	 * An item without a page falls back to the page named by its key
 	 */
 	public function testItemWithoutPage(): void
