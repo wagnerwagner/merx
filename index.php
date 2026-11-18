@@ -108,15 +108,9 @@ App::plugin(
 			'product' => \Wagnerwagner\Merx\ProductPage::class,
 		],
 		'siteMethods' => [
-			'cart' =>
-				/** Current cart of the visitor */
-				fn (): Cart => cart(),
 			'checkoutPage' =>
 				/** First page with template “checkout” */
 				fn (): Page|null => /** @var \Kirby\Cms\Site $this */ $this->children()->template('checkout')->first(),
-			'merx' =>
-				/** Current Merx instance */
-				fn (): Merx => merx(),
 			'ordersPage' =>
 				/** Parent page of all orders */
 				fn (): Page|null => /** @var \Kirby\Cms\Site $this */ $this->page(option('wagnerwagner.merx.ordersPage')),

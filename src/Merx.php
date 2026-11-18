@@ -17,6 +17,8 @@ use NumberFormatter;
 /**
  * This is the core of the plugin. The class mainly contains helper methods.
  *
+ * Get an instance for the visitor’s cart with the global helper `merx()`.
+ *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  */

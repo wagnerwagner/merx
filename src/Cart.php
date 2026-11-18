@@ -10,6 +10,8 @@ use Stripe\Util\RequestOptions;
 /**
  * Storage for cart items
  *
+ * Get the visitor’s cart with the global helper `cart()`. It also takes items like the [constructor](/reference/classes/cart/__construct), which replace the cart in the session.
+ *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
  *
