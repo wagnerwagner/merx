@@ -558,7 +558,7 @@ class Merx
 	 */
 	private static function getLocale(int|string $category = LC_ALL): string
 	{
-		$locale ??= Locale::get($category);
+		$locale = Locale::get($category);
 		if ($locale === 'C') {
 			App::instance()->setCurrentLanguage();
 			$locale = Locale::get($category);
