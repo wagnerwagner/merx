@@ -1,5 +1,7 @@
 <?php
 
+use Wagnerwagner\Merx\Merx;
+
 /** @var string $endpoint wagnerwagner.merx.api.endpoint option */
 
 return [
@@ -12,6 +14,8 @@ return [
 		 */
 		'action' => function (): array {
 			/** @var \Kirby\Api\Api $this */
+			Merx::setApiTranslation($this);
+
 			$params = option('wagnerwagner.merx.stripe.paymentIntentParameters', []);
 
 			/** @var \Wagnerwagner\Merx\Cart $cart */
