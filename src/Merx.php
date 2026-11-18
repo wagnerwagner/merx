@@ -205,8 +205,10 @@ class Merx
 
 				$kirby->trigger('wagnerwagner.merx.createOrder:before', ['virtualOrderPage' => $virtualOrderPage, 'gateway' => $gateway, 'data' => $data]);
 
+				// What the gateway returns is written, as with `initializePayment`
 				if (is_callable($gateway['completePayment'])) {
-					$gateway['completePayment']($virtualOrderPage, $data);
+					/** @var OrderPage */
+					$virtualOrderPage = $gateway['completePayment']($virtualOrderPage, $data);
 				}
 
 				// Set to default language to make sure content is saved in default language
@@ -443,25 +445,31 @@ class Merx
 	}
 
 	/**
-	 * Removes the fields Merx sets itself from client submitted order data
+	 * Keeps the fields of client submitted order data which a customer may fill in
 	 *
-	 * Kirby stores content keys in lower case, so `datePaid`, `DatePaid`
-	 * and `datepaid` all address the same field and all have to be removed.
+	 * These are the fields of the order blueprint which Merx does not set
+	 * itself. Anything else would be stored as well: Kirby writes every key,
+	 * and writes it as its slug, so `datePaid_` would end up as `datePaid`.
+	 * Field names are compared in lower case, as Kirby stores them.
 	 *
+	 * @param $fields The fields of the order blueprint, e.g. `$orderPage->blueprint()->fields()`
 	 * @see Merx::$protectedOrderFields
 	 */
-	public static function filterOrderData(array $data): array
+	public static function filterOrderData(array $data, array $fields): array
 	{
+		$names = array_map(fn ($name) => Str::lower((string)$name), array_keys($fields));
+		$names = array_diff($names, static::$protectedOrderFields);
+
 		return array_filter(
 			$data,
-			fn ($key) => in_array(Str::lower((string)$key), static::$protectedOrderFields, true) === false,
+			fn ($key) => in_array(Str::lower((string)$key), $names, true),
 			ARRAY_FILTER_USE_KEY,
 		);
 	}
 
 	/**
 	 * Formats a currency number
-	 * E.g. 1045.12 → € 1,045.12
+	 * E.g. 1045.12 → €1,045.12
 	 * Similar to I18n::formatNumber()
 	 *
 	 * @see https://merx.wagnerwagner.de/guide/configuration/localization
@@ -569,16 +577,18 @@ class Merx
 	/**
 	 * Creates virtual OrderPage and validates it. Runs the payment gateway’s `initializePayment` function. Saves the order as a draft, which `createOrder()` publishes when the customer returns from the payment.
 	 *
-	 * @param $data The fields of the checkout form: `paymentGateway`, the key of a payment gateway, and the fields of your order blueprint, e.g. `email`. Fields Merx sets itself, such as `datePaid`, are dropped.
+	 * @param $data The fields of the checkout form: `paymentGateway`, the key of a payment gateway, and the fields of your order blueprint, e.g. `email`. Anything else is dropped, as well as fields Merx sets itself, such as `datePaid`.
 	 * @throws Exception error.merx.cart.notOrderable when the cart has an item without a price, prices in two currencies or a negative total
 	 * @throws Exception error.merx.cart.stock or error.merx.cart.soldOut when the cart holds more of a product than its stock
 	 * @return string The return URL, or the `redirect` that the gateway’s `initializePayment` set on the virtual order page.
 	 */
 	public function initializeOrder(array $data): string
 	{
-		try {
-			$kirby = App::instance();
+		$kirby = App::instance();
+		$previousUid = null;
+		$orderPage = null;
 
+		try {
 			// Start a new order for this checkout, so a return url handed out
 			// earlier cannot complete this order. A draft of an earlier attempt
 			// in this session is replaced by the new one.
@@ -593,9 +603,26 @@ class Merx
 				return is_string($item) ? Str::trim($item) : $item;
 			}, $data);
 
-			// Drop fields which Merx sets itself. Without this a client could submit
-			// `datePaid` and receive a paid order without paying.
-			$data = static::filterOrderData($data);
+			$paymentGateway = $data['paymentGateway'] ?? null;
+
+			// check if paymentGateway exists
+			if (is_string($paymentGateway) === false || $paymentGateway === '') {
+				throw new Exception(
+					key: 'merx.noPaymentGateway',
+					httpCode: 400,
+				);
+			}
+
+			// Only the fields of the order blueprint. Without this a client could
+			// submit `datePaid_` and receive a paid order without paying.
+			$fields = OrderPage::factory([
+				'slug' => static::orderUid(),
+				'template' => 'order',
+				'model' => 'order',
+				'parent' => $kirby->site()->ordersPage(),
+			])->blueprint()->fields();
+			$data = static::filterOrderData($data, $fields);
+			$data['paymentGateway'] = $paymentGateway;
 
 			// get cart
 			$cart = $this->cart;
@@ -626,15 +653,6 @@ class Merx
 
 			// A cart lives in the session for days, while the stock runs out
 			$cart->validateStock();
-
-			// check if paymentGateway exists
-			$paymentGateway = $data['paymentGateway'] ?? null;
-			if (Str::length($paymentGateway) === 0) {
-				throw new Exception(
-					key: 'merx.noPaymentGateway',
-					httpCode: 400,
-				);
-			}
 
 			// add cart to content
 			$data['items'] = $cart->toYaml();
@@ -730,6 +748,14 @@ class Merx
 			if (option('wagnerwagner.merx.logging') === true) {
 				Logger::log($ex, 'error');
 			}
+
+			// No new draft: the one of the previous attempt stays the session’s,
+			// so the next checkout replaces it. Otherwise it would be left behind
+			// with the session’s Stripe payment, for the webhook to complete.
+			if ($orderPage === null && is_string($previousUid) === true) {
+				$kirby->session()->set(static::$orderDraftSessionKey, $previousUid);
+			}
+
 			throw $ex;
 		}
 	}

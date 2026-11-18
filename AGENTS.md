@@ -16,10 +16,10 @@ the public API. Methods Merx inherits from Kirby are documented at
 | --- | --- |
 | `src/` | Classes, namespace `Wagnerwagner\Merx\`, PSR-4 |
 | `api/` | Kirby API routes, models, collections. All routes are `auth: false` |
-| `blueprints/` | Panel blueprints for orders, products and shop settings |
+| `blueprints/` | Panel blueprints for orders, products and the checkout page |
 | `config/` | Default options (`config.php`) and hook definitions (`hooks.php`) |
 | `translations/` | `en.php` and `de.php` |
-| `templates/`, `models/` | Order and success templates, page models |
+| `templates/` | Templates of the order and orders pages. Page models are in `src/` |
 | `index.php` | Plugin registration, helper functions `merx()` and `cart()` |
 | `vendor/` | Committed on purpose — the plugin ships its dependencies |
 
@@ -57,7 +57,7 @@ directory so composer extracts it again, or use `--no-dev` to clean up.
 
 ### The suite is green
 
-`OK (122 tests, 240 assertions)` at the time of writing. A failure is yours.
+Every test passes. A failure is yours.
 
 A test which builds its own `App` has to set `App::$enableWhoops = false`
 first. Kirby installs Whoops’ error and exception handlers with every instance
@@ -154,8 +154,9 @@ Prefer the boring solution; the burden of proof is on the abstraction.
 - **Impersonation needs the callback form.** `$kirby->impersonate('kirby')`
   without a closure leaves the super user active for the rest of the request.
   Always pass the callback so Kirby resets it, including on exceptions.
-- **Virtual order pages** live in the session between `initializeOrder()` and
-  `createOrder()`. Content written before `createOrder()` uses
+- **Order drafts.** `initializeOrder()` saves the virtual order page as a
+  draft below the orders page, not in the session, and `createOrder()`
+  publishes it. Content written to a virtual order page uses
   `$virtualOrderPage->version()->update()`.
 - The plugin is proprietary and checks a license key; see `src/License.php`.
   `config/licenses.bin` holds the fingerprints of all keys. It is written by
