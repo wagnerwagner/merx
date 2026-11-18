@@ -211,16 +211,27 @@ class Merx
 				// leaves the object it was given behind as an outdated copy. Updating
 				// that copy again throws, and Kirby removes the order’s content from
 				// disk while it does. `apply()` hands every hook, and Merx, the current one.
+				//
+				// The order is written by now. A hook which fails, e.g. with a mail,
+				// is logged: it must not send the customer back to the checkout.
+				$apply = function (string $hook) use ($kirby, &$orderPage): void {
+					try {
+						$orderPage = $kirby->impersonate('kirby', fn () => $kirby->apply($hook, ['orderPage' => $orderPage], 'orderPage'));
+					} catch (\Throwable $ex) {
+						Logger::log($ex, 'error');
+					}
+				};
+
 				if ($orderPage->isPaid() === true) {
-					$orderPage = $kirby->impersonate('kirby', fn () => $kirby->apply('wagnerwagner.merx.orderPaid', ['orderPage' => $orderPage], 'orderPage'));
+					$apply('wagnerwagner.merx.orderPaid');
 				}
 
 				$kirby->session()->remove(static::$orderDraftSessionKey);
 				$this->cart->delete();
 
-				// `apply()`, like `orderPaid` above, so a caller gets the order
-				// with what the hooks wrote, not an outdated copy of it
-				return $kirby->impersonate('kirby', fn () => $kirby->apply('wagnerwagner.merx.createOrder:after', ['orderPage' => $orderPage], 'orderPage'));
+				$apply('wagnerwagner.merx.createOrder:after');
+
+				return $orderPage;
 			}, true);
 
 			return $orderPage;

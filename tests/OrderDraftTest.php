@@ -300,6 +300,40 @@ final class OrderDraftTest extends TestCase
 		}
 	}
 
+	/**
+	 * The order is written before these hooks run. A failing mail must not
+	 * send the customer back to the checkout.
+	 */
+	public function testAHookWhichFailsAfterTheOrderIsWrittenIsLogged(): void
+	{
+		$return = $this->checkout();
+		$this->kirby->session()->destroy();
+		$this->boot([], [
+			// Paid right away, the way PayPal and Stripe complete a payment
+			'wagnerwagner.merx.createOrder:before' => function (OrderPage $virtualOrderPage) {
+				$virtualOrderPage->version()->update(['datePaid' => date('c')]);
+			},
+			'wagnerwagner.merx.orderPaid' => function () {
+				throw new \RuntimeException('Mail server down');
+			},
+			'wagnerwagner.merx.createOrder:after' => function () {
+				throw new \RuntimeException('Mail server still down');
+			},
+		]);
+		$this->kirby = $this->kirby->clone([
+			'roots' => ['logs' => $this->root . '/logs'],
+			'options' => ['wagnerwagner.merx.logging' => true],
+		]);
+
+		$orderPage = merx()->createOrder($return);
+
+		$this->assertSame('listed', $orderPage->status());
+		$this->assertTrue($orderPage->isPaid());
+		$log = implode('', array_map('file_get_contents', glob($this->root . '/logs/*-merx.log')));
+		$this->assertStringContainsString('Mail server down', $log);
+		$this->assertStringContainsString('Mail server still down', $log);
+	}
+
 	public function testANewCheckoutReplacesTheDraftOfTheSession(): void
 	{
 		$first = $this->checkout();
