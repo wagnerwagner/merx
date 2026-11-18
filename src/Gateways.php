@@ -267,8 +267,6 @@ class Gateways
 	}
 }
 
-Gateways::$gateways['invoice'] = true;
-
 /**
  * Definition of the initializePayment and completePayment methods for PayPal stored in the $gateways array
  */
