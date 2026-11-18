@@ -72,7 +72,7 @@ return [
 	'merx.system.keys' => 'Keys in use',
 	'merx.system.log.level' => 'Level',
 	'merx.system.log.message' => 'Entry',
-	'merx.system.log.time' => 'Time',
+	'merx.system.log.date' => 'Date',
 	'merx.system.log' => 'Latest log entries',
 	'merx.system.note.endpoint' => 'Your scripts and the Stripe webhook URL have to use /api/{ endpoint }/.',
 	'merx.system.note.gateways.default' => 'The gateways Merx ships.',

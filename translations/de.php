@@ -72,7 +72,7 @@ return [
 	'merx.system.keys' => 'Verwendete Schlüssel',
 	'merx.system.log.level' => 'Level',
 	'merx.system.log.message' => 'Eintrag',
-	'merx.system.log.time' => 'Zeit',
+	'merx.system.log.date' => 'Datum',
 	'merx.system.log' => 'Letzte Log-Einträge',
 	'merx.system.logging' => 'Logging',
 	'merx.system.note.endpoint' => 'Eigene Skripte und die Stripe-Webhook-URL müssen /api/{ endpoint }/ verwenden.',

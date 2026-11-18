@@ -274,7 +274,7 @@ class SystemView
 					['option' => '40ch', 'value' => '20ch'],
 				)],
 				['headline' => t('merx.system.log'), ...$table(
-					['time' => t('merx.system.log.time'), 'level' => t('merx.system.log.level'), 'message' => t('merx.system.log.message')],
+					['time' => t('merx.system.log.date'), 'level' => t('merx.system.log.level'), 'message' => t('merx.system.log.message')],
 					static::logs(),
 					['level' => 'code', 'message' => 'pre'],
 					['level' => '20ch'],
