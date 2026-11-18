@@ -17,7 +17,7 @@ return [
 		 * @return array Array with redirect url when json is the preferred mime type, otherwise redirects with code 303.
 		 */
 		'action' => function (): array {
-			/** @var \Kirby\Cms\Api $this */
+			/** @var \Kirby\Api\Api $this */
 			Merx::setApiTranslation($this);
 
 			$data = $this->requestBody();
