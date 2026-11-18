@@ -52,7 +52,6 @@ fields:
     type: number
     step: 0.001
     width: 1/4
-    translate: false
 columns:
   page: true
   quantity: true
