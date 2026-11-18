@@ -4,6 +4,7 @@ namespace Wagnerwagner\Merx;
 
 use Kirby\Cms\App;
 use Kirby\Exception\Exception;
+use Kirby\Exception\InvalidArgumentException;
 use Stripe\PaymentIntent;
 use Stripe\Util\RequestOptions;
 
@@ -256,6 +257,9 @@ class Cart extends ProductList
 
 	/**
 	 * Updates existing item.
+	 *
+	 * @param $data What `new ListItem()` takes, except `key`, which stays
+	 * @throws InvalidArgumentException when $data has a key the constructor does not take, or a value of the wrong type
 	 */
 	public function updateItem(string $key, array $data): static
 	{

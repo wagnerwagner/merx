@@ -64,6 +64,16 @@ class ListItemTest extends TestCase
 		$this->assertNull($listItem->data);
 	}
 
+	/**
+	 * A key the constructor does not take is named, not hidden behind an empty key
+	 */
+	public function testFactoryNamesAnUnknownKey(): void
+	{
+		$this->expectException(\Kirby\Exception\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Unknown named parameter $color');
+		ListItem::factory(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0, 'color' => 'red']);
+	}
+
 	public function testInvalidPriceInitialization()
 	{
 		$this->expectException(TypeError::class);

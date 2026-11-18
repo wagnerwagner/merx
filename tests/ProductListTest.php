@@ -5,6 +5,7 @@ namespace Wagnerwagner\Merx;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Exception\Exception;
+use Kirby\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class ProductListTest extends TestCase
@@ -360,7 +361,7 @@ final class ProductListTest extends TestCase
 		$productList = new ProductList();
 		$productList->add(['key' => 'nice-shoes', 'price' => 99.99]);
 
-		$productList->updateItem('nice-shoes', ['price' => new Price(89.99), 'tax' => 10]);
+		$productList->updateItem('nice-shoes', ['price' => new Price(89.99)]);
 		$this->assertEquals(
 			89.99,
 			$productList->total()->toFloat(),
@@ -407,6 +408,37 @@ final class ProductListTest extends TestCase
 			App::$enableWhoops = true;
 			App::instance($app);
 		}
+	}
+
+	/**
+	 * What `new ListItem()` would not take is refused, before it reaches the session
+	 */
+	public function testUpdateItemRefusesWhatItCannotStore(): void
+	{
+		$productList = new ProductList();
+		$productList->add(['key' => 'socks', 'title' => 'Socks', 'price' => 10.0]);
+
+		foreach ([
+			['color' => 'red'],
+			['type' => 'bogus'],
+			['quantity' => 'many'],
+		] as $data) {
+			try {
+				$productList->updateItem('socks', $data);
+				$this->fail('Updated with ' . json_encode($data));
+			} catch (InvalidArgumentException $exception) {
+				$this->assertSame(400, $exception->getHttpCode());
+			}
+		}
+
+		$this->assertSame('Socks', $productList->first()->title);
+		$this->assertSame('product', $productList->first()->type);
+
+		// The key makes the line and stays
+		$productList->updateItem('socks', ['key' => 'other', 'price' => 5.0]);
+		$this->assertSame(['socks'], $productList->keys());
+		$this->assertSame('socks', $productList->first()->key);
+		$this->assertSame(5.0, $productList->first()->price->toFloat());
 	}
 
 	public function testUpdateItemRejectsInfiniteQuantity(): void

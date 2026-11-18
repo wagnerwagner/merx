@@ -3,6 +3,7 @@
 namespace Wagnerwagner\Merx;
 
 use Kirby\Exception\Exception;
+use Kirby\Exception\InvalidArgumentException;
 
 /**
  * Collection of ListItem objects for products
@@ -122,6 +123,9 @@ class ProductList extends ListItems
 
 	/**
 	 * Updates existing item
+	 *
+	 * @param $data What `new ListItem()` takes, except `key`, which stays
+	 * @throws InvalidArgumentException when $data has a key the constructor does not take, or a value of the wrong type
 	 */
 	public function updateItem(string $key, array $data): self
 	{
@@ -137,18 +141,11 @@ class ProductList extends ListItems
 			);
 		}
 
-		// Work on a copy, so a rejected update cannot leave the item behind with a
-		// quantity which never passed validation.
-		$updatedItem = clone $listItem;
-
-		foreach ($data as $dataKey => $val) {
-			$updatedItem->$dataKey = $val;
-		}
-
-		// Update the price according to the quantity. Required for volume-based pricing.
-		if (!array_key_exists('price', $data)) {
-			$updatedItem->refreshPrice();
-		}
+		// Built anew, as from the session, so the constructor checks $data and
+		// reads the price of a page for the new quantity, e.g. a volume discount.
+		// The page as it is, which a virtual page needs. A rejected update leaves
+		// the item as it was.
+		$updatedItem = ListItem::factory([...$listItem->toSessionArray(), 'page' => $listItem->page, ...$data, 'key' => $key]);
 
 		static::validateQuantity($updatedItem);
 		static::validateData($updatedItem);

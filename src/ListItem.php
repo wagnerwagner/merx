@@ -109,6 +109,8 @@ class ListItem extends Obj
 
 	/**
 	 * Convert mixed $data to ListItem
+	 *
+	 * @throws InvalidArgumentException when $data has a key the constructor does not take, e.g. `color` instead of `data.color`, or a value of the wrong type
 	 */
 	public static function factory(string|array|ListItem $data): ListItem
 	{
@@ -142,7 +144,12 @@ class ListItem extends Obj
 					],
 				);
 			}
-			$listItem = new ListItem(...$data);
+			try {
+				$listItem = new ListItem(...$data);
+			} catch (\Error $ex) {
+				// E.g. “Unknown named parameter $color”, which a developer has to see
+				throw new InvalidArgumentException(message: $ex->getMessage(), previous: $ex);
+			}
 		} elseif ($data instanceof ListItem) {
 			$listItem = $data;
 		}
