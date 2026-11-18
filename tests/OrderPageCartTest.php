@@ -73,16 +73,6 @@ final class OrderPageCartTest extends TestCase
 	}
 
 	/**
-	 * An empty page means no page. `page('')` returns the home page.
-	 */
-	public function testItemWithEmptyPage(): void
-	{
-		$cart = $this->cart("-\n  key: shipping\n  page: ''\n  type: shipping\n  price: 4.9\n");
-
-		$this->assertNull($cart->first()->page);
-	}
-
-	/**
 	 * An item whose `data` is stored as an empty string has no data
 	 */
 	public function testItemWithEmptyData(): void
@@ -91,6 +81,16 @@ final class OrderPageCartTest extends TestCase
 
 		$this->assertNull($cart->first()->data);
 		$this->assertNull($cart->last()->data);
+	}
+
+	/**
+	 * An empty page means no page. `page('')` returns the home page.
+	 */
+	public function testItemWithEmptyPage(): void
+	{
+		$cart = $this->cart("-\n  key: shipping\n  page: ''\n  type: shipping\n  price: 4.9\n");
+
+		$this->assertNull($cart->first()->page);
 	}
 
 	/**

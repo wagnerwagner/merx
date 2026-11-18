@@ -26,6 +26,56 @@ class SystemView
 	protected static array|null $accounts = null;
 
 	/**
+	 * What Stripe and PayPal say about the keys in use, once per request
+	 *
+	 * Stripe names the account of its secret key. PayPal names no account for
+	 * a client ID and secret, only whether they are valid. A gateway which is
+	 * switched off or has no keys is not asked.
+	 *
+	 * @return array<'stripe'|'paypal', array{ok: bool, note: string}>
+	 */
+	public static function accounts(): array
+	{
+		if (static::$accounts !== null) {
+			return static::$accounts;
+		}
+
+		$production = option('wagnerwagner.merx.production') === true;
+		$gateways = Gateways::enabled();
+		$accounts = [];
+
+		$stripeKey = (string)option('wagnerwagner.merx.stripe.' . ($production ? 'live' : 'test') . '.secret_key');
+		if (isset($gateways['stripe']) && $stripeKey !== '') {
+			try {
+				$account = Account::retrieve(null, ['api_key' => $stripeKey])->toArray();
+				$name = $account['business_profile']['name'] ?? $account['settings']['dashboard']['display_name'] ?? $account['id'];
+				$accounts['stripe'] = ['ok' => true, 'note' => Str::template(Escape::html(t('merx.system.account.stripe')), [
+					'name' => Escape::html((string)$name),
+					'id' => '<a href="https://dashboard.stripe.com/' . Escape::html($account['id']) . '" target="_blank"><code>' . Escape::html($account['id']) . '</code></a>',
+				])];
+			} catch (Throwable) {
+				$accounts['stripe'] = ['ok' => false, 'note' => Escape::html(t('merx.system.account.invalid'))];
+			}
+		}
+
+		$paypal = $production ? 'live' : 'sandbox';
+		if (
+			isset($gateways['paypal']) &&
+			(string)option('wagnerwagner.merx.paypal.' . $paypal . '.clientID') !== '' &&
+			(string)option('wagnerwagner.merx.paypal.' . $paypal . '.secret') !== ''
+		) {
+			try {
+				PayPalPayment::getAccessToken();
+				$accounts['paypal'] = ['ok' => true, 'note' => Escape::html(t('merx.system.account.valid'))];
+			} catch (Throwable) {
+				$accounts['paypal'] = ['ok' => false, 'note' => Escape::html(t('merx.system.account.invalid'))];
+			}
+		}
+
+		return static::$accounts = $accounts;
+	}
+
+	/**
 	 * What the browser checks, as a visitor: robots.txt and sitemap.xml
 	 *
 	 * Requests from the server to its own domain hang on a server which runs
@@ -124,53 +174,49 @@ class SystemView
 	}
 
 	/**
-	 * What Stripe and PayPal say about the keys in use, once per request
+	 * The newest entries of Merx’ log, newest first, each as a whole
 	 *
-	 * Stripe names the account of its secret key. PayPal names no account for
-	 * a client ID and secret, only whether they are valid. A gateway which is
-	 * switched off or has no keys is not asked.
-	 *
-	 * @return array<'stripe'|'paypal', array{ok: bool, note: string}>
+	 * @return array<array{time: string, level: string, type: string|null, message: string}>
 	 */
-	public static function accounts(): array
+	public static function logs(int $limit = 10): array
 	{
-		if (static::$accounts !== null) {
-			return static::$accounts;
-		}
+		$files = glob(App::instance()->root('logs') . '/*' . Logger::$appendix . '.log') ?: [];
+		rsort($files);
 
-		$production = option('wagnerwagner.merx.production') === true;
-		$gateways = Gateways::enabled();
-		$accounts = [];
+		$logs = [];
+		foreach ($files as $file) {
+			$entries = preg_split('/^(?=\[\d{4}-\d{2}-\d{2}T)/m', (string)file_get_contents($file), -1, PREG_SPLIT_NO_EMPTY);
 
-		$stripeKey = (string)option('wagnerwagner.merx.stripe.' . ($production ? 'live' : 'test') . '.secret_key');
-		if (isset($gateways['stripe']) && $stripeKey !== '') {
-			try {
-				$account = Account::retrieve(null, ['api_key' => $stripeKey])->toArray();
-				$name = $account['business_profile']['name'] ?? $account['settings']['dashboard']['display_name'] ?? $account['id'];
-				$accounts['stripe'] = ['ok' => true, 'note' => Str::template(Escape::html(t('merx.system.account.stripe')), [
-					'name' => Escape::html((string)$name),
-					'id' => '<a href="https://dashboard.stripe.com/' . Escape::html($account['id']) . '" target="_blank"><code>' . Escape::html($account['id']) . '</code></a>',
-				])];
-			} catch (Throwable) {
-				$accounts['stripe'] = ['ok' => false, 'note' => Escape::html(t('merx.system.account.invalid'))];
+			foreach (array_reverse($entries) as $entry) {
+				if (preg_match('/^\[([^\]]+)\] (\w+) (.*)$/s', trim($entry), $match) !== 1) {
+					continue;
+				}
+
+				[, $time, $level, $message] = $match;
+
+				$level = strtolower($level);
+				$logs[] = [
+					'time' => date('Y-m-d H:i:s', strtotime($time)),
+					'level' => $level,
+					// The color of the level’s code block, none for `info`
+					'type' => match ($level) {
+						'debug' => 'gray',
+						'info' => null,
+						'notice' => 'aqua',
+						'warning' => 'yellow',
+						'error' => 'orange',
+						default => 'red',
+					},
+					'message' => $message,
+				];
+
+				if (count($logs) === $limit) {
+					return $logs;
+				}
 			}
 		}
 
-		$paypal = $production ? 'live' : 'sandbox';
-		if (
-			isset($gateways['paypal']) &&
-			(string)option('wagnerwagner.merx.paypal.' . $paypal . '.clientID') !== '' &&
-			(string)option('wagnerwagner.merx.paypal.' . $paypal . '.secret') !== ''
-		) {
-			try {
-				PayPalPayment::getAccessToken();
-				$accounts['paypal'] = ['ok' => true, 'note' => Escape::html(t('merx.system.account.valid'))];
-			} catch (Throwable) {
-				$accounts['paypal'] = ['ok' => false, 'note' => Escape::html(t('merx.system.account.invalid'))];
-			}
-		}
-
-		return static::$accounts = $accounts;
+		return $logs;
 	}
 
 	/**
@@ -239,52 +285,6 @@ class SystemView
 				)],
 			],
 		];
-	}
-
-	/**
-	 * The newest entries of Merx’ log, newest first, each as a whole
-	 *
-	 * @return array<array{time: string, level: string, type: string|null, message: string}>
-	 */
-	public static function logs(int $limit = 10): array
-	{
-		$files = glob(App::instance()->root('logs') . '/*' . Logger::$appendix . '.log') ?: [];
-		rsort($files);
-
-		$logs = [];
-		foreach ($files as $file) {
-			$entries = preg_split('/^(?=\[\d{4}-\d{2}-\d{2}T)/m', (string)file_get_contents($file), -1, PREG_SPLIT_NO_EMPTY);
-
-			foreach (array_reverse($entries) as $entry) {
-				if (preg_match('/^\[([^\]]+)\] (\w+) (.*)$/s', trim($entry), $match) !== 1) {
-					continue;
-				}
-
-				[, $time, $level, $message] = $match;
-
-				$level = strtolower($level);
-				$logs[] = [
-					'time' => date('Y-m-d H:i:s', strtotime($time)),
-					'level' => $level,
-					// The color of the level’s code block, none for `info`
-					'type' => match ($level) {
-						'debug' => 'gray',
-						'info' => null,
-						'notice' => 'aqua',
-						'warning' => 'yellow',
-						'error' => 'orange',
-						default => 'red',
-					},
-					'message' => $message,
-				];
-
-				if (count($logs) === $limit) {
-					return $logs;
-				}
-			}
-		}
-
-		return $logs;
 	}
 
 	/**

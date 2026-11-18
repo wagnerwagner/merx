@@ -22,26 +22,6 @@ final class SystemViewTest extends TestCase
 	protected App $kirby;
 	protected string $root;
 
-	/**
-	 * Answers every request to the Stripe API with one response
-	 */
-	protected function stripeAnswers(int $code, array $body): void
-	{
-		// `accounts()` asks once per request; a test is a new one
-		(new ReflectionProperty(SystemView::class, 'accounts'))->setValue(null, null);
-
-		ApiRequestor::setHttpClient(new class ($code, json_encode($body)) implements ClientInterface {
-			public function __construct(private int $code, private string $body)
-			{
-			}
-
-			public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null)
-			{
-				return [$this->body, $this->code, new CaseInsensitiveArray([])];
-			}
-		});
-	}
-
 	public function setUp(): void
 	{
 		App::$enableWhoops = false;
@@ -91,6 +71,26 @@ final class SystemViewTest extends TestCase
 		});
 	}
 
+	/**
+	 * Answers every request to the Stripe API with one response
+	 */
+	protected function stripeAnswers(int $code, array $body): void
+	{
+		// `accounts()` asks once per request; a test is a new one
+		(new ReflectionProperty(SystemView::class, 'accounts'))->setValue(null, null);
+
+		ApiRequestor::setHttpClient(new class ($code, json_encode($body)) implements ClientInterface {
+			public function __construct(private int $code, private string $body)
+			{
+			}
+
+			public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null)
+			{
+				return [$this->body, $this->code, new CaseInsensitiveArray([])];
+			}
+		});
+	}
+
 	public function tearDown(): void
 	{
 		ApiRequestor::setHttpClient(null);
@@ -126,28 +126,6 @@ final class SystemViewTest extends TestCase
 		$this->assertStringContainsString('Customer', $checks['frontendRoles']['text']);
 	}
 
-	public function testLogsShowTheNewestEntriesFirst(): void
-	{
-		$logs = $this->kirby->root('logs');
-		F::write($logs . '/2026-11-16-merx.log', "[2026-11-16T10:00:00+01:00] ERROR Payment failed\nwith details\n");
-		F::write($logs . '/2026-11-17-merx.log', implode('', [
-			"[2026-11-17T09:00:00+01:00] INFO " . json_encode(['event' => 'orderPage.render', 'order' => 'aaaa', 'orderNumber' => '42', 'user' => null], JSON_PRETTY_PRINT) . "\n",
-			"[2026-11-17T10:00:00+01:00] INFO " . json_encode(['event' => 'orderPage.render', 'order' => 'bbbb', 'orderNumber' => null, 'user' => 'abc'], JSON_PRETTY_PRINT) . "\n",
-		]));
-		// Not Merx’ log
-		F::write($logs . '/2026-11-18-other.log', "[2026-11-18T10:00:00+01:00] INFO Other\n");
-
-		$entries = SystemView::logs();
-		// Each entry as a whole
-		$this->assertStringContainsString('"order": "bbbb"', $entries[0]['message']);
-		$this->assertStringContainsString('"orderNumber": "42"', $entries[1]['message']);
-		$this->assertSame("Payment failed\nwith details", $entries[2]['message']);
-		$this->assertSame('error', $entries[2]['level']);
-		$this->assertSame('orange', $entries[2]['type']);
-		$this->assertNull($entries[0]['type']);
-		$this->assertSame(1, count(SystemView::logs(1)));
-	}
-
 	public function testKeysNameTheStripeAccount(): void
 	{
 		$keys = array_column(SystemView::keys(), null, 'option');
@@ -171,6 +149,28 @@ final class SystemViewTest extends TestCase
 		$this->assertSame('••••abcd', $keys['stripe.test.secret_key']);
 		$this->assertSame('–', $keys['stripe.test.publishable_key']);
 		$this->assertArrayNotHasKey('stripe.live.secret_key', $keys);
+	}
+
+	public function testLogsShowTheNewestEntriesFirst(): void
+	{
+		$logs = $this->kirby->root('logs');
+		F::write($logs . '/2026-11-16-merx.log', "[2026-11-16T10:00:00+01:00] ERROR Payment failed\nwith details\n");
+		F::write($logs . '/2026-11-17-merx.log', implode('', [
+			'[2026-11-17T09:00:00+01:00] INFO ' . json_encode(['event' => 'orderPage.render', 'order' => 'aaaa', 'orderNumber' => '42', 'user' => null], JSON_PRETTY_PRINT) . "\n",
+			'[2026-11-17T10:00:00+01:00] INFO ' . json_encode(['event' => 'orderPage.render', 'order' => 'bbbb', 'orderNumber' => null, 'user' => 'abc'], JSON_PRETTY_PRINT) . "\n",
+		]));
+		// Not Merx’ log
+		F::write($logs . '/2026-11-18-other.log', "[2026-11-18T10:00:00+01:00] INFO Other\n");
+
+		$entries = SystemView::logs();
+		// Each entry as a whole
+		$this->assertStringContainsString('"order": "bbbb"', $entries[0]['message']);
+		$this->assertStringContainsString('"orderNumber": "42"', $entries[1]['message']);
+		$this->assertSame("Payment failed\nwith details", $entries[2]['message']);
+		$this->assertSame('error', $entries[2]['level']);
+		$this->assertSame('orange', $entries[2]['type']);
+		$this->assertNull($entries[0]['type']);
+		$this->assertSame(1, count(SystemView::logs(1)));
 	}
 
 	public function testOnlyAdminsMayListOrdersByDefault(): void
