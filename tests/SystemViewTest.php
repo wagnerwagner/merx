@@ -8,6 +8,10 @@ use Kirby\Cms\Page;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
+use Stripe\ApiRequestor;
+use Stripe\HttpClient\ClientInterface;
+use Stripe\Util\CaseInsensitiveArray;
 use Wagnerwagner\Merx\SystemView;
 
 /**
@@ -18,9 +22,30 @@ final class SystemViewTest extends TestCase
 	protected App $kirby;
 	protected string $root;
 
+	/**
+	 * Answers every request to the Stripe API with one response
+	 */
+	protected function stripeAnswers(int $code, array $body): void
+	{
+		// `accounts()` asks once per request; a test is a new one
+		(new ReflectionProperty(SystemView::class, 'accounts'))->setValue(null, null);
+
+		ApiRequestor::setHttpClient(new class ($code, json_encode($body)) implements ClientInterface {
+			public function __construct(private int $code, private string $body)
+			{
+			}
+
+			public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null)
+			{
+				return [$this->body, $this->code, new CaseInsensitiveArray([])];
+			}
+		});
+	}
+
 	public function setUp(): void
 	{
 		App::$enableWhoops = false;
+		$this->stripeAnswers(200, ['id' => 'acct_probe', 'object' => 'account', 'country' => 'DE', 'business_profile' => ['name' => 'Probe Shop']]);
 
 		$this->root = __DIR__ . '/kirby/system-view';
 		Dir::remove($this->root);
@@ -68,6 +93,7 @@ final class SystemViewTest extends TestCase
 
 	public function tearDown(): void
 	{
+		ApiRequestor::setHttpClient(null);
 		// Kirby keeps loaded blueprints in static properties
 		Blueprint::$loaded = [];
 		Blueprint::$normalized = [];
@@ -120,6 +146,22 @@ final class SystemViewTest extends TestCase
 		$this->assertSame('orange', $entries[2]['type']);
 		$this->assertNull($entries[0]['type']);
 		$this->assertSame(1, count(SystemView::logs(1)));
+	}
+
+	public function testKeysNameTheStripeAccount(): void
+	{
+		$keys = array_column(SystemView::keys(), null, 'option');
+		$this->assertSame('Account Probe Shop (<a href="https://dashboard.stripe.com/acct_probe" target="_blank"><code>acct_probe</code></a>)', $keys['stripe.test.secret_key']['<note>']);
+		$this->assertSame('', $keys['stripe.test.publishable_key']['<note>']);
+		// No PayPal keys, nothing to ask
+		$this->assertArrayNotHasKey('paypal', SystemView::accounts());
+
+		// A key Stripe refuses is a security problem
+		$this->stripeAnswers(401, ['error' => ['message' => 'Invalid API Key provided', 'type' => 'invalid_request_error']]);
+		$keys = array_column(SystemView::keys(), null, 'option');
+		$this->assertSame('Not valid', $keys['stripe.test.secret_key']['<note>']);
+		$checks = array_column(SystemView::security(), null, 'id');
+		$this->assertSame('negative', $checks['stripeKeys']['theme']);
 	}
 
 	public function testKeysShowTheirLastFourCharacters(): void

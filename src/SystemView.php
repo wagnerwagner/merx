@@ -9,6 +9,8 @@ use Kirby\Cms\User;
 use Kirby\Guards\PageGuards;
 use Kirby\Toolkit\Escape;
 use Kirby\Toolkit\Str;
+use Stripe\Account;
+use Throwable;
 
 /**
  * Merx’ Panel view: security checks, options, rules and the keys in use
@@ -20,6 +22,9 @@ use Kirby\Toolkit\Str;
  */
 class SystemView
 {
+	/** Result of `accounts()` in this request */
+	protected static array|null $accounts = null;
+
 	/**
 	 * What the browser checks, as a visitor: robots.txt and sitemap.xml
 	 *
@@ -100,14 +105,72 @@ class SystemView
 			'paypal.' . $paypal . '.secret',
 		];
 
-		return array_map(function (string $option): array {
+		$accounts = static::accounts();
+		$notes = [
+			'stripe.' . $stripe . '.secret_key' => $accounts['stripe']['note'] ?? '',
+			'paypal.' . $paypal . '.secret' => $accounts['paypal']['note'] ?? '',
+		];
+
+		return array_map(function (string $option) use ($notes): array {
 			$key = (string)option('wagnerwagner.merx.' . $option);
 
 			return [
 				'option' => $option,
 				'value' => $key === '' ? '–' : '••••' . Str::substr($key, -4),
+				// `<note>`: the Panel trusts it as HTML and hands it on as `note`
+				'<note>' => $notes[$option] ?? '',
 			];
 		}, $options);
+	}
+
+	/**
+	 * What Stripe and PayPal say about the keys in use, once per request
+	 *
+	 * Stripe names the account of its secret key. PayPal names no account for
+	 * a client ID and secret, only whether they are valid. A gateway which is
+	 * switched off or has no keys is not asked.
+	 *
+	 * @return array<'stripe'|'paypal', array{ok: bool, note: string}>
+	 */
+	public static function accounts(): array
+	{
+		if (static::$accounts !== null) {
+			return static::$accounts;
+		}
+
+		$production = option('wagnerwagner.merx.production') === true;
+		$gateways = Gateways::enabled();
+		$accounts = [];
+
+		$stripeKey = (string)option('wagnerwagner.merx.stripe.' . ($production ? 'live' : 'test') . '.secret_key');
+		if (isset($gateways['stripe']) && $stripeKey !== '') {
+			try {
+				$account = Account::retrieve(null, ['api_key' => $stripeKey])->toArray();
+				$name = $account['business_profile']['name'] ?? $account['settings']['dashboard']['display_name'] ?? $account['id'];
+				$accounts['stripe'] = ['ok' => true, 'note' => Str::template(Escape::html(t('merx.system.account.stripe')), [
+					'name' => Escape::html((string)$name),
+					'id' => '<a href="https://dashboard.stripe.com/' . Escape::html($account['id']) . '" target="_blank"><code>' . Escape::html($account['id']) . '</code></a>',
+				])];
+			} catch (Throwable) {
+				$accounts['stripe'] = ['ok' => false, 'note' => Escape::html(t('merx.system.account.invalid'))];
+			}
+		}
+
+		$paypal = $production ? 'live' : 'sandbox';
+		if (
+			isset($gateways['paypal']) &&
+			(string)option('wagnerwagner.merx.paypal.' . $paypal . '.clientID') !== '' &&
+			(string)option('wagnerwagner.merx.paypal.' . $paypal . '.secret') !== ''
+		) {
+			try {
+				PayPalPayment::getAccessToken();
+				$accounts['paypal'] = ['ok' => true, 'note' => Escape::html(t('merx.system.account.valid'))];
+			} catch (Throwable) {
+				$accounts['paypal'] = ['ok' => false, 'note' => Escape::html(t('merx.system.account.invalid'))];
+			}
+		}
+
+		return static::$accounts = $accounts;
 	}
 
 	/**
@@ -162,9 +225,10 @@ class SystemView
 					)],
 				]],
 				['headline' => t('merx.system.keys'), ...$table(
-					['option' => t('merx.system.option'), 'value' => t('merx.system.keys.value')],
+					['option' => t('merx.system.option'), 'value' => t('merx.system.keys.value'), 'note' => t('merx.system.note')],
 					static::keys(),
-					widths: ['option' => '40ch'],
+					['note' => 'html'],
+					['option' => '40ch', 'value' => '20ch'],
 				)],
 				['headline' => t('merx.system.log'), ...$table(
 					['time' => t('merx.system.log.time'), 'level' => t('merx.system.log.level'), 'message' => t('merx.system.log.message')],
@@ -289,6 +353,12 @@ class SystemView
 		$stripeKey = (string)option('wagnerwagner.merx.stripe.' . ($production ? 'live' : 'test') . '.secret_key');
 		if ($stripeKey !== '' && (string)option('wagnerwagner.merx.stripe.webhook_signing_secret') === '') {
 			$checks[] = static::check(id: 'webhook', ok: false, text: t('merx.system.check.webhook'), themeFailed: 'notice');
+		}
+
+		foreach (static::accounts() as $provider => $account) {
+			if ($account['ok'] === false) {
+				$checks[] = static::check(id: $provider . 'Keys', ok: false, text: t('merx.system.check.' . $provider . 'Keys'));
+			}
 		}
 
 		return $checks;

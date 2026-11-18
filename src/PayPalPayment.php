@@ -118,7 +118,7 @@ class PayPalPayment
 	 *               - 'expires_in': (int) The number of seconds until the token expires.
 	 *               - 'nonce': (string) A unique nonce value associated with this token, used for validation purposes.
 	 */
-	private static function getAccessToken(): array
+	public static function getAccessToken(): array
 	{
 		if (option('wagnerwagner.merx.production') === true) {
 			$auth = option('wagnerwagner.merx.paypal.live.clientID') . ':' . option('wagnerwagner.merx.paypal.live.secret');

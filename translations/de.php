@@ -93,4 +93,9 @@ return [
 	'merx.system.log.time' => 'Zeit',
 	'merx.system.log.level' => 'Level',
 	'merx.system.log.message' => 'Eintrag',
+	'merx.system.account.stripe' => 'Konto { name } ({ id })',
+	'merx.system.account.valid' => 'Gültig',
+	'merx.system.account.invalid' => 'Ungültig',
+	'merx.system.check.stripeKeys' => 'Stripe nimmt den Secret Key nicht an.',
+	'merx.system.check.paypalKeys' => 'PayPal nimmt Client-ID und Secret nicht an.',
 ];
