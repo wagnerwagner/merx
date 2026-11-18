@@ -37,7 +37,7 @@ class ProductPage extends Page
 			$quantity += $order->quantity()->toFloat();
 		}
 		$quantityPerOrder = $count > 0 ? round($quantity / $count, 1) : 0;
-		return tt('section.orders.info', null, compact('quantity', 'count', 'quantityPerOrder'));
+		return tt('field.orders.info', null, compact('quantity', 'count', 'quantityPerOrder'));
 	}
 
 	/**

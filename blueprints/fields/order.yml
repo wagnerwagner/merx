@@ -1,6 +1,7 @@
 type: group
 fields:
   dateCreated:
+    label: field.dateCreated
     type: date
     width: 1/3
     time:

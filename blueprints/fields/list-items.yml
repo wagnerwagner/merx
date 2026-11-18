@@ -9,6 +9,7 @@ fields:
     required: true
     width: 1/3
   title:
+    label: title
     type: text
     width: 1/3
   page:
