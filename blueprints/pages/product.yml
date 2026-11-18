@@ -25,8 +25,7 @@ tabs:
     fields:
       orders:
         extends: fields/orders
-        query: page.orders.flip
-        # What the order holds of this product, see `ProductPage::orders()`
+        query: page.orders
         columns:
           quantity:
             label: field.quantity

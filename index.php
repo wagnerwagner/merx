@@ -65,8 +65,6 @@ App::plugin(
 			'wagnerwagner.merx.fields/order' => __DIR__ . '/blueprints/fields/order.yml',
 			'fields/orders' => __DIR__ . '/blueprints/fields/orders.yml',
 			'wagnerwagner.merx.fields/orders' => __DIR__ . '/blueprints/fields/orders.yml',
-			'fields/payment' => __DIR__ . '/blueprints/fields/payment.yml',
-			'wagnerwagner.merx.fields/payment' => __DIR__ . '/blueprints/fields/payment.yml',
 			'fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'wagnerwagner.merx.fields/price' => __DIR__ . '/blueprints/fields/price.yml',
 			'fields/personal-data' => __DIR__ . '/blueprints/fields/personal-data.yml',

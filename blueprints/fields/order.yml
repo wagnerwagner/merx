@@ -2,7 +2,7 @@ type: group
 fields:
   dateCreated:
     type: date
-    width: 1/2
+    width: 1/3
     time:
       display: HH:mm:ss
       step:
@@ -10,20 +10,36 @@ fields:
         size: 1
     disabled: true
     translate: false
+  datePaid:
+    label: field.datePaid
+    help: field.datePaid.help
+    type: date
+    width: 1/3
+    time:
+      display: HH:mm:ss
+      step:
+        unit: second
+        size: 1
+    translate: false
+  paymentGateway:
+    label: field.paymentGateway
+    type: text
+    required: true
+    width: 1/3
+    disabled: true
+    translate: false
   items:
     extends: fields/list-items
-  infoOrder:
-    label: field.info
-    type: info
+    width: 2/3
+    help: |
+      Total: <strong>{{ page.total.toString("price") }}</strong> · Net: {{ page.total.toString("priceNet") }} · Tax: {{ page.total.tax.toString }}
+  paymentDetails:
+    label: field.paymentDetails
+    type: textarea
+    font: monospace
+    buttons: false
+    counter: false
+    spellcheck: false
+    disabled: true
+    translate: false
     width: 1/3
-    text:
-      en: >
-        Order Number: {{ page.orderNumber }}<br>
-        Total: {{ page.total.toString }}<br>
-        Order date: {{ page.dateCreated }}<br>
-        Paid date: {{ page.datePaid }}<br>
-      de: >
-        Bestellnummer: {{ page.orderNumber }}<br>
-        Summe: {{ page.total.toString }}<br>
-        Bestelldatum: {{ page.dateCreated }}<br>
-        Bezahldatum: {{ page.datePaid }}<br>

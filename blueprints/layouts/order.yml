@@ -4,11 +4,6 @@ tabs:
     icon: draft
     fields:
       order: fields/order
-  payment:
-    label: field.payment
-    icon: credit-card
-    fields:
-      payment: fields/payment
   personalData:
     label: field.personalData
     icon: user

@@ -1,6 +1,5 @@
 label: field.items
 type: structure
-width: 2/3
 translate: false
 disabled: true
 fields:
