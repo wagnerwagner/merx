@@ -40,6 +40,9 @@ class ProductList extends ListItems
 
 		if ($existingItem = $this->get($listItem->key)) {
 			$listItem->quantity += $existingItem->quantity;
+			// The price may depend on the quantity, e.g. a volume discount. The
+			// next request reads it from the page for the whole line anyway.
+			$listItem->refreshPrice();
 		}
 
 		static::validateProduct($listItem);
