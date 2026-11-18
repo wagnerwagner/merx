@@ -154,6 +154,20 @@ final class ProductListTest extends TestCase
 	}
 
 	/**
+	 * A quantity of 0 adds no line, and empties one, as `updateItem()` does
+	 */
+	public function testAddWithoutQuantityAddsNoLine(): void
+	{
+		$productList = new ProductList();
+		$productList->add(['key' => 'gift-wrap', 'price' => 2.0, 'quantity' => 0.0]);
+		$this->assertSame([], $productList->keys());
+
+		$productList->add(['key' => 'gift-wrap', 'price' => 2.0, 'quantity' => 2.0]);
+		$productList->add(['key' => 'gift-wrap', 'price' => 2.0, 'quantity' => -2.0]);
+		$this->assertSame([], $productList->keys());
+	}
+
+	/**
 	 * An item with a plain float price has no currency, and the order of the
 	 * items must not decide whether the list has a total
 	 */

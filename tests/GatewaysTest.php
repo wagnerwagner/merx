@@ -153,6 +153,46 @@ final class GatewaysTest extends TestCase
 	}
 
 	/**
+	 * Asking for the client secret again updates the intent of the session as
+	 * long as nothing was paid with it, instead of creating another one
+	 */
+	public function testAnUnpaidPaymentIntentIsUpdatedRatherThanCreatedAgain(): void
+	{
+		$this->app->clone(['options' => [
+			'wagnerwagner.merx.production' => false,
+			'wagnerwagner.merx.stripe.test.secret_key' => 'sk_test_probe',
+		]]);
+
+		$expected = [
+			'requires_payment_method' => 'POST /v1/payment_intents/pi_probe',
+			'requires_capture' => 'POST /v1/payment_intents',
+			'succeeded' => 'POST /v1/payment_intents',
+		];
+
+		foreach ($expected as $status => $request) {
+			$client = new class ($status) implements ClientInterface {
+				public array $requests = [];
+
+				public function __construct(private string $status)
+				{
+				}
+
+				public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null)
+				{
+					$this->requests[] = strtoupper($method) . ' ' . parse_url($absUrl, PHP_URL_PATH);
+					$body = ['id' => 'pi_probe', 'object' => 'payment_intent', 'status' => $this->status];
+					return [json_encode($body), 200, new CaseInsensitiveArray([])];
+				}
+			};
+			ApiRequestor::setHttpClient($client);
+
+			StripePayment::createStripePaymentIntent(12.5, ['currency' => 'EUR'], [], 'pi_probe');
+
+			$this->assertSame(['GET /v1/payment_intents/pi_probe', $request], $client->requests, $status);
+		}
+	}
+
+	/**
 	 * The payment was captured for this order, and writing the order failed
 	 * afterwards. Reloading the return url has to complete it.
 	 */

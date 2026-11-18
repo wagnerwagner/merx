@@ -172,4 +172,31 @@ final class ApiTest extends TestCase
 		$this->assertEquals('dolor', $response['data']['products']['items'][0]['key']);
 		$this->assertEquals(5, $response['data']['products']['items'][0]['quantity']);
 	}
+
+	/**
+	 * A value of the wrong type is the client’s mistake, not a server error
+	 */
+	public function testCartRefusesValuesOfTheWrongType(): void
+	{
+		kirby()->api()->call('shop/cart', 'POST', ['body' => ['key' => 'lorem']]);
+
+		$requests = [
+			['POST', ['page' => ['lorem']]],
+			['POST', ['key' => 1]],
+			['POST', ['page' => 'lorem', 'data' => 'text']],
+			['PATCH', []],
+			['PATCH', ['key' => ['lorem'], 'quantity' => 2]],
+			['PATCH', ['key' => 'lorem', 'data' => 'text']],
+			['DELETE', []],
+		];
+
+		foreach ($requests as [$method, $body]) {
+			try {
+				kirby()->api()->call('shop/cart', $method, ['body' => $body]);
+				$this->fail($method . ' ' . json_encode($body) . ' was accepted');
+			} catch (Exception $exception) {
+				$this->assertSame(400, $exception->getHttpCode(), $method . ' ' . json_encode($body));
+			}
+		}
+	}
 }
