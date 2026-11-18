@@ -53,8 +53,8 @@ fields:
     step: 0.001
     width: 1/4
 columns:
+  title: true
   page: true
   quantity: true
-  currency: true
   price: true
   type: true
