@@ -5,7 +5,7 @@ namespace Wagnerwagner\Merx;
 use Kirby\Toolkit\Obj;
 
 /**
- * Represents a tax with a price and a rate in percent
+ * Represents a tax with a price and a rate, e.g. `0.19` for 19 %
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH

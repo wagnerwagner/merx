@@ -7,9 +7,7 @@ use Kirby\Exception\Exception;
 use Stripe\Exception\ApiErrorException;
 
 /**
- * Gateway class dummy holder
- *
- * This class only holds the static $gateways array.
+ * The payment gateways: the built-in Stripe and PayPal, the shop’s own from the `gateways` option, and the checks they share
  *
  * @author Tobias Wolf
  * @copyright Wagnerwagner GmbH
@@ -23,7 +21,7 @@ class Gateways
 	 * Captures stripe payment intent
 	 *
 	 * @param $virtualOrderPage Virtual order page which may contain `stripePaymentIntentId` field (Credit Card Payment)
-	 * @param $data Additional data from get request which may contain `payment_intent` (Klarna Payment)
+	 * @param $data Query of the return url, with `redirect_status` after a redirect, e.g. to Klarna
 	 * @throws Exception|ApiErrorException Kirby exception, when the customer canceled the payment, payment is incomplete or Stripe API Exception
 	 *
 	 * @return OrderPage Virtual order page with updated payment details

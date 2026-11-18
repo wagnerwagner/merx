@@ -10,7 +10,7 @@ return [
 		'auth' => false,
 		'method' => 'POST',
 		/** Required post data keys:
-		 * `paymentGateway` or `paymentgateway` or `payment-gateway`
+		 * `paymentGateway`, `payment_gateway`, `paymentgateway` or `payment-gateway`
 		 * and all fields required by the order blueprint
 		 *
 		 * @see https://merx.wagnerwagner.de/guide/getting-started/create-checkout

@@ -55,7 +55,7 @@ class ListItem extends Obj
 	 *
 	 * @param $title Title of an item without a page. The cart reads the title of an item with a page from the page.
 	 * @param $page Page object or page slug
-	 * @param $price Will be overwritten by $page’s price when $price is float or null. An array is a price as `toSessionArray()` stores it.
+	 * @param $price Read from $page when null. An array is a price as `toSessionArray()` stores it.
 	 * @param $quantity Quantity of the ListItem. E.g. 3.0 for 3 items.
 	 * @param $quantifier Multiplier for the price. Could be used when the item has a price per meter.
 	 * @param $type Type of ListItem. See ListItem::$allowedTypes for allowed types.

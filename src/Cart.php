@@ -22,7 +22,7 @@ class Cart extends ProductList
 	/**
 	 * Constructor
 	 *
-	 * @param $data List of product items. Product items must contain `id`. `quantity`, `title`, `price`, `tax` are optional.
+	 * @param $data Items in any form `add()` takes: the id or UUID of a product page, an array with `key` or `page` and optionally `quantity`, `title`, `price`, `type`, `data`, or a `ListItem`. Without items, the cart is read from the session.
 	 */
 	public function __construct(array $data = [])
 	{

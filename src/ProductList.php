@@ -193,11 +193,6 @@ class ProductList extends ListItems
 	}
 
 	/**
-	 * Makes sure the item’s quantity is a usable, non-negative number
-	 *
-	 * @throws Exception error.merx.cart.quantity when the quantity is negative or not a finite number
-	 */
-	/**
 	 * Makes sure a product is something that can be sold
 	 *
 	 * A key or page which is no product page, a typo for example, would be
@@ -224,6 +219,11 @@ class ProductList extends ListItems
 		}
 	}
 
+	/**
+	 * Makes sure the item’s quantity is a usable, non-negative number
+	 *
+	 * @throws Exception error.merx.cart.quantity when the quantity is negative or not a finite number
+	 */
 	protected static function validateQuantity(ListItem $listItem): void
 	{
 		if (is_finite($listItem->quantity) === false || $listItem->quantity < 0) {
