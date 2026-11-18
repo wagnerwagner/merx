@@ -31,6 +31,8 @@ class ProductList extends ListItems
 	 * $productList->add(new ListItem(key: 'nice-socks', price: 10.0)); // Custom ListItem
 	 * ```
 	 *
+	 * A quantity of 0 adds nothing, and one which leaves an item at 0 removes it, as `updateItem()` does.
+	 *
 	 * @see ListItem
 	 */
 	public function add(
@@ -45,8 +47,15 @@ class ProductList extends ListItems
 			$listItem->refreshPrice();
 		}
 
-		static::validateProduct($listItem);
 		static::validateQuantity($listItem);
+
+		// Nothing to add, or nothing left of the line, as with `updateItem()`.
+		// A line without a quantity would make the list orderable for nothing.
+		if ($listItem->quantity === 0.0) {
+			return $existingItem ? $this->remove($listItem->key) : $this;
+		}
+
+		static::validateProduct($listItem);
 		static::validateData($listItem);
 		$this->validateStockOf($listItem);
 
