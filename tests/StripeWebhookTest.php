@@ -3,10 +3,12 @@
 namespace Wagnerwagner\Merx\Tests;
 
 use Kirby\Cms\App;
+use Kirby\Exception\Exception;
 use Kirby\Filesystem\Dir;
 use PHPUnit\Framework\TestCase;
 use Stripe\Event;
 use Wagnerwagner\Merx\OrderPage;
+use Wagnerwagner\Merx\StripePayment;
 
 /**
  * The Stripe webhook is the only path which completes a payment the customer’s
@@ -98,6 +100,7 @@ final class StripeWebhookTest extends TestCase
 	{
 		App::$enableWhoops = true;
 		Dir::remove($this->root);
+		unset($_SERVER['HTTP_STRIPE_SIGNATURE']);
 	}
 
 	public function testIgnoresAnOrderWithoutAPaymentIntent(): void
@@ -177,5 +180,27 @@ final class StripeWebhookTest extends TestCase
 		$this->fireWebhook('pi_matching', 'no-such-order');
 
 		$this->assertFalse($this->isPaid('an-order'));
+	}
+
+	/**
+	 * Test and live mode each have their own webhook with its own signing
+	 * secret, picked like the keys by `production`
+	 */
+	public function testVerifiesTheSignatureWithTheSecretOfTheMode(): void
+	{
+		$payload = json_encode(['id' => 'evt_1', 'object' => 'event', 'type' => 'payment_intent.succeeded']);
+		$timestamp = time();
+		$_SERVER['HTTP_STRIPE_SIGNATURE'] = 't=' . $timestamp . ',v1=' . hash_hmac('sha256', $timestamp . '.' . $payload, 'whsec_test');
+		$secrets = [
+			'wagnerwagner.merx.stripe.test.webhook_signing_secret' => 'whsec_test',
+			'wagnerwagner.merx.stripe.live.webhook_signing_secret' => 'whsec_live',
+		];
+
+		$this->kirby->clone(['options' => $secrets]);
+		$this->assertSame('evt_1', StripePayment::constructEvent($payload)->id);
+
+		$this->kirby->clone(['options' => [...$secrets, 'wagnerwagner.merx.production' => true]]);
+		$this->expectException(Exception::class);
+		StripePayment::constructEvent($payload);
 	}
 }

@@ -36,9 +36,10 @@ return [
 	'paypal.sandbox.secret' => '',
 	'stripe.live.publishable_key' => '',
 	'stripe.live.secret_key' => '',
+	'stripe.live.webhook_signing_secret' => '',
 	'stripe.test.publishable_key' => '',
 	'stripe.test.secret_key' => '',
-	'stripe.webhook_signing_secret' => '',
+	'stripe.test.webhook_signing_secret' => '',
 	'stripe.paymentIntentParameters' => [
 		'capture_method' => 'manual',
 	],

@@ -34,9 +34,10 @@ class StripePayment
 	{
 		self::setStripeApiKey();
 
-		$endpoint_secret = option('wagnerwagner.merx.stripe.webhook_signing_secret', false);
-		if ($endpoint_secret === false || empty($endpoint_secret)) {
-			self::logWebhookError('No Stripe webhook signing secret configured.');
+		$mode = option('wagnerwagner.merx.production') === true ? 'live' : 'test';
+		$endpoint_secret = option('wagnerwagner.merx.stripe.' . $mode . '.webhook_signing_secret');
+		if (empty($endpoint_secret) === true) {
+			self::logWebhookError('No Stripe ' . $mode . ' webhook signing secret configured.');
 			throw new Exception(
 				key: 'merx.stripeWebhook',
 				httpCode: 500,

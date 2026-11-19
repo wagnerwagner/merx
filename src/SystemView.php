@@ -144,7 +144,7 @@ class SystemView
 		$options = [
 			'stripe.' . $stripe . '.publishable_key',
 			'stripe.' . $stripe . '.secret_key',
-			'stripe.webhook_signing_secret',
+			'stripe.' . $stripe . '.webhook_signing_secret',
 			'paypal.' . $paypal . '.clientID',
 			'paypal.' . $paypal . '.secret',
 		];
@@ -349,8 +349,8 @@ class SystemView
 			$checks[] = static::check(id: 'testKeys', ok: false, text: t('merx.system.check.testKeys'));
 		}
 
-		$stripeKey = (string)option('wagnerwagner.merx.stripe.' . ($production ? 'live' : 'test') . '.secret_key');
-		if ($stripeKey !== '' && (string)option('wagnerwagner.merx.stripe.webhook_signing_secret') === '') {
+		$stripe = 'wagnerwagner.merx.stripe.' . ($production ? 'live' : 'test');
+		if ((string)option($stripe . '.secret_key') !== '' && (string)option($stripe . '.webhook_signing_secret') === '') {
 			$checks[] = static::check(id: 'webhook', ok: false, text: t('merx.system.check.webhook'), themeFailed: 'notice');
 		}
 
