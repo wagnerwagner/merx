@@ -114,6 +114,20 @@ final class OrderPageCartTest extends TestCase
 	}
 
 	/**
+	 * A price of 0, such as free shipping, is a price, with its tax rate
+	 */
+	public function testItemWithPriceZero(): void
+	{
+		$cart = $this->cart("-\n  key: shipping\n  type: shipping\n  price: 0\n  taxrate: 0.19\n  currency: EUR\n");
+
+		$price = $cart->first()->price;
+		$this->assertInstanceOf(Price::class, $price);
+		$this->assertSame(0.0, $price->price);
+		$this->assertSame(0.19, $price->tax?->rate);
+		$this->assertArrayHasKey('0.19', $cart->taxRates());
+	}
+
+	/**
 	 * A page Merx wrote itself is still used
 	 */
 	public function testItemWithPage(): void
