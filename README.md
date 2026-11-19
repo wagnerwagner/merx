@@ -1,21 +1,19 @@
 # Merx
 
-Merx is a plugin to create online shops with [Kirby](https://getkirby.com).
+Merx is a plugin for creating online shops with [Kirby](https://getkirby.com).
 
 ## Documentation
 
-[merx.wagnerwagner.de/guide](https://merx.wagnerwagner.de/guide)
+[merx.wagnerwagner.de/guide](https://merx.wagnerwagner.de/guide)  
+[merx.wagnerwagner.de/reference](https://merx.wagnerwagner.de/reference)  
+[merx.wagnerwagner.de/cookbook](https://merx.wagnerwagner.de/cookbook)
 
-## Issues
-
-Please report issues on Github: [wagnerwagner/merx](https://github.com/wagnerwagner/merx)
-
-## Ideas & Feature Requests
+## Issues, Ideas & Feature Requests
 
 Please use Github issues to submit your ideas and wishes: [wagnerwagner/merx](https://github.com/wagnerwagner/merx).
 
-Alternatively we can discuss ideas at [Kirby Forum](https://forum.getkirby.com).
+Alternatively we can discuss ideas at [Kirby Forum](https://forum.getkirby.com) or on [Discord](https://chat.getkirby.com/).
 
 ## License
 
-The Merx plugin is not free software. In order to run on a public server you must purchase a valid [Kirby license](https://getkirby.com/buy) **and** a valid [Merx license](https://merx.wagnerwagner.de/buy).
+The Merx plugin is **not free software**. In order to run on a public server you must purchase a valid [Kirby license](https://getkirby.com/buy) **and** a valid [Merx license](https://merx.wagnerwagner.de/buy).
